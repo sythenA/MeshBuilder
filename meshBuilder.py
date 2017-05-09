@@ -23,6 +23,7 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
+from qgis.core import QgsVectorLayer
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
@@ -310,13 +311,36 @@ class meshBuilder:
         selectedFeatures = list()
         for row in c_Feature:
             selectedFeatures.append(row.row())
-        self.dlg.label_3.setText(str(selectedFeatures))
         layer = iface.mapCanvas().currentLayer()
         layer.select(selectedFeatures)
 
     def cancelSelection(self):
         layer = iface.mapCanvas().currentLayer()
         layer.removeSelection()
+
+    def cleanTableSelection(self):
+        table = self.dlg.tableWidget
+        c_Feature = self.dlg.tableWidget.selectionModel().selectedIndexes()
+        columns = table.columnCount()
+
+        for row in c_Feature:
+            for j in range(0, columns):
+                item = table.item(row.row(), j)
+                if item:
+                    item.setSelected(False)
+
+    def selectFromQgis(self):
+        self.cleanTableSelection()
+        layer = iface.activeLayer()
+        selectedIds = layer.selectedFeatures()
+        columns = self.dlg.tableWidget.columnCount()
+        table = self.dlg.tableWidget
+
+        for feature in selectedIds:
+            for j in range(0, columns):
+                item = table.item(feature.id(), j)
+                if item:
+                   item.setSelected(True)
 
     def writeTableToLayer(self):
         fieldDict = self.fieldDict
@@ -354,8 +378,7 @@ class meshBuilder:
 
         layer.commitChanges()
 
-    def attrTable(self, layer, Type='poly'):
-
+    def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
             if type(Object) != QPyNullVariant and Type == 'Object':
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -371,44 +394,92 @@ class meshBuilder:
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
 
+        self.dlg.tableWidget.setColumnCount(6)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'網格間距',
+                                                        u'符合邊界',
+                                                        u'區域分類',
+                                                        u'輸出名',
+                                                        u'合併網格',
+                                                        u'結構化網格'])
+        counter = 0
+        for feature in layer.getFeatures():
+            setTableItem(counter, 0, feature['mesh_size'])
+            setTableItem(counter, 1, feature['ForceBound'], Type='ComboBox')
+            setTableItem(counter, 2, feature['Physical'])
+            setTableItem(counter, 3, feature['geoName'])
+            setTableItem(counter, 4, feature['Recombine'], Type='ComboBox')
+            setTableItem(counter, 5, feature['Transfinit'], Type='ComboBox')
+            counter = counter + 1
+
+        fieldDict = {0:'mesh_size',
+                        1:'ForceBound',
+                        2:'Physical',
+                        3:'geoName',
+                        4:'Recombine',
+                        5:'Transfinit'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = layer
+        self.dlg.attrSelectBox.addItems([u'網格間距',
+                                         u'符合邊界',
+                                         u'區域分類',
+                                         u'輸出名',
+                                         u'合併網格',
+                                         u'結構化網格'])
+        self.tableAttrNameDict = {u'網格間距': 0,
+                                  u'符合邊界': 1,
+                                  u'區域分類': 2,
+                                  u'輸出名': 3,
+                                  u'合併網格': 4,
+                                  u'結構化網格': 5}
+
+    def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
 
         if Type == 'poly':
-            self.dlg.tableWidget.setColumnCount(6)
-            self.dlg.tableWidget.setHorizontalHeaderLabels([u'網格間距',
-                                                            u'符合邊界',
-                                                            u'區域分類',
-                                                            u'輸出名',
-                                                            u'合併網格',
-                                                            u'結構化網格'])
-            counter = 0
-            for feature in layer.getFeatures():
-                setTableItem(counter, 0, feature['mesh_size'])
-                setTableItem(counter, 1, feature['ForceBound'], Type='ComboBox')
-                setTableItem(counter, 2, feature['Physical'])
-                setTableItem(counter, 3, feature['geoName'])
-                setTableItem(counter, 4, feature['Recombine'], Type='ComboBox')
-                setTableItem(counter, 5, feature['Transfinit'], Type='ComboBox')
-                counter = counter + 1
+            self.setTableToPoly(layer)
 
-            fieldDict = {0:'mesh_size',
-                         1:'ForceBound',
-                         2:'Physical',
-                         3:'geoName',
-                         4:'Recombine',
-                         5:'Transfinit'}
-
-            self.fieldDict = fieldDict
-            self.currentLayer = layer
+    def fillBoxFill(self):
+        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格']
+        currentName = self.dlg.attrSelectBox.currentText()
+        self.dlg.fillBox.clear()
+        if currentName in comboxNames:
+            self.dlg.fillBox.setEditable(False)
+            self.dlg.fillBox.addItems([u'是', u'否'])
+        else:
+            self.dlg.fillBox.setEditable(True)
+            self.dlg.fillBox.clear()
 
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
-        iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
         self.attrTable(layer, Type='poly')
+
+    def batchFill(self):
+        tableAttrNameDict = self.tableAttrNameDict
+        currentAttrIdx = self.dlg.attrSelectBox.currentIndex()
+        fillText = self.dlg.fillBox.currentText()
+
+        c_Feature = self.dlg.tableWidget.selectionModel().selectedIndexes()
+        selectedFeatures = list()
+        for row in c_Feature:
+            selectedFeatures.append(row.row())
+
+        for row in selectedFeatures:
+            item = self.dlg.tableWidget.cellWidget(row, currentAttrIdx)
+            if item:
+                self.dlg.label_3.setText(str(type(item)))
+                if type(item) == QComboBox:
+                    if fillText == u'是':
+                        item.setCurrentIndex(0)
+                    elif fillText == u'否':
+                        item.setCurrentIndex(1)
+            elif item is None:
+                item = self.dlg.tableWidget.item(row, currentAttrIdx)
+                item.setText(fillText)
 
     def step2(self, source):
         # polygon layer
@@ -419,11 +490,16 @@ class meshBuilder:
         self.c_Caption = "Select a polygon shapefile"
         self.c_lineEdit = self.dlg.polyIndicator
         self.dlg.wherePolyBtn.clicked.connect(self.fileBrowser)
-        # load polygon layer is button pressed
+        # load polygon layer if button pressed
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
+        self.dlg.polyAttrBtn.setEnabled(False)
         self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
-        self.dlg.tableWidget.itemClicked.connect(self.selectLayerFeature)
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
+        self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
         self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
+        self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
+        self.dlg.batchFillBtn.clicked.connect(self.batchFill)
 
     def run(self):
         """Run method that performs all the real work"""

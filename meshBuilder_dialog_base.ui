@@ -424,7 +424,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QComboBox" name="comboBox_2">
+  <widget class="QComboBox" name="attrSelectBox">
    <property name="geometry">
     <rect>
      <x>540</x>
@@ -510,6 +510,9 @@
    </property>
   </widget>
   <widget class="QPushButton" name="polyAttrBtn">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>1120</x>
@@ -535,7 +538,7 @@
     <string>選擇圖層</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="comboBox_3">
+  <widget class="QComboBox" name="fillBox">
    <property name="geometry">
     <rect>
      <x>760</x>
