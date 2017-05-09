@@ -306,10 +306,17 @@ class meshBuilder:
         self.lineFrameObj = lineFrame.lineCombine(self.lineFrameObj)
 
     def selectLayerFeature(self):
-        c_Feature = self.dlg.tableWidget.currentRow()
-        self.dlg.label_3.setText(str(c_Feature))
+        c_Feature = self.dlg.tableWidget.selectionModel().selectedIndexes()
+        selectedFeatures = list()
+        for row in c_Feature:
+            selectedFeatures.append(row.row())
+        self.dlg.label_3.setText(str(selectedFeatures))
         layer = iface.mapCanvas().currentLayer()
-        layer.setSelectedFeatures([c_Feature])
+        layer.select(selectedFeatures)
+
+    def cancelSelection(self):
+        layer = iface.mapCanvas().currentLayer()
+        layer.removeSelection()
 
     def writeTableToLayer(self):
         fieldDict = self.fieldDict
@@ -416,6 +423,7 @@ class meshBuilder:
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
         self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
         self.dlg.tableWidget.itemClicked.connect(self.selectLayerFeature)
+        self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
 
     def run(self):
         """Run method that performs all the real work"""
