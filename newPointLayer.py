@@ -3,6 +3,7 @@ from qgis.utils import iface
 from qgis.core import QgsVectorFileWriter, QGis, QgsPoint
 from qgis.core import QgsVectorLayer, QgsFeature, QgsFields, QgsField
 from qgis.core import QgsGeometry
+import os.path
 from PyQt4.QtCore import QVariant, QFileInfo, QPyNullVariant
 import shutil
 
@@ -38,6 +39,8 @@ def copyMainLayer(layer, folder):
     layerPath = layer.dataProvider().dataSourceUri().split('|')[0]
     baseName = layerPath.split("\\")[-1].replace('.shp', '')
     path = folder + '\\' + 'MainLayers' + '\\' + str(baseName) + '.shp'
+    if os.path.isfile(path):
+        return False
 
     layerType = QGis.WKBPolygon
     newlayer = QgsVectorFileWriter(path, "utf-8", fields,

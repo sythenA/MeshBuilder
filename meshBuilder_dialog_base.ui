@@ -465,7 +465,7 @@
     <string>批次修改</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pointCompleteBtn">
+  <widget class="QPushButton" name="setCompleteBtn">
    <property name="geometry">
     <rect>
      <x>1070</x>

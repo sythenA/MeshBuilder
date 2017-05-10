@@ -23,7 +23,7 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
@@ -243,11 +243,22 @@ class meshBuilder:
 
         newMainLayer = newPointLayer.copyMainLayer(mainLayerSelected,
                                                    projFolder)
-        self.mainLayer = newMainLayer
-        newMainLayer.setCrs(self.systemCRS)
-        source = newMainLayer.dataProvider().dataSourceUri().split('|')[0]
-        #  Load the assinged shape file layer into qgis, and show on the canvas.
+        if newMainLayer:
+            self.mainLayer = newMainLayer
+        else:
+            self.mainLayer = mainLayerSelected
+
+        self.mainLayer.setCrs(self.systemCRS)
+        source = self.mainLayer.dataProvider().dataSourceUri().split('|')[0]
+        #
+        #  Load the assinged shape file layer into qgis, and show on the
+        #  canvas.
+        #
         iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
+        self.polyBaseName = self.mainLayer.name()
+        vl = QgsMapLayerRegistry.instance().mapLayer(self.polyBaseName)
+        iface.setActiveLayer(vl)
+        self.dlg.polyAttrBtn.setEnabled(False)
 
         innerLayersChecked = list()
         for i in range(0, self.dlg.listWidget.count()):
@@ -492,7 +503,6 @@ class meshBuilder:
         self.dlg.wherePolyBtn.clicked.connect(self.fileBrowser)
         # load polygon layer if button pressed
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
-        self.dlg.polyAttrBtn.setEnabled(False)
         self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
