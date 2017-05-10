@@ -296,14 +296,8 @@ def pointAndLine(polygonLayer, projFolder):
     #  Delete the shapefile writer and writes into vector layer
     del Pointwriter
     #  Load the created point layer into qgis
-    """
-    iface.addVectorLayer(savePath_point, QFileInfo(savePath_point).baseName(),
-                         'ogr')"""
     del LineWriter
     #  Load the created line layer into qgis
-    """
-    iface.addVectorLayer(savePath_line, QFileInfo(savePath_line).baseName(),
-                         'ogr')"""
     pointLayer = QgsVectorLayer(savePath_point,
                                 QFileInfo(savePath_point).baseName(),
                                 'ogr')

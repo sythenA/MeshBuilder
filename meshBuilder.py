@@ -34,7 +34,6 @@ import os.path
 import newPointLayer
 import lineFrame
 from innerLayers import innerLayersExport
-import shutil
 import os
 
 
@@ -98,18 +97,16 @@ class meshBuilder:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('meshBuilder', message)
 
-
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+    def add_action(self,
+                   icon_path,
+                   text,
+                   callback,
+                   enabled_flag=True,
+                   add_to_menu=True,
+                   add_to_toolbar=True,
+                   status_tip=None,
+                   whats_this=None,
+                   parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -182,7 +179,6 @@ class meshBuilder:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -199,11 +195,13 @@ class meshBuilder:
         if folderName:
             self.dlg.lineEdit.setText(folderName)
 
-    def fileBrowser(self):
-        Caption = self.c_Caption
+    def fileBrowser(self, Caption, presetFolder, presetType=".shp"):
         lineEdit = self.c_lineEdit
+        if not presetFolder:
+            presetFolder = self.projFolder
+
         fileName = QFileDialog.getOpenFileName(self.dlg, Caption,
-                                               self.projFolder, "*.shp")
+                                               presetFolder, "*" + presetType)
         if fileName:
             lineEdit.setText(fileName)
 
@@ -259,6 +257,8 @@ class meshBuilder:
         vl = QgsMapLayerRegistry.instance().mapLayer(self.polyBaseName)
         iface.setActiveLayer(vl)
         self.dlg.polyAttrBtn.setEnabled(False)
+        self.dlg.pointAttrBtn.setEnabled(False)
+        self.dlg.lineAttrBtn.setEnabled(False)
 
         innerLayersChecked = list()
         for i in range(0, self.dlg.listWidget.count()):
@@ -351,11 +351,11 @@ class meshBuilder:
             for j in range(0, columns):
                 item = table.item(feature.id(), j)
                 if item:
-                   item.setSelected(True)
+                    item.setSelected(True)
 
     def writeTableToLayer(self):
         fieldDict = self.fieldDict
-        layer = self.currentLayer
+        layer = iface.activeLayer()
         layerFields = layer.pendingFields()
 
         Rows = self.dlg.tableWidget.rowCount()
@@ -363,14 +363,14 @@ class meshBuilder:
 
         layer.startEditing()
 
-        item = self.dlg.tableWidget.cellWidget(0, 2)
         for i in range(0, Rows):
             for j in range(0, Columns):
                 item = self.dlg.tableWidget.cellWidget(i, j)
                 if type(item) == QComboBox:
                     dat = item.currentText()
                 elif item is None:
-                    dat = self.dlg.tableWidget.item(i, j).text()
+                    if self.dlg.tableWidget.item(i, j) is not None:
+                        dat = self.dlg.tableWidget.item(i, j).text()
 
                 fieldName = fieldDict[j]
                 idx = layerFields.fieldNameIndex(fieldName)
@@ -392,6 +392,7 @@ class meshBuilder:
     def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
             if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
             elif Type == 'ComboBox':
                 widget = QComboBox()
@@ -404,6 +405,9 @@ class meshBuilder:
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
 
         self.dlg.tableWidget.setColumnCount(6)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'網格間距',
@@ -422,12 +426,12 @@ class meshBuilder:
             setTableItem(counter, 5, feature['Transfinit'], Type='ComboBox')
             counter = counter + 1
 
-        fieldDict = {0:'mesh_size',
-                        1:'ForceBound',
-                        2:'Physical',
-                        3:'geoName',
-                        4:'Recombine',
-                        5:'Transfinit'}
+        fieldDict = {0: 'mesh_size',
+                     1: 'ForceBound',
+                     2: 'Physical',
+                     3: 'geoName',
+                     4: 'Recombine',
+                     5: 'Transfinit'}
 
         self.fieldDict = fieldDict
         self.currentLayer = layer
@@ -444,14 +448,89 @@ class meshBuilder:
                                   u'合併網格': 4,
                                   u'結構化網格': 5}
 
+    def setTableToPoint(self, layer):
+        def setTableItem(i, j, Object, Type='Object'):
+            if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+            elif Type == 'ComboBox':
+                widget = QComboBox()
+                widget.addItem(u'是')
+                widget.addItem(u'否')
+                if Object == 0:
+                    widget.setCurrentIndex(1)
+                else:
+                    widget.setCurrentIndex(0)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif type(Object) != QPyNullVariant and Type == 'Fixed':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+                item = self.dlg.tableWidget.item(i, j)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
+
+        self.dlg.tableWidget.setColumnCount(6)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'X',
+                                                        u'Y',
+                                                        u'網格間距',
+                                                        u'點分類',
+                                                        u'輸出名',
+                                                        u'分段點'])
+        counter = 0
+        for feature in layer.getFeatures():
+            setTableItem(counter, 0, feature.geometry().asPoint().x(),
+                         Type='Fixed')
+            setTableItem(counter, 1, feature.geometry().asPoint().y(),
+                         Type='Fixed')
+            setTableItem(counter, 2, feature['mesh_size'])
+            setTableItem(counter, 3, feature['Physical'])
+            setTableItem(counter, 4, feature['geoName'])
+            setTableItem(counter, 5, feature['breakPoint'], Type='ComboBox')
+            counter = counter + 1
+
+        fieldDict = {0: 'X',
+                     1: 'Y',
+                     2: 'mesh_size',
+                     3: 'Physical',
+                     4: 'geoName',
+                     5: 'breakPoint'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = layer
+        self.dlg.attrSelectBox.addItems([u'網格間距',
+                                         u'點分類',
+                                         u'輸出名',
+                                         u'分段點'])
+        self.tableAttrNameDict = {u'X': 0,
+                                  u'Y': 1,
+                                  u'網格間距': 2,
+                                  u'點分類': 3,
+                                  u'輸出名': 4,
+                                  u'分段點': 5}
+
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
 
         if Type == 'poly':
             self.setTableToPoly(layer)
+        elif Type == 'point':
+            self.setTableToPoint(layer)
+
+    def switchAttr(self, Type, setComplete=False):
+        if Type == 'poly':
+            self.setTableToPoly(self.mainLayer)
+            self.dlg.pointAttrBtn.setEnabled(True)
+            if setComplete:
+                self.dlg.setCompleteBtn.setEnabled(False)
+        elif Type == 'point':
+            self.setTableToPoint(self.pointLayer)
+            if setComplete:
+                self.dlg.setCompleteBtn.setEnabled(False)
 
     def fillBoxFill(self):
-        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格']
+        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格', u'分段點']
         currentName = self.dlg.attrSelectBox.currentText()
         self.dlg.fillBox.clear()
         if currentName in comboxNames:
@@ -464,15 +543,27 @@ class meshBuilder:
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        vl = QgsMapLayerRegistry.instance().mapLayer(layer.name())
+        iface.setActiveLayer(vl)
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
         self.attrTable(layer, Type='poly')
 
+    def readPointLayer(self):
+        path = self.dlg.pointIndicator.text()
+        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        vl = QgsMapLayerRegistry.instance().mapLayer(layer.name())
+        iface.setActiveLayer(vl)
+
+        self.dlg.pointConfirm.setEnabled(False)
+        self.pointLayer = layer
+        self.attrTable(layer, Type='point')
+
     def batchFill(self):
-        tableAttrNameDict = self.tableAttrNameDict
-        currentAttrIdx = self.dlg.attrSelectBox.currentIndex()
+        currentAttrText = self.dlg.attrSelectBox.currentText()
         fillText = self.dlg.fillBox.currentText()
+        currentAttrIdx = self.tableAttrNameDict[currentAttrText]
 
         c_Feature = self.dlg.tableWidget.selectionModel().selectedIndexes()
         selectedFeatures = list()
@@ -482,7 +573,6 @@ class meshBuilder:
         for row in selectedFeatures:
             item = self.dlg.tableWidget.cellWidget(row, currentAttrIdx)
             if item:
-                self.dlg.label_3.setText(str(type(item)))
                 if type(item) == QComboBox:
                     if fillText == u'是':
                         item.setCurrentIndex(0)
@@ -498,18 +588,57 @@ class meshBuilder:
 
         self.dlg.resize(self.dlg.maximumSize())
         self.dlg.polyIndicator.setText(source)
-        self.c_Caption = "Select a polygon shapefile"
+        Caption = "請選擇一個多邊形圖層"
         self.c_lineEdit = self.dlg.polyIndicator
-        self.dlg.wherePolyBtn.clicked.connect(self.fileBrowser)
+        wherePolyBtn = self.dlg.wherePolyBtn
+        wherePolyBtn.clicked.connect(lambda: self.fileBrowser(Caption,
+                                                              self.projFolder))
         # load polygon layer if button pressed
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
-        self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
+
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
+        self.dlg.setCompleteBtn.clicked.connect(self.step2_1)
+        """
         self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
         self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
         self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
         self.dlg.batchFillBtn.clicked.connect(self.batchFill)
+        """
+
+    def step2_1(self):
+        self.writeTableToLayer()
+
+        self.orgPoint, self.orgLine = newPointLayer.pointAndLine(self.mainLayer,
+                                                                 self.projFolder
+                                                                 )
+        pointFrameObj = lineFrame.pointFrame(self.projFolder,
+                                             orgPointsLayer=self.orgPoint,
+                                             CRS=self.systemCRS)
+        pointFrameObj.copyPoint()
+        pointFrameObj.openLayer()
+        pointFrameObj.showLayer()
+        self.pointLayer = pointFrameObj.frameLayer
+        self.pointLayer.setCrs(self.systemCRS)
+        vl = QgsMapLayerRegistry.instance().mapLayer(self.pointLayer.name())
+        iface.setActiveLayer(vl)
+
+        path = self.projFolder + '\\' + 'MainPoint_frame.shp'
+
+        self.attrTable(self.pointLayer, Type='point')
+        self.dlg.pointIndicator.setText(path)
+        wherePointBtn = self.dlg.wherePointBtn
+        Caption = "請選擇一個點圖層"
+        wherePointBtn.clicked.connect(lambda: self.fileBrowser(Caption,
+                                                               self.projFolder))
+        self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
+        self.dlg.polyAttrBtn.setEnabled(True)
+        self.dlg.polyAttrBtn.clicked.connect(lambda: self.switchAttr('poly',
+                                                                     True))
+        self.dlg.pointAttrBtn.clicked.connect(lambda: self.switchAttr('point',
+                                                                      False))
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -522,6 +651,13 @@ class meshBuilder:
         self.dlg.resize(self.dlg.minimumSize())
         self.step1()
 
+        # layer = iface.activeLayer()
+        # layer.selectionChanged.connect(self.selectFromQgis)
+        self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
+        self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
+        self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
+        self.dlg.batchFillBtn.clicked.connect(self.batchFill)
+        self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed

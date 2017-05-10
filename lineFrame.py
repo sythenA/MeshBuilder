@@ -5,7 +5,6 @@ from qgis.core import QgsVectorLayer, QgsGeometry, QgsPoint
 from PyQt4.QtCore import QVariant, QFileInfo, QPyNullVariant
 import collections
 from math import sqrt
-import os, shutil
 
 
 class TransformedDict(collections.MutableMapping):
@@ -58,6 +57,10 @@ class pointFrame:
         if 'orgPointsLayer' in kwargs.keys():
             self.pointLayer = kwargs['orgPointsLayer']
         self.projFolder = projFolder
+        if 'CRS' in kwargs.keys():
+            self.crs = kwargs['CRS']
+        else:
+            self.crs = ""
 
     def checkRepetitive(self, feature, featureList):
         rep = False  # repetitive checker
@@ -79,8 +82,13 @@ class pointFrame:
         fields.append(QgsField('breakPoint', QVariant.Int))
         fields.append(QgsField('geoName', QVariant.String))
 
+        if self.crs:
+            CRS = self.crs
+        else:
+            CRS = None
+
         pointFrameWriter = QgsVectorFileWriter(savePath, 'utf-8', fields,
-                                               QGis.WKBPoint, None,
+                                               QGis.WKBPoint, CRS,
                                                'ESRI shapefile')
         #  If repetitive, do not copy to the new layer.
         featureList = list()
