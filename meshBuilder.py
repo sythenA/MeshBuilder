@@ -253,9 +253,6 @@ class meshBuilder:
         #  canvas.
         #
         iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
-        self.polyBaseName = self.mainLayer.name()
-        vl = QgsMapLayerRegistry.instance().mapLayer(self.polyBaseName)
-        iface.setActiveLayer(vl)
         self.dlg.polyAttrBtn.setEnabled(False)
         self.dlg.pointAttrBtn.setEnabled(False)
         self.dlg.lineAttrBtn.setEnabled(False)
@@ -378,7 +375,8 @@ class meshBuilder:
                 fieldType = layerFields[idx].typeName()
                 if fieldType == 'String':
                     layer.changeAttributeValue(i, idx, dat)
-                elif fieldType == 'Integer' and dat:
+                elif ((fieldType == 'Integer' or fieldType == 'Integer64') and
+                        dat):
                     if dat == u'¬O':
                         dat = 1
                     elif dat == u'§_':
@@ -386,6 +384,7 @@ class meshBuilder:
                     layer.changeAttributeValue(i, idx, int(dat))
                 elif fieldType == 'Real' and dat:
                     layer.changeAttributeValue(i, idx, float(dat))
+                dat = ""
 
         layer.commitChanges()
 
@@ -543,8 +542,8 @@ class meshBuilder:
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        vl = QgsMapLayerRegistry.instance().mapLayer(layer.name())
-        iface.setActiveLayer(vl)
+        vl = QgsMapLayerRegistry.instance().mapLayersByName(layer.name())
+        iface.setActiveLayer(vl[0])
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
@@ -553,8 +552,8 @@ class meshBuilder:
     def readPointLayer(self):
         path = self.dlg.pointIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        vl = QgsMapLayerRegistry.instance().mapLayer(layer.name())
-        iface.setActiveLayer(vl)
+        vl = QgsMapLayerRegistry.instance().mapLayersByName(layer.name())
+        iface.setActiveLayer(vl[0])
 
         self.dlg.pointConfirm.setEnabled(False)
         self.pointLayer = layer
@@ -580,7 +579,10 @@ class meshBuilder:
                         item.setCurrentIndex(1)
             elif item is None:
                 item = self.dlg.tableWidget.item(row, currentAttrIdx)
-                item.setText(fillText)
+                if fillText:
+                    item.setText(fillText)
+                else:
+                    item.setText("")
 
     def step2(self, source):
         # polygon layer
@@ -620,8 +622,9 @@ class meshBuilder:
         pointFrameObj.showLayer()
         self.pointLayer = pointFrameObj.frameLayer
         self.pointLayer.setCrs(self.systemCRS)
-        vl = QgsMapLayerRegistry.instance().mapLayer(self.pointLayer.name())
-        iface.setActiveLayer(vl)
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(self.pointLayer.name())
+        iface.setActiveLayer(vl[0])
 
         path = self.projFolder + '\\' + 'MainPoint_frame.shp'
 
