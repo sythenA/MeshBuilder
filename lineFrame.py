@@ -60,7 +60,7 @@ class pointFrame:
         if 'CRS' in kwargs.keys():
             self.crs = kwargs['CRS']
         else:
-            self.crs = ""
+            self.crs = None
 
     def checkRepetitive(self, feature, featureList):
         rep = False  # repetitive checker
@@ -82,13 +82,8 @@ class pointFrame:
         fields.append(QgsField('breakPoint', QVariant.Int))
         fields.append(QgsField('geoName', QVariant.String))
 
-        if self.crs:
-            CRS = self.crs
-        else:
-            CRS = None
-
         pointFrameWriter = QgsVectorFileWriter(savePath, 'utf-8', fields,
-                                               QGis.WKBPoint, CRS,
+                                               QGis.WKBPoint, self.crs,
                                                'ESRI shapefile')
         #  If repetitive, do not copy to the new layer.
         featureList = list()
@@ -128,12 +123,15 @@ class lineFrame:
         #  (polygon).
         if 'orgLinesLayer' in kwargs.keys():
             self.lineLayer = kwargs['orgLinesLayer']
-        self.projFolder = projFolder
+        if 'pointLayer' in kwargs.keys():
+            self.pointFrame = kwargs['pointLayer']
+        if 'CRS' in kwargs.keys():
+            self.crs = kwargs['CRS']
+        else:
+            self.crs = None
 
-        pointFramePath = projFolder + "\\" + 'MainPoint_frame.shp'
-        pointFrame = QgsVectorLayer(pointFramePath,
-                                    QFileInfo(pointFramePath).baseName(), 'ogr')
-        self.pointDict = pointRef(pointFrame)
+        self.projFolder = projFolder
+        self.pointDict = pointRef(self.pointFrame)
 
     def readPoint(self, pointFrame):
         self.pointDict = pointRef(pointFrame.frameLayer)
@@ -176,7 +174,7 @@ class lineFrame:
         fields.append(QgsField('Cells', QVariant.Int))
 
         pointFrameWriter = QgsVectorFileWriter(savePath, 'utf-8', fields,
-                                               QGis.WKBLineString, None,
+                                               QGis.WKBLineString, self.crs,
                                                'ESRI shapefile')
         #  If repetitive, do not copy to the new layer.
         featureList = list()

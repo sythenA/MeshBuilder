@@ -195,14 +195,14 @@ class meshBuilder:
         if folderName:
             self.dlg.lineEdit.setText(folderName)
 
-    def fileBrowser(self, Caption, presetFolder, presetType=".shp"):
-        lineEdit = self.c_lineEdit
+    def fileBrowser(self, Caption, presetFolder, lineEdit="",
+                    presetType=".shp"):
         if not presetFolder:
             presetFolder = self.projFolder
 
         fileName = QFileDialog.getOpenFileName(self.dlg, Caption,
                                                presetFolder, "*" + presetType)
-        if fileName:
+        if fileName and lineEdit:
             lineEdit.setText(fileName)
 
     def cleanProjFolder(self, projFolder):
@@ -253,9 +253,6 @@ class meshBuilder:
         #  canvas.
         #
         iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
-        self.dlg.polyAttrBtn.setEnabled(False)
-        self.dlg.pointAttrBtn.setEnabled(False)
-        self.dlg.lineAttrBtn.setEnabled(False)
 
         innerLayersChecked = list()
         for i in range(0, self.dlg.listWidget.count()):
@@ -305,7 +302,7 @@ class meshBuilder:
             item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
             item.setCheckState(Qt.Unchecked)
 
-        self.dlg.NextBtn1.clicked.connect(self.step1_1)
+        self.dlg.nextBtn1.clicked.connect(self.step1_1)
 
     def mainPointLayerComplete(self):
         self.lineFrameObj.readPoint(self.pointFrame)
@@ -351,8 +348,9 @@ class meshBuilder:
                     item.setSelected(True)
 
     def writeTableToLayer(self):
-        fieldDict = self.fieldDict
         layer = iface.activeLayer()
+
+        fieldDict = self.fieldDict
         layerFields = layer.pendingFields()
 
         Rows = self.dlg.tableWidget.rowCount()
@@ -362,6 +360,7 @@ class meshBuilder:
 
         for i in range(0, Rows):
             for j in range(0, Columns):
+                dat = ""
                 item = self.dlg.tableWidget.cellWidget(i, j)
                 if type(item) == QComboBox:
                     dat = item.currentText()
@@ -375,16 +374,23 @@ class meshBuilder:
                 fieldType = layerFields[idx].typeName()
                 if fieldType == 'String':
                     layer.changeAttributeValue(i, idx, dat)
-                elif ((fieldType == 'Integer' or fieldType == 'Integer64') and
-                        dat):
+
+                elif fieldType == 'Integer' and dat:
                     if dat == u'是':
                         dat = 1
                     elif dat == u'否':
                         dat = 0
                     layer.changeAttributeValue(i, idx, int(dat))
+
+                elif fieldType == 'Integer64' and dat:
+                    if dat == u'是':
+                        dat = long(1)
+                    elif dat == u'否':
+                        dat = long(0)
+                    layer.changeAttributeValue(i, idx, int(dat))
+
                 elif fieldType == 'Real' and dat:
                     layer.changeAttributeValue(i, idx, float(dat))
-                dat = ""
 
         layer.commitChanges()
 
@@ -404,10 +410,14 @@ class meshBuilder:
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(self.mainLayer.name())
+        iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
 
+        self.dlg.tableWidget.setRowCount(layer.featureCount())
         self.dlg.tableWidget.setColumnCount(6)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'網格間距',
                                                         u'符合邊界',
@@ -466,10 +476,14 @@ class meshBuilder:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
                 item = self.dlg.tableWidget.item(i, j)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(self.pointLayer.name())
+        iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
 
+        self.dlg.tableWidget.setRowCount(layer.featureCount())
         self.dlg.tableWidget.setColumnCount(6)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'X',
                                                         u'Y',
@@ -509,6 +523,67 @@ class meshBuilder:
                                   u'輸出名': 4,
                                   u'分段點': 5}
 
+    def setTableToLine(self, layer):
+        def setTableItem(i, j, Object, Type='Object'):
+            if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+            elif Type == 'ComboBox':
+                widget = QComboBox()
+                widget.addItem(u'是')
+                widget.addItem(u'否')
+                if Object == 0:
+                    widget.setCurrentIndex(1)
+                else:
+                    widget.setCurrentIndex(0)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif type(Object) != QPyNullVariant and Type == 'Fixed':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+                item = self.dlg.tableWidget.item(i, j)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(self.lineLayer.name())
+        iface.setActiveLayer(vl[0])
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
+
+        self.dlg.tableWidget.setRowCount(layer.featureCount())
+        self.dlg.tableWidget.setColumnCount(5)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'符合邊界',
+                                                        u'邊界性質',
+                                                        u'輸出名',
+                                                        u'結構化',
+                                                        u'切分數量'])
+        counter = 0
+        for feature in layer.getFeatures():
+            setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox')
+            setTableItem(counter, 1, feature['Physical'])
+            setTableItem(counter, 2, feature['geoName'])
+            setTableItem(counter, 3, feature['Transfinit'], Type='ComboBox')
+            setTableItem(counter, 4, feature['Cells'])
+            counter = counter + 1
+
+        fieldDict = {0: 'ForceBound',
+                     1: 'Physical',
+                     2: 'geoName',
+                     3: 'Transfinit',
+                     4: 'Cells'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = layer
+        self.dlg.attrSelectBox.addItems([u'符合邊界',
+                                         u'邊界性質',
+                                         u'輸出名',
+                                         u'結構化',
+                                         u'切分數量'])
+        self.tableAttrNameDict = {u'符合邊界': 0,
+                                  u'邊界性質': 1,
+                                  u'輸出名': 2,
+                                  u'結構化': 3,
+                                  u'切分數量': 4}
+
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
 
@@ -516,20 +591,20 @@ class meshBuilder:
             self.setTableToPoly(layer)
         elif Type == 'point':
             self.setTableToPoint(layer)
+        elif Type == 'line':
+            self.setTableToLine(layer)
 
-    def switchAttr(self, Type, setComplete=False):
+    def switchAttr(self, Type):
         if Type == 'poly':
             self.setTableToPoly(self.mainLayer)
-            self.dlg.pointAttrBtn.setEnabled(True)
-            if setComplete:
-                self.dlg.setCompleteBtn.setEnabled(False)
         elif Type == 'point':
             self.setTableToPoint(self.pointLayer)
-            if setComplete:
-                self.dlg.setCompleteBtn.setEnabled(False)
+        elif Type == 'line':
+            self.setTableToLine(self.lineLayer)
 
     def fillBoxFill(self):
-        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格', u'分段點']
+        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格', u'分段點',
+                       u'結構化']
         currentName = self.dlg.attrSelectBox.currentText()
         self.dlg.fillBox.clear()
         if currentName in comboxNames:
@@ -542,22 +617,32 @@ class meshBuilder:
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        vl = QgsMapLayerRegistry.instance().mapLayersByName(layer.name())
-        iface.setActiveLayer(vl[0])
+        iface.setActiveLayer(layer)
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
         self.attrTable(layer, Type='poly')
+        self.dlg.polyAttrBtn.setEnabled(True)
 
     def readPointLayer(self):
         path = self.dlg.pointIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        vl = QgsMapLayerRegistry.instance().mapLayersByName(layer.name())
-        iface.setActiveLayer(vl[0])
+        iface.setActiveLayer(layer)
 
         self.dlg.pointConfirm.setEnabled(False)
         self.pointLayer = layer
         self.attrTable(layer, Type='point')
+        self.dlg.pointAttrBtn.setEnabled(True)
+
+    def readLineLayer(self):
+        path = self.dlg.lineIndicator.text()
+        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        iface.setActiveLayer(layer)
+
+        self.dlg.lineConfirm.setEnabled(False)
+        self.lineLayer = layer
+        self.attrTable(layer, Type='line')
+        self.dlg.lineAttrBtn.setEnabled(True)
 
     def batchFill(self):
         currentAttrText = self.dlg.attrSelectBox.currentText()
@@ -584,32 +669,38 @@ class meshBuilder:
                 else:
                     item.setText("")
 
+    def processSwitch(self):
+        process = self.currentProcess
+        if process == 1:
+            self.writeTableToLayer()
+            self.step2_1()
+        elif process == 2:
+            self.writeTableToLayer()
+            self.step2_2()
+        elif process == 3:
+            self.writeTableToLayer()
+            self.lineFrameObj.frameLayer = self.lineLayer
+            self.lineFrameObj.pointFrame = self.pointLayer
+
+            lineFrame.lineCombine(self.lineFrameObj)
+            self.setTableToLine(self.lineLayer)
+        elif process == 4:
+            self.writeTableToLayer()
+
     def step2(self, source):
         # polygon layer
         self.attrTable(self.mainLayer, Type='poly')
+        self.dlg.polyAttrBtn.setEnabled(True)
 
         self.dlg.resize(self.dlg.maximumSize())
         self.dlg.polyIndicator.setText(source)
-        Caption = "請選擇一個多邊形圖層"
-        self.c_lineEdit = self.dlg.polyIndicator
-        wherePolyBtn = self.dlg.wherePolyBtn
-        wherePolyBtn.clicked.connect(lambda: self.fileBrowser(Caption,
-                                                              self.projFolder))
         # load polygon layer if button pressed
-        self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
 
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
-        self.dlg.setCompleteBtn.clicked.connect(self.step2_1)
-        """
-        self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
-        self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
-        self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
-        self.dlg.batchFillBtn.clicked.connect(self.batchFill)
-        """
+        self.currentProcess = 1
 
     def step2_1(self):
-        self.writeTableToLayer()
 
         self.orgPoint, self.orgLine = newPointLayer.pointAndLine(self.mainLayer,
                                                                  self.projFolder
@@ -621,7 +712,7 @@ class meshBuilder:
         pointFrameObj.openLayer()
         pointFrameObj.showLayer()
         self.pointLayer = pointFrameObj.frameLayer
-        self.pointLayer.setCrs(self.systemCRS)
+
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.pointLayer.name())
         iface.setActiveLayer(vl[0])
@@ -630,18 +721,57 @@ class meshBuilder:
 
         self.attrTable(self.pointLayer, Type='point')
         self.dlg.pointIndicator.setText(path)
-        wherePointBtn = self.dlg.wherePointBtn
-        Caption = "請選擇一個點圖層"
-        wherePointBtn.clicked.connect(lambda: self.fileBrowser(Caption,
-                                                               self.projFolder))
-        self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
-        self.dlg.polyAttrBtn.setEnabled(True)
-        self.dlg.polyAttrBtn.clicked.connect(lambda: self.switchAttr('poly',
-                                                                     True))
-        self.dlg.pointAttrBtn.clicked.connect(lambda: self.switchAttr('point',
-                                                                      False))
+        self.dlg.pointAttrBtn.setEnabled(True)
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
+        self.currentProcess = 2
+
+    def step2_2(self):
+        lineFrameObj = lineFrame.lineFrame(self.projFolder,
+                                           orgLinesLayer=self.orgLine,
+                                           pointLayer=self.pointLayer,
+                                           CRS=self.systemCRS)
+        lineFrameObj.copyLines()
+        lineFrameObj.openLayer()
+        lineFrameObj.showLayer()
+
+        self.lineLayer = lineFrameObj.frameLayer
+        self.lineFrameObj = lineFrameObj
+
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(self.lineLayer.name())
+        iface.setActiveLayer(vl[0])
+        path = self.projFolder + '\\' + 'MainLines_frame.shp'
+
+        self.attrTable(self.lineLayer, Type='line')
+        self.dlg.lineIndicator.setText(path)
+
+        self.dlg.lineAttrBtn.setEnabled(True)
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
+
+        self.currentProcess = 3
+        self.dlg.setCompleteBtn.setText(u'合併線段')
+
+        self.step2_3()
+
+    def step2_3(self):
+        self.dlg.setCompleteBtn.setText(u'圖層設定完成')
+        self.currentProcess = 4
+        self.dlg.nextBtn2.clicked.connect(self.step3)
+
+    def step3(self):
+        self.dlg.tabWidget.setTabEnabled(2, True)
+        self.dlg.tabWidget.setCurrentIndex(2)
+
+    def resizeDialog(self):
+        currentTab = self.dlg.tabWidget.currentIndex()
+        if currentTab == 0 or currentTab == 2:
+            minSize = self.dlg.minimumSize()
+            self.dlg.resize(minSize)
+        elif currentTab == 1:
+            maxSize = self.dlg.maximumSize()
+            self.dlg.resize(maxSize)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -649,18 +779,48 @@ class meshBuilder:
         self.dlg.tabWidget.setTabEnabled(1, False)
         self.dlg.tabWidget.setTabEnabled(2, False)
 
+        self.dlg.tabWidget.currentChanged.connect(self.resizeDialog)
+
         # show the dialog
         self.dlg.show()
         self.dlg.resize(self.dlg.minimumSize())
         self.step1()
 
-        # layer = iface.activeLayer()
-        # layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
         self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
         self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
         self.dlg.batchFillBtn.clicked.connect(self.batchFill)
         self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
+        self.dlg.setCompleteBtn.clicked.connect(self.processSwitch)
+
+        self.dlg.polyAttrBtn.clicked.connect(lambda: self.switchAttr('poly'))
+        self.dlg.pointAttrBtn.clicked.connect(lambda: self.switchAttr('point'))
+        self.dlg.lineAttrBtn.clicked.connect(lambda: self.switchAttr('line'))
+        self.dlg.polyAttrBtn.setEnabled(False)
+        self.dlg.pointAttrBtn.setEnabled(False)
+        self.dlg.lineAttrBtn.setEnabled(False)
+
+        Caption = u"請選擇一個多邊形圖層"
+        lineEdit = self.dlg.polyIndicator
+        wherePolyBtn = self.dlg.wherePolyBtn
+        wherePolyBtn.clicked.connect(lambda: self.fileBrowser(Caption,
+                                                              self.projFolder,
+                                                              lineEdit=lineEdit))
+        p_Caption = u"請選擇一個點圖層"
+        wherePointBtn = self.dlg.wherePointBtn
+        p_lineEdit = self.dlg.pointIndicator
+        wherePointBtn.clicked.connect(lambda: self.fileBrowser(p_Caption,
+                                                               self.projFolder,
+                                                               lineEdit=p_lineEdit))
+        l_Caption = u"請選擇一個線圖層"
+        whereLineBtn = self.dlg.whereLineBtn
+        l_lineEdit = self.dlg.lineIndicator
+        whereLineBtn.clicked.connect(lambda: self.fileBrowser(l_Caption,
+                                                              self.projFolder,
+                                                              lineEdit=l_lineEdit))
+        self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
+        self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
+        self.dlg.lineConfirm.clicked.connect(self.readLineLayer)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed

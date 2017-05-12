@@ -53,7 +53,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_step1">
        <attribute name="title">
@@ -146,7 +146,7 @@
          <string>選擇內部邊界圖層</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="NextBtn1">
+       <widget class="QPushButton" name="nextBtn1">
         <property name="geometry">
          <rect>
           <x>190</x>
@@ -373,7 +373,7 @@
          <string>...</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_7">
+       <widget class="QPushButton" name="lineConfirm">
         <property name="geometry">
          <rect>
           <x>110</x>
@@ -386,7 +386,7 @@
          <string>確定</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="nextBtn2">
         <property name="geometry">
          <rect>
           <x>190</x>
