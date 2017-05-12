@@ -21,7 +21,8 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from PyQt4.QtCore import QFileInfo, QPyNullVariant, QVariant
+from PyQt4.QtCore import QFileInfo, QPyNullVariant
+from PyQt4.QtCore import QProcess, QProcessEnvironment
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
@@ -34,6 +35,7 @@ import os.path
 import newPointLayer
 import lineFrame
 from innerLayers import innerLayersExport
+from exportToGeo import genGeo
 import os
 
 
@@ -205,6 +207,16 @@ class meshBuilder:
         if fileName and lineEdit:
             lineEdit.setText(fileName)
 
+    def saveFileBrowser(self, Caption, presetFolder, lineEdit="",
+                        presetType=".shp"):
+        if not presetFolder:
+            presetFolder = self.projFolder
+
+        fileName = QFileDialog.getSaveFileName(self.dlg, Caption,
+                                               presetFolder, "*" + presetType)
+        if fileName and lineEdit:
+            lineEdit.setText(fileName)
+
     def cleanProjFolder(self, projFolder):
         files = os.listdir(projFolder)
         for name in files:
@@ -267,17 +279,6 @@ class meshBuilder:
         innerLayers = innerLayersExport(projFolder, newMainLayer)
         innerLayers.innerLayers = innerLayersList
         innerLayers.copyLayers()
-
-        """
-        pointFrame = lineFrame.pointFrame(projFolder, orgPointsLayer=pointLayer)
-        pointFrame.copyPoint()
-        pointFrame.openLayer()
-        self.pointFrame = pointFrame
-
-        lineFrameObj = lineFrame.lineFrame(projFolder, orgLinesLayer=lineLayer)
-        lineFrameObj.copyLines()
-        lineFrameObj.openLayer()
-        self.lineFrameObj = lineFrameObj"""
 
         self.dlg.tabWidget.setTabEnabled(1, True)
         self.dlg.tabWidget.setCurrentIndex(1)
@@ -370,7 +371,11 @@ class meshBuilder:
 
                 fieldName = fieldDict[j]
                 idx = layerFields.fieldNameIndex(fieldName)
-
+                #
+                # From the data type of layer attribute table, change the
+                # text in data table to the same type of attribute field,
+                # then fill in the attribute table.
+                #
                 fieldType = layerFields[idx].typeName()
                 if fieldType == 'String':
                     layer.changeAttributeValue(i, idx, dat)
@@ -603,13 +608,17 @@ class meshBuilder:
             self.setTableToLine(self.lineLayer)
 
     def fillBoxFill(self):
-        comboxNames = [u'符合邊界', u'合併網格', u'結構化網格', u'分段點',
+        comboxNames = [u'符合邊界',
+                       u'合併網格',
+                       u'結構化網格',
+                       u'分段點',
                        u'結構化']
         currentName = self.dlg.attrSelectBox.currentText()
         self.dlg.fillBox.clear()
         if currentName in comboxNames:
             self.dlg.fillBox.setEditable(False)
-            self.dlg.fillBox.addItems([u'是', u'否'])
+            self.dlg.fillBox.addItems([u'是',
+                                       u'否'])
         else:
             self.dlg.fillBox.setEditable(True)
             self.dlg.fillBox.clear()
@@ -684,6 +693,7 @@ class meshBuilder:
 
             lineFrame.lineCombine(self.lineFrameObj)
             self.setTableToLine(self.lineLayer)
+            self.step2_3()
         elif process == 4:
             self.writeTableToLayer()
 
@@ -701,7 +711,6 @@ class meshBuilder:
         self.currentProcess = 1
 
     def step2_1(self):
-
         self.orgPoint, self.orgLine = newPointLayer.pointAndLine(self.mainLayer,
                                                                  self.projFolder
                                                                  )
@@ -753,7 +762,6 @@ class meshBuilder:
         self.currentProcess = 3
         self.dlg.setCompleteBtn.setText(u'合併線段')
 
-        self.step2_3()
 
     def step2_3(self):
         self.dlg.setCompleteBtn.setText(u'圖層設定完成')
@@ -772,6 +780,21 @@ class meshBuilder:
         elif currentTab == 1:
             maxSize = self.dlg.maximumSize()
             self.dlg.resize(maxSize)
+
+    def runGMSH(self):
+        GMSH = self.dlg.gmshExeEdit.text()
+        geoPath = self.dlg.geoEdit.text()
+        mshPath = self.dlg.mshEdit.text()
+
+        loopDict = lineFrame.lineToLoop(self.lineFrameObj, self.mainLayer)
+        genGeo(self.projFolder, self.mainLayer, self.pointLayer,
+               self.lineFrameObj, loopDict, geoPath)
+
+        env = QProcessEnvironment.systemEnvironment()
+        env.remove("TERM")
+        P = QProcess()
+        P.setProcessEnvironment(env)
+        P.start(GMSH + " " + geoPath + " -2 -o " + mshPath)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -799,6 +822,7 @@ class meshBuilder:
         self.dlg.polyAttrBtn.setEnabled(False)
         self.dlg.pointAttrBtn.setEnabled(False)
         self.dlg.lineAttrBtn.setEnabled(False)
+        self.dlg.gmshExeBtn.clicked.connect(self.runGMSH)
 
         Caption = u"請選擇一個多邊形圖層"
         lineEdit = self.dlg.polyIndicator
@@ -818,6 +842,27 @@ class meshBuilder:
         whereLineBtn.clicked.connect(lambda: self.fileBrowser(l_Caption,
                                                               self.projFolder,
                                                               lineEdit=l_lineEdit))
+        g_Caption = u'請選擇GMSH.exe的檔案位置'
+        whereGMSH = self.dlg.whereGMSH
+        gmshExeEdit = self.dlg.gmshExeEdit
+        whereGMSH.clicked.connect(lambda: self.fileBrowser(g_Caption, "c:\\",
+                                                           lineEdit=gmshExeEdit,
+                                                           presetType='.exe'))
+        geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
+        whereGeo = self.dlg.whereGeo
+        geoEdit = self.dlg.geoEdit
+        whereGeo.clicked.connect(lambda: self.saveFileBrowser(geoCaption,
+                                                              self.projFolder,
+                                                              lineEdit=geoEdit,
+                                                              presetType='.geo'))
+        mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
+        mshEdit = self.dlg.mshEdit
+        whereMsh = self.dlg.whereMsh
+        whereMsh.clicked.connect(lambda: self.saveFileBrowser(mshCaption,
+                                                              self.projFolder,
+                                                              lineEdit=mshEdit,
+                                                              presetType='.msh'))
+
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
         self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
         self.dlg.lineConfirm.clicked.connect(self.readLineLayer)

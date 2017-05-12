@@ -426,7 +426,6 @@ def lineToLoop(lineFrameObj, polygonLayer):
 
         LoopName = 'ILL+' + str(counter-1)
         counter = counter + 1
-        print lineList
         LoopDict.update({feature['geoName']:
                          [{LoopName: featureLoop(lineList)}]})
 
