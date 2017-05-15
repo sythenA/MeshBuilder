@@ -781,6 +781,11 @@ class meshBuilder:
             maxSize = self.dlg.maximumSize()
             self.dlg.resize(maxSize)
 
+    def showMsg(self, P):
+        while P.canReadLine():
+            line = str(P.readLine())[:-1]
+            self.dlg.textBrowser.append(line)
+
     def runGMSH(self):
         GMSH = self.dlg.gmshExeEdit.text()
         geoPath = self.dlg.geoEdit.text()
@@ -790,11 +795,18 @@ class meshBuilder:
         genGeo(self.projFolder, self.mainLayer, self.pointLayer,
                self.lineFrameObj, loopDict, geoPath)
 
+        P = QProcess()
+        P.setProcessChannelMode(QProcess.MergedChannels)
+        P.readyReadStandardOutput.connect(lambda: self.showMsg(P))
+
         env = QProcessEnvironment.systemEnvironment()
         env.remove("TERM")
-        P = QProcess()
         P.setProcessEnvironment(env)
-        P.start(GMSH + " " + geoPath + " -2 -o " + mshPath)
+        command = GMSH + " " + geoPath + " -2 -o " + mshPath
+        command = command.replace('/', '\\')
+        P.start(command)
+
+        self.dlg.textBrowser.setText(command)
 
     def run(self):
         """Run method that performs all the real work"""
