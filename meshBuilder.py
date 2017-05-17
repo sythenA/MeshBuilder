@@ -21,12 +21,12 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from PyQt4.QtCore import QFileInfo, QPyNullVariant, QDir, QFile
+from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
-from qgis.core import QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
@@ -817,7 +817,7 @@ class meshBuilder:
             systemCRS = self.systemCRS
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
-        loadMesh(meshFile, systemCRS, outDir, self.dlg.textBrowser_2)
+        loadMesh(meshFile, systemCRS, outDir)
 
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
@@ -928,8 +928,9 @@ class meshBuilder:
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 
 
-def loadMesh(filename, crs, outDir, textBrowser):
+def loadMesh(filename, crs, outDir):
     meshfile = open(filename, 'r')
+    meshName = filename.split('/')[-1]
     mesh = meshfile.readlines()
 
     vertices = dict()
@@ -943,8 +944,6 @@ def loadMesh(filename, crs, outDir, textBrowser):
     fields.append(QgsField("id", QVariant.Int))
     for l in mesh:
         w = l.split()
-
-        textBrowser.append(l)
 
         if w[0] == "$PhysicalNames":
             mode = 1
@@ -983,7 +982,6 @@ def loadMesh(filename, crs, outDir, textBrowser):
             tagsNum = int(w[2])
             tagArgs = w[3:3+tagsNum]
             NodesNum = mshTypeRef[geoType]
-            textBrowser.append(physicalNames[int(tagArgs[0])][1])
             ElementNodes = w[3+tagsNum:3+tagsNum+NodesNum]
 
             writer = physicalWriter[int(tagArgs[0])]
@@ -1015,5 +1013,14 @@ def loadMesh(filename, crs, outDir, textBrowser):
             continue
 
     for writer in physicalWriter.values():
-        textBrowser.append(writer.path)
         del writer
+
+    loadMeshLayers(layerPath, meshName)
+
+
+def loadMeshLayers(layerPath, meshName):
+    group = QgsProject.instance().layerTreeRoot().addGroup(meshName)
+    for path in layerPath.values():
+        layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+        group.addLayer(layer)
