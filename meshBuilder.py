@@ -21,10 +21,12 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from PyQt4.QtCore import QFileInfo, QPyNullVariant
-from PyQt4.QtCore import QProcess, QProcessEnvironment
+from PyQt4.QtCore import QFileInfo, QPyNullVariant, QDir, QFile
+from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
-from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
+from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
+from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
+from qgis.core import QgsCoordinateReferenceSystem
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
@@ -76,13 +78,6 @@ class meshBuilder:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'meshBuilder')
         self.toolbar.setObjectName(u'meshBuilder')
-
-        self.dlg.lineEdit.clear()
-        self.dlg.FileBrowseBtn.clicked.connect(self.folderBrowser)
-
-        self.dlg.polyIndicator.clear()
-        self.dlg.pointIndicator.clear()
-        self.dlg.lineIndicator.clear()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -191,11 +186,13 @@ class meshBuilder:
         # remove the toolbar
         del self.toolbar
 
-    def folderBrowser(self):
+    def folderBrowser(self, caption="", Dir=os.getcwd(),
+                      lineEdit=""):
         folderName = QFileDialog.getExistingDirectory(self.dlg,
-                                                      "Select Project Folder")
-        if folderName:
-            self.dlg.lineEdit.setText(folderName)
+                                                      caption)
+        if lineEdit:
+            if folderName:
+                lineEdit.setText(folderName)
 
     def fileBrowser(self, Caption, presetFolder, lineEdit="",
                     presetType=".shp"):
@@ -204,8 +201,9 @@ class meshBuilder:
 
         fileName = QFileDialog.getOpenFileName(self.dlg, Caption,
                                                presetFolder, "*" + presetType)
-        if fileName and lineEdit:
-            lineEdit.setText(fileName)
+        if lineEdit:
+            if fileName:
+                lineEdit.setText(fileName)
 
     def saveFileBrowser(self, Caption, presetFolder, lineEdit="",
                         presetType=".shp"):
@@ -481,6 +479,8 @@ class meshBuilder:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
                 item = self.dlg.tableWidget.item(i, j)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            else:
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.pointLayer.name())
         iface.setActiveLayer(vl[0])
@@ -547,6 +547,8 @@ class meshBuilder:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
                 item = self.dlg.tableWidget.item(i, j)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            else:
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
         iface.setActiveLayer(vl[0])
@@ -762,7 +764,6 @@ class meshBuilder:
         self.currentProcess = 3
         self.dlg.setCompleteBtn.setText(u'合併線段')
 
-
     def step2_3(self):
         self.dlg.setCompleteBtn.setText(u'圖層設定完成')
         self.currentProcess = 4
@@ -808,8 +809,30 @@ class meshBuilder:
 
         self.dlg.textBrowser.setText(command)
 
+    def loadGeneratedMesh(self):
+        refId = QgsCoordinateReferenceSystem.PostgisCrsId
+        if not self.systemCRS:
+            systemCRS = QgsCoordinateReferenceSystem(3826, refId)
+        else:
+            systemCRS = self.systemCRS
+        meshFile = self.dlg.whereMshEdit.text()
+        outDir = self.dlg.whereMshLayerEdit.text()
+        loadMesh(meshFile, systemCRS, outDir, self.dlg.textBrowser_2)
+
     def run(self):
+        refId = QgsCoordinateReferenceSystem.PostgisCrsId
+        self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
+        self.dlg.lineEdit.clear()
+        caption = u"請選擇一個專案資料夾"
+        self.dlg.FileBrowseBtn.clicked.connect(lambda: self.folderBrowser(caption,
+                                                                          lineEdit=self.dlg.lineEdit))
+
+        self.dlg.polyIndicator.clear()
+        self.dlg.pointIndicator.clear()
+        self.dlg.lineIndicator.clear()
+
         """Run method that performs all the real work"""
+        self.dlg.tabWidget.setCurrentIndex(0)
         # Set step2, step3 tab temporary unaccessible
         self.dlg.tabWidget.setTabEnabled(1, False)
         self.dlg.tabWidget.setTabEnabled(2, False)
@@ -875,9 +898,24 @@ class meshBuilder:
                                                               lineEdit=mshEdit,
                                                               presetType='.msh'))
 
+        loadMshCaption = u'請選擇一個.msh檔案'
+        whereMshEdit = self.dlg.whereMshEdit
+        whereMshBtn = self.dlg.whereMshBtn
+        whereMshBtn.clicked.connect(lambda: self.fileBrowser(loadMshCaption,
+                                                             os.getcwd(),
+                                                             lineEdit=whereMshEdit,
+                                                             presetType='.msh'))
+        MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
+        whereMshLayerEdit = self.dlg.whereMshLayerEdit
+        whereMshLayerBtn = self.dlg.whereMshLayerBtn
+        whereMshLayerBtn.clicked.connect(lambda: self.folderBrowser(MshLayerCaption,
+                                                                    os.getcwd(),
+                                                                    whereMshLayerEdit))
+
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
         self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
         self.dlg.lineConfirm.clicked.connect(self.readLineLayer)
+        self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -885,3 +923,97 @@ class meshBuilder:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+
+mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
+
+
+def loadMesh(filename, crs, outDir, textBrowser):
+    meshfile = open(filename, 'r')
+    mesh = meshfile.readlines()
+
+    vertices = dict()
+    physicalNames = dict()
+    layerPath = dict()
+    physicalWriter = dict()
+    mode = 0
+    endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
+
+    fields = QgsFields()
+    fields.append(QgsField("id", QVariant.Int))
+    for l in mesh:
+        w = l.split()
+
+        textBrowser.append(l)
+
+        if w[0] == "$PhysicalNames":
+            mode = 1
+        elif w[0] == "$Nodes":
+            mode = 2
+        elif w[0] == "$Elements":
+            mode = 3
+        elif w[0] in endStatements:
+            continue
+
+        if mode == 1 and len(w) > 1:
+            dim, tag, name = int(w[0]), int(w[1]), w[2]
+            name = name[1:-1]
+            physicalNames.update({tag: [int(dim), name]})
+            path = outDir + "\\" + name + ".shp"
+
+            # Create QGIS layers
+            if dim == 0:
+                layerType = QGis.WKBPoint
+            elif dim == 1:
+                layerType = QGis.WKBLineString
+            elif dim >= 2:
+                layerType = QGis.WKBPolygon
+            writer = QgsVectorFileWriter(path, "UTF-8", fields, layerType,
+                                         crs, "ESRI Shapefile")
+            writer.path = path
+            physicalWriter.update({tag: writer})
+            layerPath.update({tag: path})
+
+        elif mode == 2 and len(w) > 1:
+            nid, x, y, z = w[0], w[1], w[2], w[3]
+            vertices.update({int(nid): (float(x), float(y), float(z))})
+        elif mode == 3 and len(w) > 1:
+            fid = int(w[0])
+            geoType = int(w[1])
+            tagsNum = int(w[2])
+            tagArgs = w[3:3+tagsNum]
+            NodesNum = mshTypeRef[geoType]
+            textBrowser.append(physicalNames[int(tagArgs[0])][1])
+            ElementNodes = w[3+tagsNum:3+tagsNum+NodesNum]
+
+            writer = physicalWriter[int(tagArgs[0])]
+            feature = QgsFeature()
+            if NodesNum == 1:
+                point = vertices[ElementNodes[0]]
+                feature.setGeometry(QgsGeometry().fromPoint(point))
+            elif NodesNum == 2:
+                x1, y1, z1 = vertices[int(ElementNodes[0])]
+                x2, y2, z2 = vertices[int(ElementNodes[1])]
+                geoString = "LINESTRING ("
+                geoString = geoString + str(x1) + " " + str(y1) + ","
+                geoString = geoString + str(x2) + " " + str(y2)
+                geoString = geoString + ")"
+                feature.setGeometry(QgsGeometry().fromWkt(geoString))
+            elif NodesNum > 2:
+                geoString = "POLYGON (("
+                for pid in ElementNodes:
+                    x, y, z = vertices[int(pid)]
+                    geoString = geoString + str(x) + " " + str(y) + ","
+                x, y, z = vertices[int(ElementNodes[0])]
+                geoString = geoString + str(x) + " " + str(y) + "))"
+                feature.setGeometry(QgsGeometry().fromWkt(geoString))
+            feature.setAttributes([int(fid)])
+            writer.addFeature(feature)
+        elif mode == 0:
+            continue
+        elif len(w) == 1:
+            continue
+
+    for writer in physicalWriter.values():
+        textBrowser.append(writer.path)
+        del writer

@@ -202,7 +202,21 @@ class fileWriter:
             f.write(self.TransSurface)
         return f
 
+    def removeRepetitive(self):
+        mainPoints = self.mainPointList
+        mainPoints = set(mainPoints)
+        self.mainPointList = list(mainPoints)
+        self.mainPointList = sorted(self.mainPointList)
+
+        mainLines = self.mainLineList
+        mainLines = set(mainLines)
+        self.mainLineList = list(mainLines)
+        self.mainLineList = sorted(self.mainLineList)
+
     def write(self):
+
+        self.removeRepetitive()
+
         f = self.f
         for line in self.mainPointList:
             f.write(line)
@@ -535,12 +549,20 @@ class lineWriter:
 
         for feature in lineLayer.getFeatures():
             geo = feature.geometry().asPolyline()
-            geoName = feature[l_Name_idx]
-            line = "Line(" + geoName + ") = {"
-            for point in geo:
-                line = line + pointDict[point]['geoName'] + ", "
-            line = line[:-2] + "};\n"
-            lines_List.append(line)
+            if geo:
+                geoName = feature[l_Name_idx]
+                line = "Line(" + geoName + ") = {"
+                for point in geo:
+                    line = line + pointDict[point]['geoName'] + ", "
+                line = line[:-2] + "};\n"
+                lines_List.append(line)
+            else:
+                """
+                lineLayer.startEditing()
+                empty_id = feature.id()
+                lineLayer.dataProvider().deleteFeatures([empty_id])
+                lineLayer.commitChanges()"""
+                pass
 
         for feature in lineLayer.getFeatures():
             if not type(feature[l_Phx_idx]) == QPyNullVariant:
@@ -631,24 +653,27 @@ def genGeo(projFolder, polyLayer, pointFrameLayer, lineFrameObj, loopList,
     innerList.physicalSurfaces = Surfaces.Phx_list
     innerList.writePolygonLoops(Surfaces.loop_num)
 
-    f = fileWriter(f)
-    f.totalSurface = polyLayer.featureCount()
+    fw = fileWriter(f)
+    fw.totalSurface = polyLayer.featureCount()
 
-    f.loopDict = innerList.loopDict
-    f.mainPointList = point_List
-    f.mainLineList = lines_List
-    f.surfaceSet = Surfaces.surfaceSet
-    f.innerPointDict = innerList.innerPointDict
-    f.innerLineDict = innerList.innerLineDict
-    f.physicalPoints = innerList.p_Phx_list
-    f.physicalLines = innerList.line_Phx_list
-    f.physicalSurfaces = innerList.physicalSurfaces
-    f.innerSurfaceList = innerList.innerPlane_lines
-    f.innerSurface_Phx = innerList.surface_phx
-    f.innerPointLayer = innerList.innerPointLayer
-    f.innerLineLayer = innerList.innerLineLayer
-    f.recombine = innerList.recombine
-    f.innerPlane_recomb = innerList.innerPlane_recomb
-    f.TransLineList = lines.TransLines
-    f.TransSurface = Surfaces.Transfinite
-    f.write()
+    fw.loopDict = innerList.loopDict
+    fw.mainPointList = point_List
+    fw.mainLineList = lines_List
+    fw.surfaceSet = Surfaces.surfaceSet
+    fw.innerPointDict = innerList.innerPointDict
+    fw.innerLineDict = innerList.innerLineDict
+    fw.physicalPoints = innerList.p_Phx_list
+    fw.physicalLines = innerList.line_Phx_list
+    fw.physicalSurfaces = innerList.physicalSurfaces
+    fw.innerSurfaceList = innerList.innerPlane_lines
+    fw.innerSurface_Phx = innerList.surface_phx
+    fw.innerPointLayer = innerList.innerPointLayer
+    fw.innerLineLayer = innerList.innerLineLayer
+    fw.recombine = innerList.recombine
+    fw.innerPlane_recomb = innerList.innerPlane_recomb
+    fw.TransLineList = lines.TransLines
+    fw.TransSurface = Surfaces.Transfinite
+    fw.write()
+
+    f.close()
+    del fw

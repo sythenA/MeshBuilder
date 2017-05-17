@@ -227,6 +227,39 @@ def pointRef(pointFrame):
     return frameRef
 
 
+def lineInverse(lineGeo):
+    InverseGeo = list()
+    for i in range(0, len(lineGeo)):
+        InverseGeo.append(lineGeo[len(lineGeo)-1-i])
+    return InverseGeo
+
+
+def multiToPoly(lineFrameLayer, pointDict):
+    for feature in lineFrameLayer.getFeatures():
+        geo = feature.geometry().asPolyline()
+        multiGeo = feature.geometry().asMultiPolyline()
+        if multiGeo and not geo:
+            lineFrameLayer.startEditing()
+            feat_id = feature.id()
+            newGeo = list()
+            firstPoint = multiGeo[0][0]
+            newGeo.append(firstPoint)
+
+            for i in range(1, len(multiGeo)):
+                name1 = pointDict[multiGeo[i][0]]['geoName']
+                name2 = pointDict[multiGeo[i-1][-1]]['geoName']
+                if name1 != name2:
+                    multiGeo[i] = lineInverse(multiGeo[i])
+
+            for i in range(0, len(multiGeo)):
+                for j in range(1, len(multiGeo[i])):
+                    newGeo.append(multiGeo[i][j])
+
+            lineFrameLayer.changeGeometry(feat_id,
+                                          QgsGeometry().fromPolyline(newGeo))
+            lineFrameLayer.commitChanges()
+
+
 def lineRef(lineFrame, pointDict):
     frameRef = lineRefDict()
     for feature in lineFrame.getFeatures():
@@ -403,6 +436,7 @@ def lineCombine(lineFrameObj):
 def lineToLoop(lineFrameObj, polygonLayer):
     lineFrameLayer = lineFrameObj.frameLayer
     pointDict = lineFrameObj.pointDict
+    multiToPoly(lineFrameLayer, pointDict)
     lineDict = lineRef(lineFrameObj.frameLayer, pointDict)
 
     LoopDict = dict()
@@ -412,17 +446,26 @@ def lineToLoop(lineFrameObj, polygonLayer):
 
         lineList = list()
         for lineFeat in lineFrameLayer.getFeatures():
-            a = lineFeat.geometry().within(boundary)
-            b = boundary.overlaps(lineFeat.geometry())
-            lineIntersect = lineFeat.geometry().intersection(boundary)
-            if a or b:
-                key = list()
-                for point in lineFeat.geometry().asPolyline():
-                    key.append(pointDict[point]['geoName'])
-                key = tuple(key)
+            geo = lineFeat.geometry().asPolyline()
+            if geo:
+                a = lineFeat.geometry().within(boundary)
+                b = boundary.overlaps(lineFeat.geometry())
+                lineIntersect = lineFeat.geometry().intersection(boundary)
+                if a or b:
+                    key = list()
+                    for point in lineFeat.geometry().asPolyline():
+                        key.append(pointDict[point]['geoName'])
+                    key = tuple(key)
 
-                lineName = lineDict[key]['geoName']
-                lineList.append((key[0], key[-1], lineName))
+                    lineName = lineDict[key]['geoName']
+                    lineList.append((key[0], key[-1], lineName))
+            else:
+                pass
+                """
+                lineFrameLayer.startEditing()
+                empty_id = lineFeat.id()
+                lineFrameLayer.dataProvider().deleteFeatures([empty_id])
+                lineFrameLayer.commitChanges()"""
 
         LoopName = 'ILL+' + str(counter-1)
         counter = counter + 1
