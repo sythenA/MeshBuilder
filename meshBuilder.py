@@ -38,6 +38,7 @@ import newPointLayer
 import lineFrame
 from innerLayers import innerLayersExport
 from exportToGeo import genGeo
+from shutil import rmtree
 import os
 
 
@@ -216,24 +217,23 @@ class meshBuilder:
             lineEdit.setText(fileName)
 
     def cleanProjFolder(self, projFolder):
+        projFolder.replace("\\", "/")
         files = os.listdir(projFolder)
         for name in files:
-            if os.path.isfile(projFolder + "\\" + name):
-                os.remove(projFolder + "\\" + name)
+            if os.path.isfile(projFolder + "/" + name):
+                os.remove(projFolder + "/" + name)
 
-        if os.path.isdir(projFolder + '\\MainLayers'):
-            files = os.listdir(projFolder + '\\MainLayers')
-            for name in files:
-                os.remove(projFolder + '\\MainLayers' + "\\" + name)
+        if os.path.isdir(projFolder + '/MainLayers'):
+            files = rmtree(projFolder + '/MainLayers')
+            os.mkdir(projFolder + '/MainLayers')
         else:
-            os.mkdir(projFolder + '\\MainLayers')
+            os.mkdir(projFolder + '/MainLayers')
 
-        if os.path.isdir(projFolder + '\\InnerLayers'):
-            files = os.listdir(projFolder + '\\InnerLayers')
-            for name in files:
-                os.remove(projFolder + '\\InnerLayers' + "\\" + name)
+        if os.path.isdir(projFolder + '/InnerLayers'):
+            files = rmtree(projFolder + '/InnerLayers')
+            os.mkdir(projFolder + '/InnerLayers')
         else:
-            os.mkdir(projFolder + '\\InnerLayers')
+            os.mkdir(projFolder + '/InnerLayers')
 
     def step1_1(self):
 
@@ -1019,6 +1019,7 @@ def loadMesh(filename, crs, outDir):
 
 
 def loadMeshLayers(layerPath, meshName):
+    meshName.replace('.msh', '')
     group = QgsProject.instance().layerTreeRoot().addGroup(meshName)
     for path in layerPath.values():
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')

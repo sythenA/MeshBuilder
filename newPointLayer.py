@@ -37,7 +37,7 @@ def copyMainLayer(layer, folder):
     fields = layer.pendingFields()
 
     layerPath = layer.dataProvider().dataSourceUri().split('|')[0]
-    baseName = layerPath.split("\\")[-1].replace('.shp', '')
+    baseName = os.path.split(layerPath)[-1].replace(".shp", '')
     path = folder + '\\' + 'MainLayers' + '\\Main_' + str(baseName) + '.shp'
     if os.path.isfile(path):
         return False
