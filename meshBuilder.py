@@ -40,6 +40,7 @@ from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
 import os
+import copy
 
 
 class meshBuilder:
@@ -932,6 +933,7 @@ def loadMesh(filename, crs, outDir):
     meshfile = open(filename, 'r')
     meshName = filename.split('/')[-1]
     mesh = meshfile.readlines()
+    SegList = lineFrame.lineRefDict()
 
     vertices = dict()
     physicalNames = dict()
@@ -942,6 +944,19 @@ def loadMesh(filename, crs, outDir):
 
     fields = QgsFields()
     fields.append(QgsField("id", QVariant.Int))
+    nodePath = outDir + "\\" + "Nodes.shp"
+    NodeFields = QgsFields()
+    NodeFields.append(QgsField("id", QVariant.Int))
+    NodeFields.append(QgsField("Z", QVariant.Double))
+    NodeWriter = QgsVectorFileWriter(nodePath, "UTF-8", NodeFields,
+                                     QGis.WKBPoint, crs, "ESRI Shapefile")
+    SegFields = QgsFields()
+    SegFields.append(QgsField("id", QVariant.Int))
+    SegFields.append(QgsField("Boundary", QVariant.String))
+    SegPath = outDir + "\\" + "Segments.shp"
+    SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
+                                    QGis.WKBLineString, crs, "ESRI Shapefile")
+
     for l in mesh:
         w = l.split()
 
@@ -976,6 +991,11 @@ def loadMesh(filename, crs, outDir):
         elif mode == 2 and len(w) > 1:
             nid, x, y, z = w[0], w[1], w[2], w[3]
             vertices.update({int(nid): (float(x), float(y), float(z))})
+            feature = QgsFeature()
+            WktString = "POINT (" + x + " " + y + ")"
+            feature.setGeometry(QgsGeometry().fromWkt(WktString))
+            feature.setAttributes([int(nid), float(z)])
+            NodeWriter.addFeature(feature)
         elif mode == 3 and len(w) > 1:
             fid = int(w[0])
             geoType = int(w[1])
@@ -999,12 +1019,28 @@ def loadMesh(filename, crs, outDir):
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
             elif NodesNum > 2:
                 geoString = "POLYGON (("
+                ElementNodes.append(ElementNodes[0])
                 for pid in ElementNodes:
                     x, y, z = vertices[int(pid)]
                     geoString = geoString + str(x) + " " + str(y) + ","
-                x, y, z = vertices[int(ElementNodes[0])]
-                geoString = geoString + str(x) + " " + str(y) + "))"
+                # x, y, z = vertices[int(ElementNodes[0])]
+                # geoString = geoString + str(x) + " " + str(y) + "))"
+                geoString = geoString[:-1] + "))"
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
+
+                for i in range(1, len(ElementNodes)):
+                    try:
+                        SegList[(int(ElementNodes[i-1]), int(ElementNodes[i]))]
+                    except(KeyError):
+                        x1, y1, z1 = vertices[int(ElementNodes[i-1])]
+                        x2, y2, z2 = vertices[int(ElementNodes[i])]
+                        WktString = ("LINESTRING (" + str(x1) + " " + str(y1) +
+                                     ",")
+                        WktString = WktString + str(x2) + " " + str(y2) + ")"
+                        SegList.update({(int(ElementNodes[i-1]),
+                                         int(ElementNodes[i])):
+                                        WktString})
+
             feature.setAttributes([int(fid)])
             writer.addFeature(feature)
         elif mode == 0:
@@ -1012,9 +1048,23 @@ def loadMesh(filename, crs, outDir):
         elif len(w) == 1:
             continue
 
+    maxTag = max(layerPath.keys())
     for writer in physicalWriter.values():
         del writer
+    del NodeWriter
 
+    layerPath.update({maxTag+1: nodePath})
+
+    id_tag = 0
+    for key in SegList.keys():
+        lineString = SegList[key]
+        feature = QgsFeature()
+        feature.setGeometry(QgsGeometry().fromWkt(lineString))
+        feature.setAttributes([id_tag])
+        SegWriter.addFeature(feature)
+    del SegWriter
+
+    layerPath.update({maxTag+2: SegPath})
     loadMeshLayers(layerPath, meshName)
 
 
