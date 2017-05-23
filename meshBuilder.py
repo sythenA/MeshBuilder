@@ -40,7 +40,6 @@ from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
 import os
-import copy
 
 
 class meshBuilder:
@@ -818,7 +817,7 @@ class meshBuilder:
             systemCRS = self.systemCRS
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
-        loadMesh(meshFile, systemCRS, outDir)
+        loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
@@ -929,7 +928,7 @@ class meshBuilder:
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 
 
-def loadMesh(filename, crs, outDir):
+def loadMesh(filename, crs, outDir, dlg):
     meshfile = open(filename, 'r')
     meshName = filename.split('/')[-1]
     mesh = meshfile.readlines()
@@ -939,6 +938,7 @@ def loadMesh(filename, crs, outDir):
     physicalNames = dict()
     layerPath = dict()
     physicalWriter = dict()
+    NodeFeature = dict()
     mode = 0
     endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
 
@@ -948,6 +948,7 @@ def loadMesh(filename, crs, outDir):
     NodeFields = QgsFields()
     NodeFields.append(QgsField("id", QVariant.Int))
     NodeFields.append(QgsField("Z", QVariant.Double))
+    NodeFields.append(QgsField("Physical", QVariant.String))
     NodeWriter = QgsVectorFileWriter(nodePath, "UTF-8", NodeFields,
                                      QGis.WKBPoint, crs, "ESRI Shapefile")
     SegFields = QgsFields()
@@ -956,7 +957,7 @@ def loadMesh(filename, crs, outDir):
     SegPath = outDir + "\\" + "Segments.shp"
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
-
+    counter = 0
     for l in mesh:
         w = l.split()
 
@@ -993,9 +994,7 @@ def loadMesh(filename, crs, outDir):
             vertices.update({int(nid): (float(x), float(y), float(z))})
             feature = QgsFeature()
             WktString = "POINT (" + x + " " + y + ")"
-            feature.setGeometry(QgsGeometry().fromWkt(WktString))
-            feature.setAttributes([int(nid), float(z)])
-            NodeWriter.addFeature(feature)
+            NodeFeature.update({int(nid): [WktString, float(z), None]})
         elif mode == 3 and len(w) > 1:
             fid = int(w[0])
             geoType = int(w[1])
@@ -1007,8 +1006,10 @@ def loadMesh(filename, crs, outDir):
             writer = physicalWriter[int(tagArgs[0])]
             feature = QgsFeature()
             if NodesNum == 1:
-                point = vertices[ElementNodes[0]]
-                feature.setGeometry(QgsGeometry().fromPoint(point))
+                point = NodeFeature[int(ElementNodes[0])][0]
+                feature.setGeometry(QgsGeometry().fromWkt(point))
+                nodeName = physicalNames[int(tagArgs[0])][1]
+                NodeFeature[int(ElementNodes[0])][2] = nodeName
             elif NodesNum == 2:
                 x1, y1, z1 = vertices[int(ElementNodes[0])]
                 x2, y2, z2 = vertices[int(ElementNodes[1])]
@@ -1017,14 +1018,23 @@ def loadMesh(filename, crs, outDir):
                 geoString = geoString + str(x2) + " " + str(y2)
                 geoString = geoString + ")"
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
+                try:
+                    SegList[int(ElementNodes[0]), int(ElementNodes[1])]
+                except(KeyError):
+                    x1, y1, z1 = vertices[int(ElementNodes[0])]
+                    x2, y2, z2 = vertices[int(ElementNodes[1])]
+                    WktString = ("LINESTRING (" + str(x1) + " " + str(y1) + ",")
+                    WktString = WktString + str(x2) + " " + str(y2) + ")"
+                    boundName = physicalNames[int(tagArgs[0])][1]
+                    SegList.update({(int(ElementNodes[0]),
+                                     int(ElementNodes[1])):
+                                    [WktString, boundName]})
             elif NodesNum > 2:
                 geoString = "POLYGON (("
                 ElementNodes.append(ElementNodes[0])
                 for pid in ElementNodes:
                     x, y, z = vertices[int(pid)]
                     geoString = geoString + str(x) + " " + str(y) + ","
-                # x, y, z = vertices[int(ElementNodes[0])]
-                # geoString = geoString + str(x) + " " + str(y) + "))"
                 geoString = geoString[:-1] + "))"
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
 
@@ -1039,7 +1049,7 @@ def loadMesh(filename, crs, outDir):
                         WktString = WktString + str(x2) + " " + str(y2) + ")"
                         SegList.update({(int(ElementNodes[i-1]),
                                          int(ElementNodes[i])):
-                                        WktString})
+                                        [WktString, None]})
 
             feature.setAttributes([int(fid)])
             writer.addFeature(feature)
@@ -1047,31 +1057,58 @@ def loadMesh(filename, crs, outDir):
             continue
         elif len(w) == 1:
             continue
+        counter = counter + 1
+        dlg.meshLoadProgress.setValue(int(float(counter)/len(mesh)*100))
 
     maxTag = max(layerPath.keys())
     for writer in physicalWriter.values():
         del writer
+
+    for key in NodeFeature.keys():
+        feature = QgsFeature()
+        geoString = NodeFeature[key][0]
+        Z = NodeFeature[key][1]
+        phys = NodeFeature[key][2]
+        feature.setGeometry(QgsGeometry().fromWkt(geoString))
+        feature.setAttributes([key, Z, phys])
+        NodeWriter.addFeature(feature)
+
     del NodeWriter
 
     layerPath.update({maxTag+1: nodePath})
+    NodeLayer = QgsVectorLayer(nodePath, QFileInfo(nodePath).baseName(), 'ogr')
 
     id_tag = 0
     for key in SegList.keys():
-        lineString = SegList[key]
+        lineString = SegList[key][0]
+        boundName = SegList[key][1]
         feature = QgsFeature()
         feature.setGeometry(QgsGeometry().fromWkt(lineString))
-        feature.setAttributes([id_tag])
+        feature.setAttributes([id_tag, boundName])
         SegWriter.addFeature(feature)
     del SegWriter
 
+    SegLayer = QgsVectorLayer(SegPath, QFileInfo(SegPath).baseName(), 'ogr')
+
     layerPath.update({maxTag+2: SegPath})
-    loadMeshLayers(layerPath, meshName)
+    dlg.meshLoadProgress.setValue(100)
+    loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer)
+
+    size = dlg.maximumSize()
+    dlg.resize(size)
+    dlg.pointAttrBtn.setDisabled(True)
+    dlg.lineAttrBtn.setDisabled(True)
+    dlg.polyAttrBtn.setDisabled(True)
+    dlg.setCompleteBtn.setDisabled(True)
 
 
-def loadMeshLayers(layerPath, meshName):
+def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
     meshName.replace('.msh', '')
     group = QgsProject.instance().layerTreeRoot().addGroup(meshName)
+
+    layers = list()
     for path in layerPath.values():
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        layers.append(layer)
         QgsMapLayerRegistry.instance().addMapLayer(layer, False)
         group.addLayer(layer)
