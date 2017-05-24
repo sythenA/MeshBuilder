@@ -26,7 +26,7 @@ from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
@@ -315,7 +315,8 @@ class meshBuilder:
         selectedFeatures = list()
         for row in c_Feature:
             selectedFeatures.append(row.row())
-        layer = iface.mapCanvas().currentLayer()
+        # layer = iface.mapCanvas().currentLayer()
+        layer = iface.activeLayer()
         layer.select(selectedFeatures)
 
     def cancelSelection(self):
@@ -591,6 +592,99 @@ class meshBuilder:
                                   u'結構化': 3,
                                   u'切分數量': 4}
 
+    def setTableToNodes(self, layer):
+        def setTableItem(i, j, Object, Type='Object'):
+            if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+            elif Type == 'ComboBox':
+                widget = QComboBox()
+                widget.addItem(u'是')
+                widget.addItem(u'否')
+                if Object == 0:
+                    widget.setCurrentIndex(1)
+                else:
+                    widget.setCurrentIndex(0)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif type(Object) != QPyNullVariant and Type == 'Fixed':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+                item = self.dlg.tableWidget.item(i, j)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            else:
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName("Nodes")
+        iface.setActiveLayer(vl[0])
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
+
+        self.dlg.tableWidget.setRowCount(layer.featureCount())
+        self.dlg.tableWidget.setColumnCount(2)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'高程',
+                                                        u'點位性質'])
+        counter = 0
+        for feature in layer.getFeatures():
+            setTableItem(counter, 0, feature['Z'])
+            setTableItem(counter, 1, feature['Physical'])
+            counter = counter + 1
+
+        fieldDict = {0: 'Z',
+                     1: 'Physical'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = layer
+        self.dlg.attrSelectBox.addItems([u'高程',
+                                         u'點位性質'])
+        self.tableAttrNameDict = {u'高程': 0,
+                                  u'點位性質': 1}
+        # layer = iface.activeLayer()
+        # layer.selectionChanged.connect(self.selectFromQgis)
+
+    def setTableToSegments(self, layer):
+        def setTableItem(i, j, Object, Type='Object'):
+            if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+            elif Type == 'ComboBox':
+                widget = QComboBox()
+                widget.addItem(u'是')
+                widget.addItem(u'否')
+                if Object == 0:
+                    widget.setCurrentIndex(1)
+                else:
+                    widget.setCurrentIndex(0)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif type(Object) != QPyNullVariant and Type == 'Fixed':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+                item = self.dlg.tableWidget.item(i, j)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            else:
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName("Segments")
+        iface.setActiveLayer(vl[0])
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
+
+        self.dlg.tableWidget.setRowCount(layer.featureCount())
+        self.dlg.tableWidget.setColumnCount(1)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'邊界性質'])
+        counter = 0
+        for feature in layer.getFeatures():
+            setTableItem(counter, 0, feature['Boundary'])
+            counter = counter + 1
+
+        fieldDict = {0: 'Boundary'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = layer
+        self.dlg.attrSelectBox.addItems([u'邊界性質'])
+        self.tableAttrNameDict = {u'邊界性質': 0}
+
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
 
@@ -608,6 +702,10 @@ class meshBuilder:
             self.setTableToPoint(self.pointLayer)
         elif Type == 'line':
             self.setTableToLine(self.lineLayer)
+        elif Type == 'Nodes':
+            self.setTableToNodes(self.nodeLayer)
+        elif Type == 'Segments':
+            self.setTableToSegments(self.segLayer)
 
     def fillBoxFill(self):
         comboxNames = [u'符合邊界',
@@ -773,6 +871,11 @@ class meshBuilder:
         self.dlg.tabWidget.setTabEnabled(2, True)
         self.dlg.tabWidget.setCurrentIndex(2)
 
+    def outputMsh(self):
+        OutDir = self.dlg.whereMshLayerEdit.text()
+        meshFile = self.dlg.whereMshEdit.text()
+        meshOutput(OutDir, meshFile, self.nodeLayer, self.segLayer)
+
     def resizeDialog(self):
         currentTab = self.dlg.tabWidget.currentIndex()
         if currentTab == 0 or currentTab == 2:
@@ -819,6 +922,15 @@ class meshBuilder:
         outDir = self.dlg.whereMshLayerEdit.text()
         loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
+        NodeLayer = QgsMapLayerRegistry.instance().mapLayersByName("Nodes")[0]
+        iface.setActiveLayer(NodeLayer)
+        self.setTableToNodes(NodeLayer)
+        self.nodeLayer = NodeLayer
+
+        SegmentLayer = QgsMapLayerRegistry.instance().mapLayersByName("Segments")[0]
+        self.segLayer = SegmentLayer
+        self.dlg.meshOutputBtn.setEnabled(True)
+
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
@@ -836,6 +948,9 @@ class meshBuilder:
         # Set step2, step3 tab temporary unaccessible
         self.dlg.tabWidget.setTabEnabled(1, False)
         self.dlg.tabWidget.setTabEnabled(2, False)
+        self.dlg.outputMeshPointsBtn.setEnabled(False)
+        self.dlg.outputSegmentsBtn.setEnabled(False)
+        self.dlg.meshOutputBtn.setEnabled(False)
 
         self.dlg.tabWidget.currentChanged.connect(self.resizeDialog)
 
@@ -916,6 +1031,9 @@ class meshBuilder:
         self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
         self.dlg.lineConfirm.clicked.connect(self.readLineLayer)
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
+        self.dlg.outputMeshPointsBtn.clicked.connect(lambda: self.switchAttr('Nodes'))
+        self.dlg.outputSegmentsBtn.clicked.connect(lambda: self.switchAttr('Segments'))
+        self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -1100,6 +1218,8 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.lineAttrBtn.setDisabled(True)
     dlg.polyAttrBtn.setDisabled(True)
     dlg.setCompleteBtn.setDisabled(True)
+    dlg.outputMeshPointsBtn.setEnabled(True)
+    dlg.outputSegmentsBtn.setEnabled(True)
 
 
 def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
@@ -1112,3 +1232,145 @@ def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
         layers.append(layer)
         QgsMapLayerRegistry.instance().addMapLayer(layer, False)
         group.addLayer(layer)
+
+
+def physicCode(physName, physicsRef):
+    for key in physicsRef.keys():
+        if physicsRef[key][0] == physName:
+            return key
+
+
+def arangeNodeLines(NodeLayer, physicsRef):
+    physicalNodes = list()
+    for feature in NodeLayer.getFeatures():
+        if feature['Physical'] != None:
+            physName = feature['Physical']
+            ref = physicCode(physName, physicsRef)
+            line = "15 2 " + str(ref) + " 0 " + str(feature.id() + 1)
+            physicalNodes.append(line)
+    return physicalNodes
+
+
+def arangeSegLines(SegLayer, physicsRef, nodeRef):
+    physicalSegs = list()
+    for feature in SegLayer.getFeatures():
+        if feature['Boundary'] != None:
+            lineGeo = feature.geometry().asPolyline()
+            id1 = nodeRef[lineGeo[0]]
+            id2 = nodeRef[lineGeo[-1]]
+            physName = feature['Boundary']
+            ref = physicCode(physName, physicsRef)
+            line = "1 2 " + str(ref) + " 0 " + str(id1) + " " + str(id2) + "\n"
+            physicalSegs.append(line)
+    return physicalSegs
+
+
+def arangeMesh(OutDir, gridNames, physicsRef, nodeRef):
+    meshLines = list()
+    for name in gridNames:
+        ref = physicCode(name, physicsRef)
+        layername = OutDir + "\\" + name + ".shp"
+        layer = QgsVectorLayer(layername, QFileInfo(layername).baseName(),
+                               'ogr')
+        for feature in layer.getFeatures():
+            geo = feature.geometry().asPolygon()
+            geo[0].pop(-1)
+            line = str(len(geo[0])-1) + " 2 " + str(ref) + " 0 "
+
+            for point in geo[0]:
+                fid = nodeRef[point]
+                line = line + str(fid) + " "
+            line = line[:-1] + "\n"
+            meshLines.append(line)
+
+    return meshLines
+
+
+def getGridNames(OutDir, NodeLayer, SegLayer):
+    gridNames = list()
+    fileNames = os.listdir(OutDir)
+    for name in fileNames:
+        if ".shp" in name:
+            name = OutDir + "\\" + name
+            layer = QgsVectorLayer(name, QFileInfo(name).baseName(), 'ogr')
+            if layer.geometryType() == QGis.Polygon:
+                gridNames.append(QFileInfo(name).baseName())
+            del layer
+
+    pointPhysics = list()
+    for feature in NodeLayer.getFeatures():
+        if feature['Physical'] != None:
+            pointPhysics.append(feature['Physical'])
+    pointPhysics = set(pointPhysics)
+
+    linePhysics = list()
+    for feature in SegLayer.getFeatures():
+        if feature['Boundary'] != None:
+            linePhysics.append(feature['Boundary'])
+    linePhysics = set(linePhysics)
+
+    return pointPhysics, linePhysics, gridNames
+
+
+def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
+    physicsRef = dict()
+    nodeRef = lineFrame.pointRefDict()
+    pointPhysics, linePhysics, gridNames = getGridNames(OutDir, NodeLayer,
+                                                        SegLayer)
+    counter = 1
+    if pointPhysics:
+        for physic in pointPhysics:
+            physicsRef.update({counter: [physic, 0]})
+            counter = counter + 1
+    if linePhysics:
+        for physic in linePhysics:
+            physicsRef.update({counter: [physic, 1]})
+            counter = counter + 1
+    if gridNames:
+        for physic in gridNames:
+            physicsRef.update({counter: [physic, 2]})
+            counter = counter + 1
+
+    f = open(meshFile, 'w')
+    f.write("$MeshFormat\n")
+    f.write("2.2 0 8\n")
+    f.write("$EndMeshFormat\n")
+    f.write("$PhysicalNames\n")
+    f.write(str(len(physicsRef.values())) + "\n")
+    for i in range(1, counter):
+        PhysName = physicsRef[i][0]  # Name of physics
+        Dim = physicsRef[i][1]  # Dimension of physics
+        f.write(str(Dim) + " " + str(i) + " " + '"' + PhysName + '"\n')
+    f.write("$EndPhysicalNames\n")
+    f.write("$Nodes\n")
+    f.write(str(NodeLayer.featureCount()) + "\n")
+    for feature in NodeLayer.getFeatures():
+        fid = feature.id() + 1
+        x = feature.geometry().asPoint().x()
+        y = feature.geometry().asPoint().y()
+        nodeRef.update({QgsPoint(x, y): fid})
+        z = feature["Z"]
+        f.write(str(fid) + " " + str(x) + " " + str(y) + " " + str(z) + '\n')
+    f.write("$EndNodes\n")
+
+    physicalNodes = arangeNodeLines(NodeLayer, physicsRef)
+    physicalSegs = arangeSegLines(SegLayer, physicsRef, nodeRef)
+    meshes = arangeMesh(OutDir, gridNames, physicsRef, nodeRef)
+    meshes.sort()
+    meshes.sort(key=len)
+
+    f.write("$Elements\n")
+    f.write(str(len(physicalNodes)+len(physicalSegs)+len(meshes)) + "\n")
+    elementCount = 1
+    for line in physicalNodes:
+        f.write(str(elementCount) + " " + line)
+        elementCount = elementCount + 1
+    for line in physicalSegs:
+        f.write(str(elementCount) + " " + line)
+        elementCount = elementCount + 1
+    for line in meshes:
+        f.write(str(elementCount) + " " + line)
+        elementCount = elementCount + 1
+
+    f.write("$EndElements")
+    f.close()
