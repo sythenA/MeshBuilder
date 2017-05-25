@@ -41,7 +41,6 @@ from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
 import os
-import subprocess
 
 
 class meshBuilder:
@@ -246,25 +245,28 @@ class meshBuilder:
         layers = self.iface.legendInterface().layers()
 
         MainName = self.dlg.comboBox.currentText()
-        for layer in layers:
-            if layer.name() == MainName:
-                mainLayerSelected = layer
-        self.systemCRS = mainLayerSelected.dataProvider().crs()
+        if MainName:
+            for layer in layers:
+                if layer.name() == MainName:
+                    mainLayerSelected = layer
+            self.systemCRS = mainLayerSelected.dataProvider().crs()
 
-        newMainLayer = newPointLayer.copyMainLayer(mainLayerSelected,
-                                                   projFolder)
-        if newMainLayer:
-            self.mainLayer = newMainLayer
+            newMainLayer = newPointLayer.copyMainLayer(mainLayerSelected,
+                                                       projFolder)
+            if newMainLayer:
+                self.mainLayer = newMainLayer
+            else:
+                self.mainLayer = mainLayerSelected
+
+            self.mainLayer.setCrs(self.systemCRS)
+            source = self.mainLayer.dataProvider().dataSourceUri().split('|')[0]
+            #
+            #  Load the assinged shape file layer into qgis, and show on the
+            #  canvas.
+            #
+            iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
         else:
-            self.mainLayer = mainLayerSelected
-
-        self.mainLayer.setCrs(self.systemCRS)
-        source = self.mainLayer.dataProvider().dataSourceUri().split('|')[0]
-        #
-        #  Load the assinged shape file layer into qgis, and show on the
-        #  canvas.
-        #
-        iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
+            source = ""
 
         innerLayersChecked = list()
         for i in range(0, self.dlg.listWidget.count()):
@@ -276,15 +278,35 @@ class meshBuilder:
             if layer.name() in innerLayersChecked:
                 innerLayersList.append(layer)
 
-        innerLayers = innerLayersExport(projFolder, newMainLayer)
-        innerLayers.innerLayers = innerLayersList
-        innerLayers.copyLayers()
+        if MainName:
+            innerLayers = innerLayersExport(projFolder, newMainLayer)
+            innerLayers.innerLayers = innerLayersList
+            innerLayers.copyLayers()
+        else:
+            if innerLayersList:
+                message = u'主圖層未指定'
+                detail = u'不能在未指定主圖層的情況下指定內邊界圖層'
+                self.criticalBox(message, detail)
 
         self.dlg.tabWidget.setTabEnabled(1, True)
         self.dlg.tabWidget.setCurrentIndex(1)
         self.step2(source)
 
     def step1(self):
+        def chkSwitch():
+            if not self.dlg.lineEdit.text():
+                message = u'未指定專案資料夾'
+                detail = u'進行下一步之前必需設定專案資料夾\n請先設定專案資料夾\
+再進行下一步'
+                self.criticalBox(message, detail)
+            elif not os.path.isdir(self.dlg.lineEdit.text()):
+                message = u'指定了錯的專案資料夾'
+                detail = u'您指定的專案資料夾不是可用的路徑\n請重新指定專案資料\
+夾'
+                self.criticalBox(message, detail)
+            else:
+                self.step1_1()
+
         layers = self.iface.legendInterface().layers()
         self.dlg.comboBox.clear()
 
@@ -303,7 +325,7 @@ class meshBuilder:
             item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
             item.setCheckState(Qt.Unchecked)
 
-        self.dlg.nextBtn1.clicked.connect(self.step1_1)
+        self.dlg.nextBtn1.clicked.connect(chkSwitch)
 
     def mainPointLayerComplete(self):
         self.lineFrameObj.readPoint(self.pointFrame)
@@ -728,6 +750,19 @@ class meshBuilder:
             self.dlg.fillBox.setEditable(True)
             self.dlg.fillBox.clear()
 
+    def readLayerChk(self, lineEdit, switch):
+        if not lineEdit.text():
+            message = u'請選擇一個圖層檔案'
+            detail = u'指指定一個有效的向量圖層檔案'
+            self.criticalBox(message, detail)
+        else:
+            if switch == 1:
+                self.readPolyLayer()
+            elif switch == 2:
+                self.readPointLayer()
+            elif switch == 3:
+                self.readLineLayer()
+
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
         layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
@@ -735,8 +770,10 @@ class meshBuilder:
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
+        self.systemCRS = self.mainLayer.dataProvider().crs()
         self.attrTable(layer, Type='poly')
         self.dlg.polyAttrBtn.setEnabled(True)
+        self.currentProcess = 1
 
     def readPointLayer(self):
         path = self.dlg.pointIndicator.text()
@@ -747,6 +784,7 @@ class meshBuilder:
         self.pointLayer = layer
         self.attrTable(layer, Type='point')
         self.dlg.pointAttrBtn.setEnabled(True)
+        self.currentProcess = 2
 
     def readLineLayer(self):
         path = self.dlg.lineIndicator.text()
@@ -757,6 +795,13 @@ class meshBuilder:
         self.lineLayer = layer
         self.attrTable(layer, Type='line')
         self.dlg.lineAttrBtn.setEnabled(True)
+
+        lineFrameObj = lineFrame.lineFrame(self.projFolder,
+                                           pointLayer=self.pointLayer,
+                                           CRS=self.systemCRS)
+        self.lineFrameObj = lineFrameObj
+        self.currentProcess = 3
+        self.dlg.setCompleteBtn.setText(u'合併線段')
 
     def batchFill(self):
         currentAttrText = self.dlg.attrSelectBox.currentText()
@@ -804,15 +849,22 @@ class meshBuilder:
 
     def step2(self, source):
         # polygon layer
-        self.attrTable(self.mainLayer, Type='poly')
-        self.dlg.polyAttrBtn.setEnabled(True)
+        try:
+            self.attrTable(self.mainLayer, Type='poly')
+            self.dlg.polyAttrBtn.setEnabled(True)
+        except(AttributeError):
+            pass
 
         self.dlg.resize(self.dlg.maximumSize())
         self.dlg.polyIndicator.setText(source)
         # load polygon layer if button pressed
 
-        layer = iface.activeLayer()
-        layer.selectionChanged.connect(self.selectFromQgis)
+        try:
+            layer = iface.activeLayer()
+            layer.selectionChanged.connect(self.selectFromQgis)
+        except(AttributeError):
+            pass
+
         self.currentProcess = 1
 
     def step2_1(self):
@@ -997,9 +1049,20 @@ class meshBuilder:
         elif val == QMessageBox.No:
             lineEdit.clear()
 
+    def criticalBox(self, title, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(message)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+
     def dirEmpty(self, directory, message, detail, lineEdit, lineEditText):
-        if os.listdir(directory):
-            self.warningBox(message, detail, lineEdit, lineEditText)
+        try:
+            if os.listdir(directory):
+                self.warningBox(message, detail, lineEdit, lineEditText)
+        except(WindowsError):
+            pass
 
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
@@ -1121,9 +1184,9 @@ class meshBuilder:
                                                                  lineEdit=where2dmEdit,
                                                                  presetType='.2dm'))
 
-        self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
-        self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
-        self.dlg.lineConfirm.clicked.connect(self.readLineLayer)
+        self.dlg.polyConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
+        self.dlg.pointConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
+        self.dlg.lineConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
         self.dlg.outputMeshPointsBtn.clicked.connect(lambda: self.switchAttr('Nodes'))
         self.dlg.outputSegmentsBtn.clicked.connect(lambda: self.switchAttr('Segments'))

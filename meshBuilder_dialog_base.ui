@@ -737,13 +737,13 @@
           </rect>
          </property>
          <property name="text">
-          <string>網格調整</string>
+          <string>手動設定邊界</string>
          </property>
         </widget>
         <widget class="QPushButton" name="outputMeshPointsBtn">
          <property name="geometry">
           <rect>
-           <x>120</x>
+           <x>130</x>
            <y>20</y>
            <width>61</width>
            <height>41</height>
@@ -756,7 +756,7 @@
         <widget class="QPushButton" name="outputSegmentsBtn">
          <property name="geometry">
           <rect>
-           <x>200</x>
+           <x>210</x>
            <y>20</y>
            <width>61</width>
            <height>41</height>
@@ -896,7 +896,7 @@
           </rect>
          </property>
          <property name="text">
-          <string>meshBuilder</string>
+          <string/>
          </property>
         </widget>
         <widget class="QPushButton" name="where2dmBtn">
