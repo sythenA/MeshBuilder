@@ -24,6 +24,7 @@ from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
+from PyQt4.QtGui import QMessageBox
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
@@ -40,6 +41,7 @@ from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
 import os
+import subprocess
 
 
 class meshBuilder:
@@ -925,14 +927,34 @@ class meshBuilder:
         outDir = self.dlg.whereMshLayerEdit.text()
         loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
-        NodeLayer = QgsMapLayerRegistry.instance().mapLayersByName("Nodes")[0]
+        Instance = QgsMapLayerRegistry.instance()
+        NodeLayer = Instance.mapLayersByName("Nodes")[0]
         iface.setActiveLayer(NodeLayer)
         self.setTableToNodes(NodeLayer)
         self.nodeLayer = NodeLayer
 
-        SegmentLayer = QgsMapLayerRegistry.instance().mapLayersByName("Segments")[0]
+        SegmentLayer = Instance.mapLayersByName("Segments")[0]
         self.segLayer = SegmentLayer
         self.dlg.meshOutputBtn.setEnabled(True)
+
+    def changeTo2dm(self):
+
+        userFolder = os.path.expanduser("~")
+        appFolder = userFolder + "\\.qgis2\\python\\plugins\\meshBuilder"
+        os.chdir(appFolder)
+
+        path2dm = self.dlg.where2dmEdit.text()
+        mshPath = self.dlg.whereMshEdit.text()
+
+        ibcName = os.path.basename(path2dm).replace('.2dm', '.ibc')
+        dirname = os.path.dirname(path2dm)
+        ibcPath = dirname + "\\" + ibcName
+        if os.path.isfile(ibcPath):
+            command = "GMSH2SRH.exe" + " " + mshPath + " " + path2dm + " " + ibcPath
+        else:
+            command = "GMSH2SRH.exe" + " " + mshPath + " " + path2dm
+
+        os.system(command)
 
     def mshInterp(self):
         def writeMsgToLabel(P):
@@ -962,13 +984,38 @@ class meshBuilder:
         P.start(command)
         P.finished.connect(onFinished)
 
+    def warningBox(self, title, message, lineEdit, lineEditText):
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText(message)
+        msg.setWindowTitle(title)
+        msg.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        val = msg.exec_()
+        if val == QMessageBox.Yes:
+            lineEdit.setText(lineEditText)
+        elif val == QMessageBox.No:
+            lineEdit.clear()
+
+    def dirEmpty(self, directory, message, detail, lineEdit, lineEditText):
+        if os.listdir(directory):
+            self.warningBox(message, detail, lineEdit, lineEditText)
+
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
-        caption = u"請選擇一個專案資料夾"
+        caption = u'請選擇一個專案資料夾'
         self.dlg.FileBrowseBtn.clicked.connect(lambda: self.folderBrowser(caption,
                                                                           lineEdit=self.dlg.lineEdit))
+        projFoldMsg = u'指定的專案資料夾不是空的'
+        projFoldDetail = u'指定的專案資料夾不是空的!\n若設定此資料夾為專案資料\
+夾，則資料夾內的資料將被清除。\n請問是否繼續？'
+        self.dlg.lineEdit.textChanged.connect(lambda: self.dirEmpty(self.dlg.lineEdit.text(),
+                                                                    projFoldMsg,
+                                                                    projFoldDetail,
+                                                                    self.dlg.lineEdit,
+                                                                    self.dlg.lineEdit.text()))
 
         self.dlg.polyIndicator.clear()
         self.dlg.pointIndicator.clear()
@@ -1048,21 +1095,21 @@ class meshBuilder:
         whereMshEdit = self.dlg.whereMshEdit
         whereMshBtn = self.dlg.whereMshBtn
         whereMshBtn.clicked.connect(lambda: self.fileBrowser(loadMshCaption,
-                                                             os.getcwd(),
+                                                             os.path.expanduser("~"),
                                                              lineEdit=whereMshEdit,
                                                              presetType='.msh'))
         MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
         whereMshLayerEdit = self.dlg.whereMshLayerEdit
         whereMshLayerBtn = self.dlg.whereMshLayerBtn
         whereMshLayerBtn.clicked.connect(lambda: self.folderBrowser(MshLayerCaption,
-                                                                    os.getcwd(),
+                                                                    os.path.expanduser("~"),
                                                                     whereMshLayerEdit))
 
         interpMshCaption = u'請選擇要內插高程的網格檔案'
         whereInterpEdit = self.dlg.whereInterpEdit
         whereInterpBtn = self.dlg.whereInterpBtn
         whereInterpBtn.clicked.connect(lambda: self.saveFileBrowser(interpMshCaption,
-                                                                    os.getcwd(),
+                                                                    os.path.expanduser("~"),
                                                                     lineEdit=whereInterpEdit,
                                                                     presetType='.msh'))
 
@@ -1070,7 +1117,7 @@ class meshBuilder:
         where2dmEdit = self.dlg.where2dmEdit
         where2dmBtn = self.dlg.where2dmBtn
         where2dmBtn.clicked.connect(lambda: self.saveFileBrowser(where2dmCaption,
-                                                                 os.getcwd(),
+                                                                 os.path.expanduser("~"),
                                                                  lineEdit=where2dmEdit,
                                                                  presetType='.2dm'))
 
@@ -1082,6 +1129,7 @@ class meshBuilder:
         self.dlg.outputSegmentsBtn.clicked.connect(lambda: self.switchAttr('Segments'))
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
+        self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed

@@ -857,13 +857,6 @@
           <string>執行</string>
          </property>
         </widget>
-        <zorder>label_18</zorder>
-        <zorder>whereInterpEdit</zorder>
-        <zorder>whereInterpBtn</zorder>
-        <zorder>label_19</zorder>
-        <zorder>interpExecBtn</zorder>
-        <zorder>whereMshEdit</zorder>
-        <zorder>label_15</zorder>
        </widget>
        <widget class="QFrame" name="frame_3">
         <property name="geometry">
@@ -901,6 +894,9 @@
            <width>231</width>
            <height>31</height>
           </rect>
+         </property>
+         <property name="text">
+          <string>meshBuilder</string>
          </property>
         </widget>
         <widget class="QPushButton" name="where2dmBtn">
