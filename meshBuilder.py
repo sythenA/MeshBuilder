@@ -639,8 +639,8 @@ class meshBuilder:
                                          u'點位性質'])
         self.tableAttrNameDict = {u'高程': 0,
                                   u'點位性質': 1}
-        # layer = iface.activeLayer()
-        # layer.selectionChanged.connect(self.selectFromQgis)
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToSegments(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
@@ -684,6 +684,9 @@ class meshBuilder:
         self.currentLayer = layer
         self.dlg.attrSelectBox.addItems([u'邊界性質'])
         self.tableAttrNameDict = {u'邊界性質': 0}
+
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -931,6 +934,34 @@ class meshBuilder:
         self.segLayer = SegmentLayer
         self.dlg.meshOutputBtn.setEnabled(True)
 
+    def mshInterp(self):
+        def writeMsgToLabel(P):
+            while P.canReadLine():
+                line = u'執行中...' + str(P.readLine())[:-1]
+                self.dlg.label_19.setText(line)
+
+        def onFinished():
+            self.dlg.label_19.setText(u'完成')
+            self.dlg.whereMshEdit.setText(Path)
+
+        Path = self.dlg.whereInterpEdit.text()
+        mshPath = self.dlg.whereMshEdit.text()
+
+        os.chdir(os.path.expanduser('~') + "\\.qgis2\\python\\plugins\\" +
+                 "meshBuilder")
+
+        P = QProcess()
+        P.setProcessChannelMode(QProcess.MergedChannels)
+        P.readyReadStandardOutput.connect(lambda: writeMsgToLabel(P))
+
+        env = QProcessEnvironment.systemEnvironment()
+        env.remove("TERM")
+        P.setProcessEnvironment(env)
+        command = "ZInterporate.exe" + " " + mshPath + " TW40M.xyz " + Path
+        command = command.replace('/', '\\')
+        P.start(command)
+        P.finished.connect(onFinished)
+
     def run(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
@@ -1027,6 +1058,22 @@ class meshBuilder:
                                                                     os.getcwd(),
                                                                     whereMshLayerEdit))
 
+        interpMshCaption = u'請選擇要內插高程的網格檔案'
+        whereInterpEdit = self.dlg.whereInterpEdit
+        whereInterpBtn = self.dlg.whereInterpBtn
+        whereInterpBtn.clicked.connect(lambda: self.saveFileBrowser(interpMshCaption,
+                                                                    os.getcwd(),
+                                                                    lineEdit=whereInterpEdit,
+                                                                    presetType='.msh'))
+
+        where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
+        where2dmEdit = self.dlg.where2dmEdit
+        where2dmBtn = self.dlg.where2dmBtn
+        where2dmBtn.clicked.connect(lambda: self.saveFileBrowser(where2dmCaption,
+                                                                 os.getcwd(),
+                                                                 lineEdit=where2dmEdit,
+                                                                 presetType='.2dm'))
+
         self.dlg.polyConfirm.clicked.connect(self.readPolyLayer)
         self.dlg.pointConfirm.clicked.connect(self.readPointLayer)
         self.dlg.lineConfirm.clicked.connect(self.readLineLayer)
@@ -1034,6 +1081,7 @@ class meshBuilder:
         self.dlg.outputMeshPointsBtn.clicked.connect(lambda: self.switchAttr('Nodes'))
         self.dlg.outputSegmentsBtn.clicked.connect(lambda: self.switchAttr('Segments'))
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
+        self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -1246,7 +1294,7 @@ def arangeNodeLines(NodeLayer, physicsRef):
         if feature['Physical'] != None:
             physName = feature['Physical']
             ref = physicCode(physName, physicsRef)
-            line = "15 2 " + str(ref) + " 0 " + str(feature.id() + 1)
+            line = "15 2 " + str(ref) + " 0 " + str(feature.id() + 1) + "\n"
             physicalNodes.append(line)
     return physicalNodes
 
