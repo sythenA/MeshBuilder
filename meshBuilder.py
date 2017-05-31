@@ -23,14 +23,15 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
-from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
-from PyQt4.QtGui import QMessageBox, QColor
+from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
+from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
+from commonDialog import criticalBox, warningBox
 import resources
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
@@ -41,6 +42,8 @@ import lineFrame
 from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
+from collections import Counter
+from copy import copy
 import os
 
 
@@ -197,53 +200,24 @@ class meshBuilder:
         # remove the toolbar
         del self.toolbar
 
-    def folderBrowser(self, caption="", Dir=os.getcwd(),
-                      lineEdit=""):
-        folderName = QFileDialog.getExistingDirectory(self.dlg,
-                                                      caption)
-        if lineEdit:
-            if folderName:
-                lineEdit.setText(folderName)
-
-    def fileBrowser(self, Caption, presetFolder, lineEdit="",
-                    presetType=".shp"):
-        if not presetFolder:
-            presetFolder = self.projFolder
-
-        fileName = QFileDialog.getOpenFileName(self.dlg, Caption,
-                                               presetFolder, "*" + presetType)
-        if lineEdit:
-            if fileName:
-                lineEdit.setText(fileName)
-
-    def saveFileBrowser(self, Caption, presetFolder, lineEdit="",
-                        presetType=".shp"):
-        if not presetFolder:
-            presetFolder = self.projFolder
-
-        fileName = QFileDialog.getSaveFileName(self.dlg, Caption,
-                                               presetFolder, "*" + presetType)
-        if fileName and lineEdit:
-            lineEdit.setText(fileName)
-
     def cleanProjFolder(self, projFolder):
         projFolder.replace("\\", "/")
         files = os.listdir(projFolder)
         for name in files:
-            if os.path.isfile(projFolder + "\\" + name):
-                os.remove(projFolder + "\\" + name)
+            if os.path.isfile(os.path.join(projFolder, name)):
+                os.remove(os.path.join(projFolder, name))
 
-        if os.path.isdir(projFolder + '\\MainLayers'):
-            files = rmtree(projFolder + '\\MainLayers')
-            os.mkdir(projFolder + '\\MainLayers')
+        if os.path.isdir(os.path.join(projFolder, 'MainLayers')):
+            files = rmtree(os.path.join(projFolder, 'MainLayers'))
+            os.mkdir(os.path.join(projFolder, 'MainLayers'))
         else:
-            os.mkdir(projFolder + '\\MainLayers')
+            os.mkdir(os.path.join(projFolder, 'MainLayers'))
 
-        if os.path.isdir(projFolder + '\\InnerLayers'):
-            files = rmtree(projFolder + '\\InnerLayers')
-            os.mkdir(projFolder + '\\InnerLayers')
+        if os.path.isdir(os.path.join(projFolder, 'InnerLayers')):
+            files = rmtree(os.path.join(projFolder, 'InnerLayers'))
+            os.mkdir(os.path.join(projFolder, 'InnerLayers'))
         else:
-            os.mkdir(projFolder + '\\InnerLayers')
+            os.mkdir(os.path.join(projFolder, 'InnerLayers'))
 
     def step1_1(self):
 
@@ -295,7 +269,7 @@ class meshBuilder:
             if innerLayersList:
                 message = u'主圖層未指定'
                 detail = u'不能在未指定主圖層的情況下指定內邊界圖層'
-                self.criticalBox(message, detail)
+                criticalBox(message, detail)
 
         self.dlg.tabWidget.setTabEnabled(1, True)
         self.dlg.tabWidget.setCurrentIndex(1)
@@ -307,12 +281,12 @@ class meshBuilder:
                 message = u'未指定專案資料夾'
                 detail = u'進行下一步之前必需設定專案資料夾\n請先設定專案資料夾\
 再進行下一步'
-                self.criticalBox(message, detail)
+                criticalBox(message, detail)
             elif not os.path.isdir(self.dlg.lineEdit.text()):
                 message = u'指定了錯的專案資料夾'
                 detail = u'您指定的專案資料夾不是可用的路徑\n請重新指定專案資料\
 夾'
-                self.criticalBox(message, detail)
+                criticalBox(message, detail)
             else:
                 self.step1_1()
 
@@ -763,7 +737,7 @@ class meshBuilder:
         if not lineEdit.text():
             message = u'請選擇一個圖層檔案'
             detail = u'指指定一個有效的向量圖層檔案'
-            self.criticalBox(message, detail)
+            criticalBox(message, detail)
         else:
             if switch == 1:
                 self.readPolyLayer()
@@ -892,7 +866,7 @@ class meshBuilder:
         vl = registry.mapLayersByName(self.pointLayer.name())
         iface.setActiveLayer(vl[0])
 
-        path = self.projFolder + '\\' + 'MainPoint_frame.shp'
+        path = os.path.join(self.projFolder, 'MainPoint_frame.shp')
 
         self.attrTable(self.pointLayer, Type='point')
         self.dlg.pointIndicator.setText(path)
@@ -916,7 +890,7 @@ class meshBuilder:
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
         iface.setActiveLayer(vl[0])
-        path = self.projFolder + '\\' + 'MainLines_frame.shp'
+        path = os.path.join(self.projFolder, 'MainLines_frame.shp')
 
         self.attrTable(self.lineLayer, Type='line')
         self.dlg.lineIndicator.setText(path)
@@ -981,7 +955,6 @@ class meshBuilder:
         env.remove("TERM")
         P.setProcessEnvironment(env)
         command = GMSH + " " + geoPath + " -2 -o " + mshPath
-        command = command.replace('/', '\\')
         P.start(command)
 
         self.dlg.textBrowser.setText(command)
@@ -1006,20 +979,27 @@ class meshBuilder:
         self.segLayer = SegmentLayer
         self.dlg.meshOutputBtn.setEnabled(True)
 
+    def getProj(self):
+        try:
+            destFolder = self.projFolder
+        except(AttributeError):
+            destFolder = os.path.expanduser("~")
+        return destFolder
+
     def changeTo2dm(self):
 
-        userFolder = os.path.expanduser("~")
-        appFolder = userFolder + "\\.qgis2\\python\\plugins\\meshBuilder"
-        os.chdir(appFolder)
+        homeFolder = os.path.dirname(__file__)
+        os.chdir(homeFolder)
 
         path2dm = self.dlg.where2dmEdit.text()
         mshPath = self.dlg.whereMshEdit.text()
 
         ibcName = os.path.basename(path2dm).replace('.2dm', '.ibc')
         dirname = os.path.dirname(path2dm)
-        ibcPath = dirname + "\\" + ibcName
+        ibcPath = os.path.join(dirname, ibcName)
         if os.path.isfile(ibcPath):
-            command = "GMSH2SRH.exe" + " " + mshPath + " " + path2dm + " " + ibcPath
+            command = ("GMSH2SRH.exe" + " " + mshPath + " " + path2dm + " " +
+                       ibcPath)
         else:
             command = "GMSH2SRH.exe" + " " + mshPath + " " + path2dm
 
@@ -1038,8 +1018,8 @@ class meshBuilder:
         Path = self.dlg.whereInterpEdit.text()
         mshPath = self.dlg.whereMshEdit.text()
 
-        os.chdir(os.path.expanduser('~') + "\\.qgis2\\python\\plugins\\" +
-                 "meshBuilder")
+        homeFolder = os.path.dirname(__file__)
+        os.chdir(homeFolder)
 
         P = QProcess()
         P.setProcessChannelMode(QProcess.MergedChannels)
@@ -1049,30 +1029,8 @@ class meshBuilder:
         env.remove("TERM")
         P.setProcessEnvironment(env)
         command = "ZInterporate.exe" + " " + mshPath + " TW40M.xyz " + Path
-        command = command.replace('/', '\\')
         P.start(command)
         P.finished.connect(onFinished)
-
-    def warningBox(self, title, message, lineEdit, lineEditText):
-
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
-        msg.setText(message)
-        msg.setWindowTitle(title)
-        msg.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
-        val = msg.exec_()
-        if val == QMessageBox.Yes:
-            lineEdit.setText(lineEditText)
-        elif val == QMessageBox.No:
-            lineEdit.clear()
-
-    def criticalBox(self, title, message):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText(message)
-        msg.setWindowTitle(title)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
 
     def dirEmpty(self, directory, message, detail, lineEdit, lineEditText):
         try:
@@ -1080,7 +1038,7 @@ class meshBuilder:
             files.remove("MainLayers")
             files.remove("InnerLayers")
             if files:
-                self.warningBox(message, detail, lineEdit, lineEditText)
+                warningBox(message, detail, lineEdit, lineEditText)
         except(WindowsError, ValueError):
             pass
 
@@ -1089,8 +1047,9 @@ class meshBuilder:
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
         caption = u'請選擇一個專案資料夾'
-        self.dlg.FileBrowseBtn.clicked.connect(lambda: self.folderBrowser(caption,
-                                                                          lineEdit=self.dlg.lineEdit))
+        self.dlg.FileBrowseBtn.clicked.connect(lambda: folderBrowser(self.dlg,
+                                                                     caption,
+                                                                     lineEdit=self.dlg.lineEdit))
         projFoldMsg = u'指定的專案資料夾不是空的'
         projFoldDetail = u'指定的專案資料夾不是空的!\n若設定此資料夾為專案資料\
 夾，則資料夾內的資料將被清除。\n請問是否繼續？'
@@ -1138,76 +1097,80 @@ class meshBuilder:
         Caption = u"請選擇一個多邊形圖層"
         lineEdit = self.dlg.polyIndicator
         wherePolyBtn = self.dlg.wherePolyBtn
-        wherePolyBtn.clicked.connect(lambda: self.fileBrowser(Caption,
-                                                              self.projFolder,
-                                                              lineEdit=lineEdit))
+        wherePolyBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+                                                         Caption,
+                                                         self.projFolder,
+                                                         lineEdit=lineEdit))
         p_Caption = u"請選擇一個點圖層"
         wherePointBtn = self.dlg.wherePointBtn
         p_lineEdit = self.dlg.pointIndicator
-        wherePointBtn.clicked.connect(lambda: self.fileBrowser(p_Caption,
-                                                               self.projFolder,
-                                                               lineEdit=p_lineEdit))
+        wherePointBtn.clicked.connect(lambda: fileBrowser(self.dlg, p_Caption,
+                                                          self.projFolder,
+                                                          lineEdit=p_lineEdit))
         l_Caption = u"請選擇一個線圖層"
         whereLineBtn = self.dlg.whereLineBtn
         l_lineEdit = self.dlg.lineIndicator
-        whereLineBtn.clicked.connect(lambda: self.fileBrowser(l_Caption,
-                                                              self.projFolder,
-                                                              lineEdit=l_lineEdit))
+        whereLineBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+                                                         l_Caption,
+                                                         self.projFolder,
+                                                         lineEdit=l_lineEdit))
         g_Caption = u'請選擇GMSH.exe的檔案位置'
         whereGMSH = self.dlg.whereGMSH
         gmshExeEdit = self.dlg.gmshExeEdit
-        whereGMSH.clicked.connect(lambda: self.fileBrowser(g_Caption, os.getcwd(),
-                                                           lineEdit=gmshExeEdit,
-                                                           presetType='.exe'))
+        whereGMSH.clicked.connect(lambda: fileBrowser(self.dlg,
+                                                      g_Caption, os.getcwd(),
+                                                      lineEdit=gmshExeEdit,
+                                                      presetType='.exe'))
         geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
         whereGeo = self.dlg.whereGeo
         geoEdit = self.dlg.geoEdit
-        try:
-            destFolder = self.projFolder
-        except(AttributeError):
-            destFolder = os.path.expanduser("~")
-        whereGeo.clicked.connect(lambda: self.saveFileBrowser(geoCaption,
-                                                              destFolder,
-                                                              lineEdit=geoEdit,
-                                                              presetType='.geo'))
+        whereGeo.clicked.connect(lambda: saveFileBrowser(self.dlg,
+                                                         geoCaption,
+                                                         self.getProj(),
+                                                         lineEdit=geoEdit,
+                                                         presetType='.geo'))
 
         mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
         mshEdit = self.dlg.mshEdit
         whereMsh = self.dlg.whereMsh
-        whereMsh.clicked.connect(lambda: self.saveFileBrowser(mshCaption,
-                                                              destFolder,
-                                                              lineEdit=mshEdit,
-                                                              presetType='.msh'))
+        whereMsh.clicked.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
+                                                         self.getProj(),
+                                                         lineEdit=mshEdit,
+                                                         presetType='.msh'))
 
         loadMshCaption = u'請選擇一個.msh檔案'
         whereMshEdit = self.dlg.whereMshEdit
         whereMshBtn = self.dlg.whereMshBtn
-        whereMshBtn.clicked.connect(lambda: self.fileBrowser(loadMshCaption,
-                                                             os.path.expanduser("~"),
-                                                             lineEdit=whereMshEdit,
-                                                             presetType='.msh'))
+        whereMshBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+                                                        loadMshCaption,
+                                                        self.getProj(),
+                                                        lineEdit=whereMshEdit,
+                                                        presetType='.msh'))
         MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
         whereMshLayerEdit = self.dlg.whereMshLayerEdit
         whereMshLayerBtn = self.dlg.whereMshLayerBtn
-        whereMshLayerBtn.clicked.connect(lambda: self.folderBrowser(MshLayerCaption,
-                                                                    os.path.expanduser("~"),
-                                                                    whereMshLayerEdit))
+        whereMshLayerBtn.clicked.connect(lambda: folderBrowser(self.dlg,
+                                                               MshLayerCaption,
+                                                               self.getProj(),
+                                                               whereMshLayerEdit))
 
         interpMshCaption = u'請選擇要內插高程的網格檔案'
         whereInterpEdit = self.dlg.whereInterpEdit
         whereInterpBtn = self.dlg.whereInterpBtn
-        whereInterpBtn.clicked.connect(lambda: self.saveFileBrowser(interpMshCaption,
-                                                                    os.path.expanduser("~"),
-                                                                    lineEdit=whereInterpEdit,
-                                                                    presetType='.msh'))
+        whereInterpBtn.clicked.connect(lambda: saveFileBrowser(self.dlg,
+                                                               interpMshCaption,
+                                                               self.getProj(),
+                                                               lineEdit=whereInterpEdit,
+                                                               presetType='.msh'))
 
         where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
         where2dmEdit = self.dlg.where2dmEdit
         where2dmBtn = self.dlg.where2dmBtn
-        where2dmBtn.clicked.connect(lambda: self.saveFileBrowser(where2dmCaption,
-                                                                 os.path.expanduser("~"),
-                                                                 lineEdit=where2dmEdit,
-                                                                 presetType='.2dm'))
+        where2dmBtn.clicked.connect(lambda: saveFileBrowser(self.dlg,
+                                                            where2dmCaption,
+                                                            self.getProj(),
+                                                            lineEdit=where2dmEdit,
+                                                            presetType='.2dm'))
 
         self.dlg.polyConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
         self.dlg.pointConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
@@ -1246,7 +1209,7 @@ def loadMesh(filename, crs, outDir, dlg):
 
     fields = QgsFields()
     fields.append(QgsField("id", QVariant.Int))
-    nodePath = outDir + "\\" + "Nodes.shp"
+    nodePath = os.path.join(outDir, "Nodes.shp")
     NodeFields = QgsFields()
     NodeFields.append(QgsField("id", QVariant.Int))
     NodeFields.append(QgsField("Z", QVariant.Double))
@@ -1256,14 +1219,16 @@ def loadMesh(filename, crs, outDir, dlg):
     SegFields = QgsFields()
     SegFields.append(QgsField("id", QVariant.Int))
     SegFields.append(QgsField("Boundary", QVariant.String))
-    SegPath = outDir + "\\" + "Segments.shp"
+    SegPath = os.path.join(outDir, "Segments.shp")
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
     counter = 0
     for l in mesh:
         w = l.split()
 
-        if w[0] == "$PhysicalNames":
+        if not w:
+            pass
+        elif w[0] == "$PhysicalNames":
             mode = 1
         elif w[0] == "$Nodes":
             mode = 2
@@ -1276,7 +1241,7 @@ def loadMesh(filename, crs, outDir, dlg):
             dim, tag, name = int(w[0]), int(w[1]), w[2]
             name = name[1:-1]
             physicalNames.update({tag: [int(dim), name]})
-            path = outDir + "\\" + name + ".shp"
+            path = os.path.join(outDir, name + ".shp")
 
             # Create QGIS layers
             if dim == 0:
@@ -1435,8 +1400,74 @@ def arangeNodeLines(NodeLayer, physicsRef):
     return physicalNodes
 
 
+def whereHead(physLines, twoEnds):
+    head = 0
+    tail = 0
+    for item in twoEnds:
+        for line in physLines:
+            if item in line:
+                if line[0] == item:
+                    head = item
+                elif line[-1] == item:
+                    tail = item
+    return (head, tail)
+
+
+def physSegArrange(physicalSeg, head, tail):
+    def findNext(node):
+        for i in range(0, len(physicalSeg)):
+            line = physicalSeg[i]
+            if line[0] == node:
+                return physicalSeg.pop(i)
+    _ArrangedSegs = list()
+    for i in range(0, len(physicalSeg)):
+        line = physicalSeg[i]
+        if line[0] == head:
+            _ArrangedSegs.append(physicalSeg.pop(i))
+            break
+
+    startNode = _ArrangedSegs[0][1]
+    while len(physicalSeg) > 1:
+        line = findNext(startNode)
+        _ArrangedSegs.append(line)
+        startNode = line[1]
+    _ArrangedSegs.append(physicalSeg.pop(0))
+
+    return _ArrangedSegs
+
+
+def headAndTail(refList, physicalSeg):
+    f = open(os.path.join(os.path.dirname(__file__), 'errorText.txt'), 'w')
+    f.write(str(len(refList)) + "\n")
+    ArrangedSeg = copy(physicalSeg)
+    for key in refList.keys():
+        if len(physicalSeg[key]) > 0:
+            nodes = refList[key]
+            nodes = Counter(nodes)
+            #  Find the element only appeared once (Start point and end point)
+            terminals = list()
+            for node in nodes.keys():
+                if nodes[node] == 1:
+                    terminals.append(node)
+
+            (head, tail) = whereHead(physicalSeg[key], terminals)
+            f.write(str(head) + " " + str(tail) + "\n")
+            ArrangedSeg[key] = physSegArrange(physicalSeg[key], head, tail)
+        else:
+            continue
+    f.close()
+    return ArrangedSeg
+
+
 def arangeSegLines(SegLayer, physicsRef, nodeRef):
     physicalSegs = list()
+    physicalLines = list()
+    refList = dict()
+    _physicalSegs = dict()
+    arrangedSegs = dict()
+    for key in physicsRef.keys():
+        refList.update({key: []})
+        _physicalSegs.update({key: []})
     for feature in SegLayer.getFeatures():
         if feature['Boundary'] != None:
             lineGeo = feature.geometry().asPolyline()
@@ -1444,16 +1475,36 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
             id2 = nodeRef[lineGeo[-1]]
             physName = feature['Boundary']
             ref = physicCode(physName, physicsRef)
+            refList[ref].append(id1)
+            refList[ref].append(id2)
+            _physicalSegs[ref].append([id1, id2])
+            """
             line = "1 2 " + str(ref) + " 0 " + str(id1) + " " + str(id2) + "\n"
             physicalSegs.append(line)
-    return physicalSegs
+            """
+
+    if _physicalSegs:
+        arrangedSegs = headAndTail(refList, _physicalSegs)
+        keyList = arrangedSegs.keys()
+        keyList.sort()
+
+        for key in keyList:
+            nodeList = arrangedSegs[key]
+            for nodes in nodeList:
+                id1 = nodes[0]
+                id2 = nodes[1]
+                line = ("1 2 " + str(key) + " 0 " + str(id1) + " " + str(id2) +
+                        "\n")
+                physicalLines.append(line)
+
+    return physicalLines
 
 
 def arangeMesh(OutDir, gridNames, physicsRef, nodeRef):
     meshLines = list()
     for name in gridNames:
         ref = physicCode(name, physicsRef)
-        layername = OutDir + "\\" + name + ".shp"
+        layername = os.path.join(OutDir, name + ".shp")
         layer = QgsVectorLayer(layername, QFileInfo(layername).baseName(),
                                'ogr')
         for feature in layer.getFeatures():
@@ -1475,7 +1526,7 @@ def getGridNames(OutDir, NodeLayer, SegLayer):
     fileNames = os.listdir(OutDir)
     for name in fileNames:
         if ".shp" in name:
-            name = OutDir + "\\" + name
+            name = os.path.join(OutDir, name)
             layer = QgsVectorLayer(name, QFileInfo(name).baseName(), 'ogr')
             if layer.geometryType() == QGis.Polygon:
                 gridNames.append(QFileInfo(name).baseName())
@@ -1540,7 +1591,6 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
     physicalNodes = arangeNodeLines(NodeLayer, physicsRef)
     physicalNodes.sort()
     physicalSegs = arangeSegLines(SegLayer, physicsRef, nodeRef)
-    physicalSegs.sort()
     meshes = arangeMesh(OutDir, gridNames, physicsRef, nodeRef)
     meshes.sort()
     meshes.sort(key=len)

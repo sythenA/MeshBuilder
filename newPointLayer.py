@@ -5,7 +5,6 @@ from qgis.core import QgsVectorLayer, QgsFeature, QgsFields, QgsField
 from qgis.core import QgsGeometry
 import os.path
 from PyQt4.QtCore import QVariant, QFileInfo, QPyNullVariant
-import shutil
 
 
 def createNewAttrs(fields):
@@ -38,7 +37,8 @@ def copyMainLayer(layer, folder):
 
     layerPath = layer.dataProvider().dataSourceUri().split('|')[0]
     baseName = os.path.split(layerPath)[-1].replace(".shp", '')
-    path = folder + '\\' + 'MainLayers' + '\\Main_' + str(baseName) + '.shp'
+    path = os.path.join(folder, os.path.join('MainLayers',
+                                             'Main_' + str(baseName) + '.shp'))
     if os.path.isfile(path):
         return False
 
@@ -198,7 +198,9 @@ def pointAndLine(polygonLayer, projFolder):
     p_fields.append(QgsField("Y", QVariant.Double))
     p_fields.append(QgsField("Physical", QVariant.String))
 
-    savePath_point = projFolder + '\\MainLayers\\' + "polygon-points.shp"
+    savePath_point = os.path.join(projFolder,
+                                  os.path.join('MainLayers',
+                                               "polygon-points.shp"))
     Pointwriter = QgsVectorFileWriter(savePath_point, "utf-8", p_fields,
                                       QGis.WKBPoint, None, "ESRI Shapefile")
 
@@ -217,7 +219,8 @@ def pointAndLine(polygonLayer, projFolder):
     l_fields.append(QgsField("ForceBound", QVariant.Int))
     l_fields.append(QgsField("Physical", QVariant.String))
 
-    savePath_line = projFolder + '\\MainLayers\\' + "polygon-line.shp"
+    savePath_line = os.path.join(projFolder, os.path.join('MainLayers',
+                                                          "polygon-line.shp"))
     LineWriter = QgsVectorFileWriter(savePath_line, "utf-8", l_fields,
                                      QGis.WKBLineString, None, "ESRI Shapefile")
 

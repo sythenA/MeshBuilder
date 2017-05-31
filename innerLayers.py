@@ -40,7 +40,10 @@ class innerLayersExport:
         for layer in layerList:
             #  Retrive the absolute path to the shapfile
             baseName = layer.name()
-            path = folder + '\\InnerLayers\\' + str(baseName) + '.shp'
+            path = os.path.join(folder,
+                                os.path.join('InnerLayers',
+                                             str(baseName) + '.shp'))
+
             #  The vector layer data type (point, line, polygon)
             layerType = layer.wkbType()
             p_fields = layer.pendingFields()
@@ -102,14 +105,14 @@ class innerLayersExport:
     def openLayers(self):
         layerList = list()
         projFolder = self.folder
-        folder = projFolder + "\\InnerLayers"
+        folder = os.path.join(projFolder, "InnerLayers")
         files = os.listdir(folder)
         openList = list()
         for File in files:
             if ".shp" in File:
                 openList.append(File)
         for File in openList:
-            path = folder + "\\" + File
+            path = os.path.join(folder, File)
             layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
             layerList.append(layer)
 

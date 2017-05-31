@@ -1,10 +1,8 @@
 
 import os
 
-from PyQt4 import QtGui, uic
+from PyQt4 import uic
 from PyQt4.QtGui import QDialog
-from qgis.utils import iface
-import shepred
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
