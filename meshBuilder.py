@@ -24,7 +24,7 @@ from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QMessageBox, QColor
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
@@ -34,6 +34,7 @@ from qgis.utils import iface
 import resources
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
+import shepred
 import os.path
 import newPointLayer
 import lineFrame
@@ -73,6 +74,7 @@ class meshBuilder:
                 QCoreApplication.installTranslator(self.translator)
 
         self.dlg = meshBuilderDialog()
+        self.shepred = shepred.shepred(iface)
 
         # Declare instance attributes
         self.actions = []
@@ -160,9 +162,7 @@ class meshBuilder:
             self.toolbar.addAction(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -174,9 +174,18 @@ class meshBuilder:
         icon_path = ':/plugins/meshBuilder/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u''),
+            text=self.tr(u'Build Mesh For SRH2D'),
             callback=self.run,
             parent=self.iface.mainWindow())
+        shepredTr = QCoreApplication.translate('shepred UI', 'shepred UI')
+        ShepredAction = QAction(QIcon(icon_path), shepredTr,
+                                self.iface.mainWindow())
+        ShepredAction.triggered.connect(lambda: self.shepred.run())
+        ShepredAction.setEnabled(True)
+        self.iface.addPluginToMenu(self.menu, ShepredAction)
+        self.actions.append(ShepredAction)
+        self.toolbar = self.iface.addToolBar(u'shepred UI')
+        self.toolbar.setObjectName(u'shepredUI')
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -221,20 +230,20 @@ class meshBuilder:
         projFolder.replace("\\", "/")
         files = os.listdir(projFolder)
         for name in files:
-            if os.path.isfile(projFolder + "/" + name):
-                os.remove(projFolder + "/" + name)
+            if os.path.isfile(projFolder + "\\" + name):
+                os.remove(projFolder + "\\" + name)
 
-        if os.path.isdir(projFolder + '/MainLayers'):
-            files = rmtree(projFolder + '/MainLayers')
-            os.mkdir(projFolder + '/MainLayers')
+        if os.path.isdir(projFolder + '\\MainLayers'):
+            files = rmtree(projFolder + '\\MainLayers')
+            os.mkdir(projFolder + '\\MainLayers')
         else:
-            os.mkdir(projFolder + '/MainLayers')
+            os.mkdir(projFolder + '\\MainLayers')
 
-        if os.path.isdir(projFolder + '/InnerLayers'):
-            files = rmtree(projFolder + '/InnerLayers')
-            os.mkdir(projFolder + '/InnerLayers')
+        if os.path.isdir(projFolder + '\\InnerLayers'):
+            files = rmtree(projFolder + '\\InnerLayers')
+            os.mkdir(projFolder + '\\InnerLayers')
         else:
-            os.mkdir(projFolder + '/InnerLayers')
+            os.mkdir(projFolder + '\\InnerLayers')
 
     def step1_1(self):
 
@@ -945,6 +954,14 @@ class meshBuilder:
     def showMsg(self, P):
         while P.canReadLine():
             line = str(P.readLine())[:-1]
+            if "Error" in line:
+                self.dlg.textBrowser.setTextColor(QColor(238, 0, 0))
+            elif "Warning" in line:
+                self.dlg.textBrowser.setTextColor(QColor(0, 139, 69))
+            elif "invalid" in line:
+                self.dlg.textBrowser.setTextColor(QColor(70, 130, 180))
+            else:
+                self.dlg.textBrowser.setTextColor(QColor(0, 0, 0))
             self.dlg.textBrowser.append(line)
 
     def runGMSH(self):
@@ -1059,9 +1076,12 @@ class meshBuilder:
 
     def dirEmpty(self, directory, message, detail, lineEdit, lineEditText):
         try:
-            if os.listdir(directory):
+            files = os.listdir(directory)
+            files.remove("MainLayers")
+            files.remove("InnerLayers")
+            if files:
                 self.warningBox(message, detail, lineEdit, lineEditText)
-        except(WindowsError):
+        except(WindowsError, ValueError):
             pass
 
     def run(self):
@@ -1136,21 +1156,26 @@ class meshBuilder:
         g_Caption = u'請選擇GMSH.exe的檔案位置'
         whereGMSH = self.dlg.whereGMSH
         gmshExeEdit = self.dlg.gmshExeEdit
-        whereGMSH.clicked.connect(lambda: self.fileBrowser(g_Caption, "c:\\",
+        whereGMSH.clicked.connect(lambda: self.fileBrowser(g_Caption, os.getcwd(),
                                                            lineEdit=gmshExeEdit,
                                                            presetType='.exe'))
         geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
         whereGeo = self.dlg.whereGeo
         geoEdit = self.dlg.geoEdit
+        try:
+            destFolder = self.projFolder
+        except(AttributeError):
+            destFolder = os.path.expanduser("~")
         whereGeo.clicked.connect(lambda: self.saveFileBrowser(geoCaption,
-                                                              self.projFolder,
+                                                              destFolder,
                                                               lineEdit=geoEdit,
                                                               presetType='.geo'))
+
         mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
         mshEdit = self.dlg.mshEdit
         whereMsh = self.dlg.whereMsh
         whereMsh.clicked.connect(lambda: self.saveFileBrowser(mshCaption,
-                                                              self.projFolder,
+                                                              destFolder,
                                                               lineEdit=mshEdit,
                                                               presetType='.msh'))
 
@@ -1513,7 +1538,9 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
     f.write("$EndNodes\n")
 
     physicalNodes = arangeNodeLines(NodeLayer, physicsRef)
+    physicalNodes.sort()
     physicalSegs = arangeSegLines(SegLayer, physicsRef, nodeRef)
+    physicalSegs.sort()
     meshes = arangeMesh(OutDir, gridNames, physicsRef, nodeRef)
     meshes.sort()
     meshes.sort(key=len)

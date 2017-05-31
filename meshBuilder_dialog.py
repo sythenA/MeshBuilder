@@ -24,6 +24,7 @@
 import os
 
 from PyQt4 import QtGui, uic
+from qgis.utils import iface
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'meshBuilder_dialog_base.ui'))
