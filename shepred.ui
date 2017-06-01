@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>797</width>
-    <height>508</height>
+    <height>548</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>797</width>
-    <height>508</height>
+    <height>548</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>797</width>
-    <height>508</height>
+    <height>548</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>370</y>
+     <y>410</y>
      <width>261</width>
      <height>131</height>
     </rect>
@@ -123,7 +123,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>170</y>
+     <y>210</y>
      <width>201</width>
      <height>111</height>
     </rect>
@@ -204,7 +204,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>120</y>
+     <y>160</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -246,7 +246,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>80</y>
+     <y>120</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -288,7 +288,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>280</y>
+     <y>320</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -330,7 +330,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>320</y>
+     <y>360</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -372,9 +372,9 @@
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>90</y>
+     <y>120</y>
      <width>491</width>
-     <height>381</height>
+     <height>361</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -602,7 +602,7 @@
      <widget class="QRadioButton" name="rbtnManningMaterial">
       <property name="geometry">
        <rect>
-        <x>80</x>
+        <x>90</x>
         <y>20</y>
         <width>83</width>
         <height>16</height>
@@ -615,7 +615,7 @@
      <widget class="QRadioButton" name="rbtnManningDistributed">
       <property name="geometry">
        <rect>
-        <x>170</x>
+        <x>180</x>
         <y>20</y>
         <width>101</width>
         <height>16</height>
@@ -631,7 +631,7 @@
       <rect>
        <x>12</x>
        <y>104</y>
-       <width>311</width>
+       <width>431</width>
        <height>31</height>
       </rect>
      </property>
@@ -737,6 +737,85 @@
     </attribute>
    </widget>
   </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>80</y>
+     <width>551</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <property name="spacing">
+     <number>4</number>
+    </property>
+    <property name="sizeConstraint">
+     <enum>QLayout::SetDefaultConstraint</enum>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>Save Folder</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="saveFolderEdit">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>100</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="saveFolderBtn">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>...</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="exportBtn">
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>490</y>
+     <width>171</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>輸出SIF</string>
+   </property>
+  </widget>
+  <zorder>groupBox_11</zorder>
+  <zorder>layoutWidget_2</zorder>
+  <zorder>groupBox_5</zorder>
+  <zorder>layoutWidget_4</zorder>
+  <zorder>groupBox_4</zorder>
+  <zorder>groupBox</zorder>
+  <zorder>groupBox_2</zorder>
+  <zorder>groupBox_3</zorder>
+  <zorder>tabWidget</zorder>
+  <zorder>horizontalLayoutWidget</zorder>
+  <zorder>saveFolderEdit</zorder>
+  <zorder>exportBtn</zorder>
  </widget>
  <resources/>
  <connections/>

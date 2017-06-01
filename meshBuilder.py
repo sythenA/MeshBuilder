@@ -31,7 +31,7 @@ from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
-from commonDialog import criticalBox, warningBox
+from commonDialog import onCritical, onWarning
 import resources
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
@@ -267,9 +267,7 @@ class meshBuilder:
             innerLayers.copyLayers()
         else:
             if innerLayersList:
-                message = u'主圖層未指定'
-                detail = u'不能在未指定主圖層的情況下指定內邊界圖層'
-                criticalBox(message, detail)
+                onCritical(100)
 
         self.dlg.tabWidget.setTabEnabled(1, True)
         self.dlg.tabWidget.setCurrentIndex(1)
@@ -278,15 +276,9 @@ class meshBuilder:
     def step1(self):
         def chkSwitch():
             if not self.dlg.lineEdit.text():
-                message = u'未指定專案資料夾'
-                detail = u'進行下一步之前必需設定專案資料夾\n請先設定專案資料夾\
-再進行下一步'
-                criticalBox(message, detail)
+                onCritical(101)
             elif not os.path.isdir(self.dlg.lineEdit.text()):
-                message = u'指定了錯的專案資料夾'
-                detail = u'您指定的專案資料夾不是可用的路徑\n請重新指定專案資料\
-夾'
-                criticalBox(message, detail)
+                onCritical(102)
             else:
                 self.step1_1()
 
@@ -735,9 +727,7 @@ class meshBuilder:
 
     def readLayerChk(self, lineEdit, switch):
         if not lineEdit.text():
-            message = u'請選擇一個圖層檔案'
-            detail = u'指指定一個有效的向量圖層檔案'
-            criticalBox(message, detail)
+            onCritical(102)
         else:
             if switch == 1:
                 self.readPolyLayer()
@@ -1032,13 +1022,13 @@ class meshBuilder:
         P.start(command)
         P.finished.connect(onFinished)
 
-    def dirEmpty(self, directory, message, detail, lineEdit, lineEditText):
+    def dirEmpty(self, directory, lineEdit, lineEditText):
         try:
             files = os.listdir(directory)
             files.remove("MainLayers")
             files.remove("InnerLayers")
             if files:
-                warningBox(message, detail, lineEdit, lineEditText)
+                onWarning(300, lineEdit, lineEditText)
         except(WindowsError, ValueError):
             pass
 
@@ -1050,12 +1040,7 @@ class meshBuilder:
         self.dlg.FileBrowseBtn.clicked.connect(lambda: folderBrowser(self.dlg,
                                                                      caption,
                                                                      lineEdit=self.dlg.lineEdit))
-        projFoldMsg = u'指定的專案資料夾不是空的'
-        projFoldDetail = u'指定的專案資料夾不是空的!\n若設定此資料夾為專案資料\
-夾，則資料夾內的資料將被清除。\n請問是否繼續？'
         self.dlg.lineEdit.textChanged.connect(lambda: self.dirEmpty(self.dlg.lineEdit.text(),
-                                                                    projFoldMsg,
-                                                                    projFoldDetail,
                                                                     self.dlg.lineEdit,
                                                                     self.dlg.lineEdit.text()))
 
