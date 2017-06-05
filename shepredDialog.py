@@ -6,7 +6,7 @@ from PyQt4.QtGui import QDialog
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'shepred.ui'))
+    os.path.dirname(__file__), 'srhpre.ui'))
 
 
 class shepredDialog(QDialog, FORM_CLASS):

@@ -80,17 +80,17 @@ def criticalBox(title, message):
 
 
 def warningBox(title, message, lineEdit, lineEditText):
-
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
     msg.setText(message)
     msg.setWindowTitle(title)
     msg.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
     val = msg.exec_()
-    if val == QMessageBox.Yes:
-        lineEdit.setText(lineEditText)
-    elif val == QMessageBox.No:
-        lineEdit.clear()
+    if lineEdit and lineEditText:
+        if val == QMessageBox.Yes:
+            lineEdit.setText(lineEditText)
+        elif val == QMessageBox.No:
+            lineEdit.clear()
 
 
 def onCritical(num):
@@ -100,7 +100,7 @@ def onCritical(num):
     criticalBox(title, detail)
 
 
-def onWarning(num, lineEdit, lineEditText):
+def onWarning(num, lineEdit="", lineEditText=""):
     title = warningMessages[num]['title']
     detail = warningMessages[num]['detail']
 

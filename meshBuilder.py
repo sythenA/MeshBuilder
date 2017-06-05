@@ -24,10 +24,10 @@ from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
 from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor
+from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
-from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
@@ -180,15 +180,15 @@ class meshBuilder:
             text=self.tr(u'Build Mesh For SRH2D'),
             callback=self.run,
             parent=self.iface.mainWindow())
-        shepredTr = QCoreApplication.translate('shepred UI', 'shepred UI')
+        shepredTr = QCoreApplication.translate('shrhpre UI', 'srhpre UI')
         ShepredAction = QAction(QIcon(icon_path), shepredTr,
                                 self.iface.mainWindow())
         ShepredAction.triggered.connect(lambda: self.shepred.run())
         ShepredAction.setEnabled(True)
         self.iface.addPluginToMenu(self.menu, ShepredAction)
         self.actions.append(ShepredAction)
-        self.toolbar = self.iface.addToolBar(u'shepred UI')
-        self.toolbar.setObjectName(u'shepredUI')
+        self.toolbar = self.iface.addToolBar(u'srhpre UI')
+        self.toolbar.setObjectName(u'srhpreUI')
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -1037,12 +1037,14 @@ class meshBuilder:
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
         caption = u'請選擇一個專案資料夾'
-        self.dlg.FileBrowseBtn.clicked.connect(lambda: folderBrowser(self.dlg,
-                                                                     caption,
-                                                                     lineEdit=self.dlg.lineEdit))
-        self.dlg.lineEdit.textChanged.connect(lambda: self.dirEmpty(self.dlg.lineEdit.text(),
-                                                                    self.dlg.lineEdit,
-                                                                    self.dlg.lineEdit.text()))
+        self.dlg.FileBrowseBtn.clicked.connect(
+            lambda: folderBrowser(self.dlg,
+                                  caption,
+                                  lineEdit=self.dlg.lineEdit))
+
+        self.dlg.lineEdit.textChanged.connect(
+            lambda: self.dirEmpty(self.dlg.lineEdit.text(),
+                                  self.dlg.lineEdit, self.dlg.lineEdit.text()))
 
         self.dlg.polyIndicator.clear()
         self.dlg.pointIndicator.clear()
@@ -1134,35 +1136,36 @@ class meshBuilder:
         MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
         whereMshLayerEdit = self.dlg.whereMshLayerEdit
         whereMshLayerBtn = self.dlg.whereMshLayerBtn
-        whereMshLayerBtn.clicked.connect(lambda: folderBrowser(self.dlg,
-                                                               MshLayerCaption,
-                                                               self.getProj(),
-                                                               whereMshLayerEdit))
+        whereMshLayerBtn.clicked.connect(
+            lambda: folderBrowser(self.dlg, MshLayerCaption, self.getProj(),
+                                  whereMshLayerEdit))
 
         interpMshCaption = u'請選擇要內插高程的網格檔案'
         whereInterpEdit = self.dlg.whereInterpEdit
         whereInterpBtn = self.dlg.whereInterpBtn
-        whereInterpBtn.clicked.connect(lambda: saveFileBrowser(self.dlg,
-                                                               interpMshCaption,
-                                                               self.getProj(),
-                                                               lineEdit=whereInterpEdit,
-                                                               presetType='.msh'))
+        whereInterpBtn.clicked.connect(
+            lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
+                                    lineEdit=whereInterpEdit,
+                                    presetType='.msh'))
 
         where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
         where2dmEdit = self.dlg.where2dmEdit
         where2dmBtn = self.dlg.where2dmBtn
-        where2dmBtn.clicked.connect(lambda: saveFileBrowser(self.dlg,
-                                                            where2dmCaption,
-                                                            self.getProj(),
-                                                            lineEdit=where2dmEdit,
-                                                            presetType='.2dm'))
+        where2dmBtn.clicked.connect(
+            lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
+                                    lineEdit=where2dmEdit, presetType='.2dm'))
 
-        self.dlg.polyConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
-        self.dlg.pointConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
-        self.dlg.lineConfirm.clicked.connect(lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
+        self.dlg.polyConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
+        self.dlg.pointConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
+        self.dlg.lineConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
-        self.dlg.outputMeshPointsBtn.clicked.connect(lambda: self.switchAttr('Nodes'))
-        self.dlg.outputSegmentsBtn.clicked.connect(lambda: self.switchAttr('Segments'))
+        self.dlg.outputMeshPointsBtn.clicked.connect(
+            lambda: self.switchAttr('Nodes'))
+        self.dlg.outputSegmentsBtn.clicked.connect(
+            lambda: self.switchAttr('Segments'))
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
@@ -1445,7 +1448,6 @@ def headAndTail(refList, physicalSeg):
 
 
 def arangeSegLines(SegLayer, physicsRef, nodeRef):
-    physicalSegs = list()
     physicalLines = list()
     refList = dict()
     _physicalSegs = dict()
@@ -1463,10 +1465,6 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
             refList[ref].append(id1)
             refList[ref].append(id2)
             _physicalSegs[ref].append([id1, id2])
-            """
-            line = "1 2 " + str(ref) + " 0 " + str(id1) + " " + str(id2) + "\n"
-            physicalSegs.append(line)
-            """
 
     if _physicalSegs:
         arrangedSegs = headAndTail(refList, _physicalSegs)
