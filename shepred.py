@@ -121,9 +121,7 @@ class shepred:
         self.dlg.rbtnManningDistributed.pressed.connect(self.distriMann)
 
         self.dlg.exportBtn.clicked.connect(self.export)
-        self.dlg.rbtnSimSteady.pressed.connect(
-            lambda: self.dlg.boundaryTable.cellPressed.disconnect())
-        self.dlg.rbtnSimUnsteady.pressed.connect(self.setTableUnsteady)
+        self.dlg.inputFileBtn.clicked.connect(self.setWidgetFileBrowser)
 
         result = self.dlg.exec_()
         if result:
@@ -231,56 +229,83 @@ T_SIMU [FLAG]\n')
                 f.write(str(mannInput[i])+'\n')
                 f.write('\n')
         f = self.boundaryOutput(f)
+        f = self.onOutputFormat(f)
 
         f.close()
+
+    def onOutputFormat(self, f):
+        f.write('// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
+        if self.dlg.rbtnOutputSMS.isChecked():
+            line = "SRHN"
+        elif self.dlg.rbtnOutputTecplot.isChecked():
+            line = "TEC"
+
+        if self.dlg.rbtnOutputUnitSI.isChecked():
+            line = line + " " + "SI\n"
+        elif self.dlg.rbtnOutputUnitEN.isChecked():
+            line = line + " " + "EN\n"
+
+        f.write(line)
+        f.write('\n')
+        return f
 
     def boundaryOutput(self, f):
         table = self.dlg.boundaryTable
         rows = table.rowCount()
+        wallRoughness = list()
         for i in range(0, rows):
             f.write('// Boundary Type (INLET-Q EXIT-H etc)\n')
-            if table.cellWidget(i, 1).text() == 'INLET-Q':
+            if table.cellWidget(i, 1).currentText() == 'INLET-Q':
                 f.write('INLET-Q\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
-                line = line + table.cellWidget(i, 4).text() + '\n'
+                line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
-            elif table.cellWidget(i, 1).text() == 'EXIT-H':
+            elif table.cellWidget(i, 1).currentText() == 'EXIT-H':
                 f.write('EXIT-H\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 3).text())) + " "
-                line = line + table.cellWidget(i, 4).text() + '\n'
+                line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
-            elif table.cellWidget(i, 1).text() == 'EXIT-Q':
+            elif table.cellWidget(i, 1).currentText() == 'EXIT-Q':
                 f.write('EXIT-Q\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
-                line = line + table.cellWidget(i, 4).text() + '\n'
+                line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
-            elif table.cellWidget(i, 1).text() == 'INLET-SC':
+            elif table.cellWidget(i, 1).currentText() == 'INLET-SC':
                 f.write('INLET-SC\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + str(float(table.item(i, 3).text()))
-                line = line + table.cellWidget(i, 4).text() + '\n'
+                line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
-            elif table.cellWidget(i, 1).text() == 'EXIT-EX':
+            elif table.cellWidget(i, 1).currentText() == 'EXIT-EX':
                 f.write('EXIT-EX\n')
-                f.write('\n')
-            elif table.cellWidget(i, 1).text() == 'WALL':
+            elif table.cellWidget(i, 1).currentText() == 'WALL':
                 f.write('WALL\n')
-                f.write('\n')
-            elif table.cellWidget(i, 1).text() == 'SYMM':
+                if table.item(i, 5).text():
+                    wallRoughness.append([i, table.item(i, 5).text()])
+            elif table.cellWidget(i, 1).currentText() == 'SYMM':
                 f.write('SYMM\n')
-                f.write('\n')
-            elif table.cellWidget(i, 1).text() == 'MONITOR':
+            elif table.cellWidget(i, 1).currentText() == 'MONITOR':
                 f.write('MONITOR\n')
-                f.write('\n')
             f.write('\n')
+
+        if wallRoughness:
+            for i in range(0, len(wallRoughness)):
+                f.write('// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch\
+-ID\n')
+                f.write(str(wallRoughness[i][0]+1) + '\n')
+                f.write('\n')
+                f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
+                f.write(str(wallRoughness[i][1]) + '\n')
+                f.write('\n')
+
         return f
 
     def getManningVal(self):
@@ -345,21 +370,6 @@ T_SIMU [FLAG]\n')
 
         return (tStart, tStep, totalTime)
 
-    def onOutputFormat(self):
-        group = [self.dlg.rbtnOutputSMS, self.dlg.rbtnOutputTecplot]
-        for btn in group:
-            if btn.isChecked():
-                Oformat = btn.text()
-
-        if Oformat == 'Tecplot':
-            Oformat = 'TEC'
-        elif Oformat == 'SMS':
-            Oformat = 'SMS'
-        else:
-            onCritical(106)
-
-        return Oformat
-
     def outputUnit(self):
         group = [self.dlg.rbtnOutputUnitSI, self.dlg.rbtnOutputUnitEN]
         for btn in group:
@@ -381,12 +391,13 @@ T_SIMU [FLAG]\n')
                 return btn.text()
 
     def setBoundaryTable(self):
-        labels = [u'邊界名稱', u'性質', u'流量(Q)', u'水位(H)', u'單位制']
+        labels = [u'邊界名稱', u'性質', u'流量(Q)', u'水位(H)', u'單位制',
+                  u'邊界層厚度']
         boundaryTypes = ['INLET-Q', 'EXIT-H', 'EXIT-Q', 'INLET-SC', 'EXIT-EX',
                          'WALL', 'SYMM', 'MONITOR']
         self.dlg.boundaryTable.clear()
         self.dlg.boundaryTable.setRowCount(self.NScount)
-        self.dlg.boundaryTable.setColumnCount(5)
+        self.dlg.boundaryTable.setColumnCount(6)
         self.dlg.boundaryTable.setHorizontalHeaderLabels(labels)
         for i in range(0, self.NScount):
             try:
@@ -402,36 +413,6 @@ T_SIMU [FLAG]\n')
             unitWidget.addItems(['SI', 'EN'])
             self.dlg.boundaryTable.setCellWidget(i, 4, unitWidget)
 
-    def breakTableConnection(self):
-        table = self.dlg.boundaryTable
-        table.disconnect(table, table.cellPressed)
-
-    def setTableUnsteady(self):
-        table = self.dlg.boundaryTable
-        table.cellPressed.connect(self.setWidgetFileBrowser)
-
-        """
-        table = self.dlg.boundaryTable
-        row = table.rowCount()
-        for i in range(0, row):
-            table.setCellWidget(i, 2, QPushButton())
-            table.setCellWidget(i, 3, QPushButton())
-
-        caption1 = u'請選擇流量的時間序列檔案'
-        caption2 = u'請選擇水位的時間序列檔案'
-        for i in range(0, row):
-            table.cellWidget(i, 2).setText('...')
-            table.cellWidget(i, 2).clicked.connect(
-                lambda: fileBrowser(self.dlg, caption1, os.path.expanduser("~"),
-                                    lineEdit=table.cellWidget(i, 2),
-                                    presetType=".*"))
-
-            table.cellWidget(i, 3).setText('...')
-            table.cellWidget(i, 3).clicked.connect(
-                lambda: fileBrowser(self.dlg, caption2, os.path.expanduser("~"),
-                                    lineEdit=table.cellWidget(i, 3),
-                                    presetType=".*"))"""
-
     def setWidgetFileBrowser(self):
         table = self.dlg.boundaryTable
         row = table.currentRow()
@@ -440,7 +421,7 @@ T_SIMU [FLAG]\n')
         if column == 2:
             caption = u'請選擇流量的時間序列檔案'
         elif column == 3:
-            caption = u'請選擇水位的時間序列檔案'
+            caption = u'請選擇水位的時間序列(或率定曲線)檔案'
         else:
             pass
 
