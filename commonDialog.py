@@ -4,6 +4,7 @@ import os.path
 
 criticalMessages = dict()
 warningMessages = dict()
+Explaination = dict()
 
 
 def isint(string):
@@ -28,9 +29,12 @@ def textParse(text):
             if num < 300:
                 criticalMessages.update({num: {'title': title,
                                                'detail': detail}})
-            elif num >= 300:
+            elif num >= 300 and num < 1000:
                 warningMessages.update({num: {'title': title,
                                               'detail': detail}})
+            elif num >= 1000:
+                Explaination.update({num: {'title': title,
+                                           'detail': detail}})
 
 
 cDir = os.path.dirname(__file__)
@@ -91,6 +95,11 @@ def warningBox(title, message, lineEdit, lineEditText):
             lineEdit.setText(lineEditText)
         elif val == QMessageBox.No:
             lineEdit.clear()
+
+
+def onComment(label, num):
+    detail = Explaination[num]['detail']
+    label.setText(detail)
 
 
 def onCritical(num):
