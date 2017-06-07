@@ -26,6 +26,15 @@ detail:未於表單中輸入曼寧n值，請在表單中輸入曼寧n值再繼續操作
 111
 title:邊界條件輸入值錯誤
 detail:邊界條件為INLET-SC時，流量(Q)及水位(H)皆必需有輸入值
+112
+title:找不到EXIT-ND的輸入值
+detail:當指定邊界條件為EXIT-ND(均勻流出流型態)時/n，需要在額外條件欄位中有三個輸入項Q_METHOD, BED_SLOPE, WSE_MIN
+113
+title:EXIT-ND邊界條件的輸入值錯誤
+detail:額外輸入項目中未滿足EXIT-ND(均勻流出流型態)邊界條件所需的/nQ_METHOD, BED_SLOPE, WSE_MIN三個輸入條件
+114
+title:尚未讀入.2dm及.msh檔案
+detail:設定_SOF檔案需要讀取.2dm及.msh檔案中的邊界設定，/n請至少讀入.2dm檔案以取得網格分區及邊界設定
 300
 title:指定的專案資料夾不是空的
 detail:指定的專案資料夾不是空的!/n若設定此資料夾為專案資料夾，則資料夾內的資料將被清除。/n請問是否繼續？

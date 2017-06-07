@@ -2,6 +2,7 @@
 
 import os
 import os.path
+import re
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog
@@ -159,16 +160,24 @@ class shepred:
 
         if (self.dlg.lineEditMeshFileName.text() and
                 self.dlg.lineMeshFilePath.text()):
-            physName = self.physName
-            table.setRowCount(len(physName))
-            table.setVerticalHeaderLabels(physName)
+            try:
+                physName = self.physName
+                table.setRowCount(len(physName))
+                table.setVerticalHeaderLabels(physName)
+            except(AttributeError):
+                onCritical(114)
         elif (self.dlg.lineEditMeshFileName.text() and not
                 self.dlg.lineMeshFilePath.text()):
-            meshRegion = sorted(self.meshRegion)
-            for i in range(0, len(meshRegion)):
-                meshRegion[i] = str(meshRegion[i])
-            table.setRowCount(len(meshRegion))
-            table.setVerticalHeaderLabels(meshRegion)
+            try:
+                meshRegion = sorted(self.meshRegion)
+                for i in range(0, len(meshRegion)):
+                    meshRegion[i] = str(meshRegion[i])
+                table.setRowCount(len(meshRegion))
+                table.setVerticalHeaderLabels(meshRegion)
+            except(AttributeError):
+                onCritical(114)
+        else:
+            onCritical(114)
 
     def initialDry(self):
         onComment(self.dlg.initLabel, 1000)
@@ -246,23 +255,32 @@ of T1 T2 ...  EMPTY means the end\n')
         self.dlg.mannTable.clear()
         if (self.dlg.lineEditMeshFileName.text() and
                 self.dlg.lineMeshFilePath.text()):
-            physName = self.physName
-            self.dlg.mannTable.setRowCount(3)
-            self.dlg.mannTable.setColumnCount(len(physName))
-            item = QTableWidgetItem(str(len(physName)))
-            self.dlg.mannTable.setItem(0, 0, item)
-            for i in range(0, len(physName)):
-                self.dlg.mannTable.setItem(1, i, QTableWidgetItem(physName[i]))
+            try:
+                physName = self.physName
+                self.dlg.mannTable.setRowCount(3)
+                self.dlg.mannTable.setColumnCount(len(physName))
+                item = QTableWidgetItem(str(len(physName)))
+                self.dlg.mannTable.setItem(0, 0, item)
+                for i in range(0, len(physName)):
+                    self.dlg.mannTable.setItem(1, i,
+                                               QTableWidgetItem(physName[i]))
+            except(AttributeError):
+                onCritical(114)
         elif (self.dlg.lineEditMeshFileName.text() and not
                 self.dlg.lineMeshFilePath.text()):
-            meshRegion = sorted(self.meshRegion)
-            self.dlg.mannTable.setRowCount(3)
-            self.dlg.mannTable.setColumnCount(len(meshRegion))
-            item = QTableWidgetItem(str(len(meshRegion)))
-            self.dlg.mannTable.setItem(0, 0, item)
-            for i in range(0, len(meshRegion)):
-                self.dlg.mannTable.setItem(1, i,
-                                           QTableWidgetItem(str(meshRegion[i])))
+            try:
+                meshRegion = sorted(self.meshRegion)
+                self.dlg.mannTable.setRowCount(3)
+                self.dlg.mannTable.setColumnCount(len(meshRegion))
+                item = QTableWidgetItem(str(len(meshRegion)))
+                self.dlg.mannTable.setItem(0, 0, item)
+                text = QTableWidgetItem(str(meshRegion[i]))
+                for i in range(0, len(meshRegion)):
+                    self.dlg.mannTable.setItem(1, i, text)
+            except(AttributeError):
+                onCritical(114)
+        else:
+            onCritical(114)
 
     def distriMann(self):
         self.dlg.mannTable.clear()
@@ -303,15 +321,9 @@ of T1 T2 ...  EMPTY means the end\n')
 T_SIMU [FLAG]\n')
         TSTART, DT, T_SIMU = self.timeSetup()
         f.write(str(TSTART) + " " + str(DT) + " " + str(T_SIMU)+'\n')
-        f.write('// Turbulence-Model-Selection(PARA or KE)\n')
-        f.write(self.onTubulentModel()+'\n')
-        f.write('\n')
-        f.write('// A_TURB for the PARA Model (0.05 to 1.0)\n')
-        if isfloat(self.dlg.turbParaInput.text()):
-            f.write(self.dlg.turbParaInput.text()+'\n')
-        else:
-            onCritical(106)
-        f.write('\n')
+
+        f = self.onTubulenceModel(f)
+
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
         f.write("                    " +
@@ -342,6 +354,7 @@ ne means default is used\n')
         f = self.onIntvOuput(f)
 
         f.close()
+        self.dlg.label_Complete.setText(u'完成')
 
     def onOutputFormat(self, f):
         f.write('// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
@@ -370,7 +383,12 @@ ne means default is used\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
-                line = line + table.cellWidget(i, 4).currentText() + '\n'
+                line = line + table.cellWidget(i, 4).currentText()
+                if table.cellWidget(i, 5).currentIndex() != 0:
+                    line = (line + " " + table.cellWidget(i, 5).currentText() +
+                            '\n')
+                else:
+                    line = line + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-H':
                 f.write('EXIT-H\n')
@@ -384,7 +402,12 @@ ne means default is used\n')
                 f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
-                line = line + table.cellWidget(i, 4).currentText() + '\n'
+                line = line + table.cellWidget(i, 4).currentText()
+                if table.cellWidget(i, 5).currentIndex() != 0:
+                    line = (line + " " + table.cellWidget(i, 5).currentText() +
+                            '\n')
+                else:
+                    line = line + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'INLET-SC':
                 f.write('INLET-SC\n')
@@ -396,10 +419,32 @@ ne means default is used\n')
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-EX':
                 f.write('EXIT-EX\n')
+            elif table.cellWidget(i, 1).currentText() == 'EXIT-ND':
+                f.write('EXIT-ND\n')
+                f.write('\n')
+                if table.item(i, 7) is None:
+                    onCritical(112)
+                else:
+                    w = re.split(',\s|\s,|[\s,]', table.item(i, 7).text())
+                    if len(w) < 3:
+                        onCritical(113)
+                    else:
+                        f.write('// Q_METHOD(0_at_INLET_Q; >0_at_monitor; <0_lo\
+cally, BED_SLOPE, WSE_MIN at the exit\n')
+                        line = ""
+                        for j in range(0, len(w)):
+                            if w[j]:
+                                line = line + w[j] + ' '
+                            else:
+                                pass
+                        line = line[:-1] + '\n'
+                        f.write(line)
+
             elif table.cellWidget(i, 1).currentText() == 'WALL':
                 f.write('WALL\n')
-                if table.item(i, 6).text():
-                    wallRoughness.append([i, table.item(i, 6).text()])
+                if table.item(i, 6) is not None:
+                    if table.item(i, 6).text():
+                        wallRoughness.append([i, table.item(i, 6).text()])
             elif table.cellWidget(i, 1).currentText() == 'SYMM':
                 f.write('SYMM\n')
             elif table.cellWidget(i, 1).currentText() == 'MONITOR':
@@ -489,11 +534,27 @@ ne means default is used\n')
             if btn.isChecked():
                 return btn.text()
 
-    def onTubulentModel(self):
+    def onTubulenceModel(self, f):
+        f.write('// Turbulence-Model-Selection(PARA or KE)\n')
+
         group = [self.dlg.rbtnTurbPARA, self.dlg.rbtnTurbKE]
         for btn in group:
             if btn.isChecked():
-                return btn.text()
+                selected = btn.text()
+
+        if selected == 'PARA':
+            f.write('PARA\n')
+            f.write('\n')
+            f.write('// A_TURB for the PARA Model (0.05 to 1.0)\n')
+            if isfloat(self.dlg.turbParaInput.text()):
+                f.write(self.dlg.turbParaInput.text()+'\n')
+            else:
+                onCritical(106)
+        elif selected == 'KE':
+            f.write('KE\n')
+        f.write('\n')
+
+        return f
 
     def onInitial(self, f):
         f.write('// Initial Condition Method (DRY RST AUTO ZONAL)\n')
@@ -517,7 +578,7 @@ ame]\n')
 WSE [TK] [ED] [T]\n')
                 line = ""
                 for j in range(0, 5):
-                    line = line + table.item(0, j).text() + " "
+                    line = line + table.item(i, j).text() + " "
                 line = line[:-1] + '\n'
                 f.write(line)
 
@@ -529,12 +590,12 @@ WSE [TK] [ED] [T]\n')
 
     def setBoundaryTable(self):
         labels = [u'邊界名稱', u'性質', u'流量(Q)', u'水位(H)', u'單位制',
-                  u'速度分佈', u'邊界層厚度']
+                  u'速度分佈', u'邊界層厚度', u'額外條件']
         boundaryTypes = ['INLET-Q', 'EXIT-H', 'EXIT-Q', 'INLET-SC', 'EXIT-EX',
-                         'WALL', 'SYMM', 'MONITOR']
+                         'EXIT-ND', 'WALL', 'SYMM', 'MONITOR']
         self.dlg.boundaryTable.clear()
         self.dlg.boundaryTable.setRowCount(self.NScount)
-        self.dlg.boundaryTable.setColumnCount(7)
+        self.dlg.boundaryTable.setColumnCount(8)
         self.dlg.boundaryTable.setHorizontalHeaderLabels(labels)
         for i in range(0, self.NScount):
             try:
@@ -550,7 +611,7 @@ WSE [TK] [ED] [T]\n')
             unitWidget.addItems(['SI', 'EN'])
             self.dlg.boundaryTable.setCellWidget(i, 4, unitWidget)
             v_disWidget = QComboBox()
-            v_disWidget.addItems(['C', 'V', 'Q'])
+            v_disWidget.addItems(['None', 'C', 'V', 'Q'])
             self.dlg.boundaryTable.setCellWidget(i, 5, v_disWidget)
 
     def setWidgetFileBrowser(self):
