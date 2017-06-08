@@ -3,6 +3,7 @@
 import os
 import os.path
 import re
+import sys
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog
@@ -31,6 +32,7 @@ def readMshMesh(filePath):
     boundsRef = dict()
     f = open(filePath, 'r')
     line = f.readline()
+    regionCounter = 1
     while line:
         w = line.split()
         if w[0] == '$PhysicalNames':
@@ -45,7 +47,8 @@ def readMshMesh(filePath):
             if int(w[0]) == 1:
                 boundsRef.update({int(w[1]): w[2].replace('"', '')})
             elif int(w[0]) > 1:
-                physicRef.update({int(w[1]): w[2].replace('"', '')})
+                physicRef.update({regionCounter: w[2].replace('"', '')})
+                regionCounter = regionCounter + 1
         line = f.readline()
     f.close()
     return boundsRef, physicRef
@@ -135,6 +138,7 @@ class shepred:
         self.dlg.addIntvBtn.clicked.connect(self.setIntvTable)
         self.dlg.deleteIntvBtn.clicked.connect(self.deleteIntvTableColumn)
 
+        self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
         result = self.dlg.exec_()
         if result:
             pass
@@ -274,8 +278,8 @@ of T1 T2 ...  EMPTY means the end\n')
                 self.dlg.mannTable.setColumnCount(len(meshRegion))
                 item = QTableWidgetItem(str(len(meshRegion)))
                 self.dlg.mannTable.setItem(0, 0, item)
-                text = QTableWidgetItem(str(meshRegion[i]))
                 for i in range(0, len(meshRegion)):
+                    text = QTableWidgetItem(str(meshRegion[i]))
                     self.dlg.mannTable.setItem(1, i, text)
             except(AttributeError):
                 onCritical(114)
@@ -655,26 +659,27 @@ WSE [TK] [ED] [T]\n')
 
             self.fillMannTable()
             self.setBoundaryTable()
-        if not self.dlg.lineMeshFilePath.text():
-            onWarning(301)
-        else:
-            boundsRef, physRef = readMshMesh(self.dlg.lineMeshFilePath.text())
+            if not self.dlg.lineMeshFilePath.text():
+                onWarning(301)
+            else:
+                mshFilePath = self.dlg.lineMeshFilePath.text()
+                boundsRef, physRef = readMshMesh(mshFilePath)
 
-            boundNames = list()
-            physNames = list()
+                boundNames = list()
+                physNames = list()
 
-            keylist = boundsRef.keys()
-            keylist.sort()
-            for key in keylist:
-                boundNames.append(boundsRef[key])
+                keylist = boundsRef.keys()
+                keylist.sort()
+                for key in keylist:
+                    boundNames.append(boundsRef[key])
 
-            meshRegion.sort()
-            for dist in meshRegion:
-                physNames.append(physRef[dist])
+                meshRegion.sort()
+                for dist in meshRegion:
+                    physNames.append(physRef[dist])
 
-            self.boundNames = boundNames
-            self.physName = physNames
-            self.physRef = physRef
+                self.boundNames = boundNames
+                self.physName = physNames
+                self.physRef = physRef
 
-            self.fillMannTable()
-            self.setBoundaryTable()
+                self.fillMannTable()
+                self.setBoundaryTable()

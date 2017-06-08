@@ -28,6 +28,7 @@ from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
+from qgis.core import QgsMessageLog
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
@@ -45,6 +46,7 @@ from shutil import rmtree
 from collections import Counter
 from copy import copy
 import os
+import sys
 
 
 class meshBuilder:
@@ -398,7 +400,7 @@ class meshBuilder:
         layer.commitChanges()
 
     def setTableToPoly(self, layer):
-        def setTableItem(i, j, Object, Type='Object'):
+        def setTableItem(i, j, Object, Type='Object', prefix=0):
             if type(Object) != QPyNullVariant and Type == 'Object':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -406,8 +408,10 @@ class meshBuilder:
                 widget = QComboBox()
                 widget.addItem(u'是')
                 widget.addItem(u'否')
-                if Object == 0:
-                    widget.setCurrentIndex(1)
+                if Object == 1:
+                    widget.setCurrentIndex(0)
+                elif prefix != 0:
+                    widget.setCurrentIndex(prefix)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
@@ -459,9 +463,11 @@ class meshBuilder:
                                   u'輸出名': 3,
                                   u'合併網格': 4,
                                   u'結構化網格': 5}
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToPoint(self, layer):
-        def setTableItem(i, j, Object, Type='Object'):
+        def setTableItem(i, j, Object, Type='Object', prefix=0):
             if type(Object) != QPyNullVariant and Type == 'Object':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -469,8 +475,10 @@ class meshBuilder:
                 widget = QComboBox()
                 widget.addItem(u'是')
                 widget.addItem(u'否')
-                if Object == 0:
-                    widget.setCurrentIndex(1)
+                if Object == 1:
+                    widget.setCurrentIndex(0)
+                elif prefix != 0:
+                    widget.setCurrentIndex(prefix)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
@@ -505,7 +513,8 @@ class meshBuilder:
             setTableItem(counter, 2, feature['mesh_size'])
             setTableItem(counter, 3, feature['Physical'])
             setTableItem(counter, 4, feature['geoName'])
-            setTableItem(counter, 5, feature['breakPoint'], Type='ComboBox')
+            setTableItem(counter, 5, feature['breakPoint'], Type='ComboBox',
+                         prefix=1)
             counter = counter + 1
 
         fieldDict = {0: 'X',
@@ -527,9 +536,11 @@ class meshBuilder:
                                   u'點分類': 3,
                                   u'輸出名': 4,
                                   u'分段點': 5}
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToLine(self, layer):
-        def setTableItem(i, j, Object, Type='Object'):
+        def setTableItem(i, j, Object, Type='Object', prefix='0'):
             if type(Object) != QPyNullVariant and Type == 'Object':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -537,8 +548,10 @@ class meshBuilder:
                 widget = QComboBox()
                 widget.addItem(u'是')
                 widget.addItem(u'否')
-                if Object == 0:
-                    widget.setCurrentIndex(1)
+                if Object == 1:
+                    widget.setCurrentIndex(0)
+                elif prefix != 0:
+                    widget.setCurrentIndex(prefix)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
@@ -565,10 +578,12 @@ class meshBuilder:
                                                         u'切分數量'])
         counter = 0
         for feature in layer.getFeatures():
-            setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox')
+            setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox',
+                         prefix=1)
             setTableItem(counter, 1, feature['Physical'])
             setTableItem(counter, 2, feature['geoName'])
-            setTableItem(counter, 3, feature['Transfinit'], Type='ComboBox')
+            setTableItem(counter, 3, feature['Transfinit'], Type='ComboBox',
+                         prefix=1)
             setTableItem(counter, 4, feature['Cells'])
             counter = counter + 1
 
@@ -590,6 +605,8 @@ class meshBuilder:
                                   u'輸出名': 2,
                                   u'結構化': 3,
                                   u'切分數量': 4}
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToNodes(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
@@ -600,8 +617,8 @@ class meshBuilder:
                 widget = QComboBox()
                 widget.addItem(u'是')
                 widget.addItem(u'否')
-                if Object == 0:
-                    widget.setCurrentIndex(1)
+                if Object == 1:
+                    widget.setCurrentIndex(0)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
@@ -638,6 +655,8 @@ class meshBuilder:
                                          u'點位性質'])
         self.tableAttrNameDict = {u'高程': 0,
                                   u'點位性質': 1}
+        #  Connect QGIS active layer to table, if selection is made in QGIS
+        #  interface, reflect the selection result to data table.
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
@@ -650,8 +669,8 @@ class meshBuilder:
                 widget = QComboBox()
                 widget.addItem(u'是')
                 widget.addItem(u'否')
-                if Object == 0:
-                    widget.setCurrentIndex(1)
+                if Object == 1:
+                    widget.setCurrentIndex(0)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
@@ -1169,6 +1188,8 @@ class meshBuilder:
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
+
+        self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -1407,6 +1428,12 @@ def physSegArrange(physicalSeg, head, tail):
             line = physicalSeg[i]
             if line[0] == node:
                 return physicalSeg.pop(i)
+            elif line[1] == node:
+                line = physicalSeg.pop(i)
+                newline = list()
+                newline.append(line[1])
+                newline.append(line[0])
+                return newline
     _ArrangedSegs = list()
     for i in range(0, len(physicalSeg)):
         line = physicalSeg[i]
@@ -1416,9 +1443,13 @@ def physSegArrange(physicalSeg, head, tail):
 
     startNode = _ArrangedSegs[0][1]
     while len(physicalSeg) > 1:
-        line = findNext(startNode)
-        _ArrangedSegs.append(line)
-        startNode = line[1]
+        try:
+            line = findNext(startNode)
+            _ArrangedSegs.append(line)
+            startNode = line[1]
+        except(TypeError):
+            QgsMessageLog.instance().logMessage('Physical Boundary Break in Nod\
+e:' + str(startNode), 2)
     _ArrangedSegs.append(physicalSeg.pop(0))
 
     return _ArrangedSegs
@@ -1456,7 +1487,7 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
         refList.update({key: []})
         _physicalSegs.update({key: []})
     for feature in SegLayer.getFeatures():
-        if feature['Boundary'] != None:
+        if feature['Boundary']:
             lineGeo = feature.geometry().asPolyline()
             id1 = nodeRef[lineGeo[0]]
             id2 = nodeRef[lineGeo[-1]]
@@ -1468,8 +1499,7 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
 
     if _physicalSegs:
         arrangedSegs = headAndTail(refList, _physicalSegs)
-        keyList = arrangedSegs.keys()
-        keyList.sort()
+        keyList = sorted(arrangedSegs.keys())
 
         for key in keyList:
             nodeList = arrangedSegs[key]
