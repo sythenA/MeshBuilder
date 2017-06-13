@@ -29,6 +29,7 @@ from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
 from qgis.core import QgsMessageLog
+from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
@@ -203,7 +204,7 @@ class meshBuilder:
         del self.toolbar
 
     def cleanProjFolder(self, projFolder):
-        projFolder.replace("\\", "/")
+        # projFolder.replace("\\", "/")
         files = os.listdir(projFolder)
         for name in files:
             if os.path.isfile(os.path.join(projFolder, name)):
@@ -273,6 +274,7 @@ class meshBuilder:
 
         self.dlg.tabWidget.setTabEnabled(1, True)
         self.dlg.tabWidget.setCurrentIndex(1)
+        self.dlg.nextBtn2.setEnabled(False)
         self.step2(source)
 
     def step1(self):
@@ -291,8 +293,11 @@ class meshBuilder:
         innerLayerList = list()
         for layer in layers:
             innerLayerList.append(layer.name())
-            if layer.geometryType() > 1:
-                layerList.append(layer.name())
+            try:
+                if layer.geometryType() > 1:
+                    layerList.append(layer.name())
+            except:
+                pass
         self.dlg.comboBox.addItems(layerList)
 
         self.dlg.listWidget.clear()
@@ -302,7 +307,7 @@ class meshBuilder:
             item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
             item.setCheckState(Qt.Unchecked)
 
-        self.dlg.nextBtn1.clicked.connect(chkSwitch)
+        self.dlg.nextBtn1.pressed.connect(chkSwitch)
 
     def mainPointLayerComplete(self):
         self.lineFrameObj.readPoint(self.pointFrame)
@@ -398,6 +403,8 @@ class meshBuilder:
                     layer.changeAttributeValue(i, idx, float(dat))
 
         layer.commitChanges()
+        self.iface.messageBar().pushMessage('Data in meshBuilder table wrote \
+into layer attributes.', level=QgsMessageBar.INFO)
 
     def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object', prefix=0):
@@ -435,11 +442,13 @@ class meshBuilder:
         counter = 0
         for feature in layer.getFeatures():
             setTableItem(counter, 0, feature['mesh_size'])
-            setTableItem(counter, 1, feature['ForceBound'], Type='ComboBox')
+            setTableItem(counter, 1, feature['ForceBound'], Type='ComboBox',
+                         prefix=1)
             setTableItem(counter, 2, feature['Physical'])
             setTableItem(counter, 3, feature['geoName'])
             setTableItem(counter, 4, feature['Recombine'], Type='ComboBox')
-            setTableItem(counter, 5, feature['Transfinit'], Type='ComboBox')
+            setTableItem(counter, 5, feature['Transfinit'], Type='ComboBox',
+                         prefix=1)
             counter = counter + 1
 
         fieldDict = {0: 'mesh_size',
@@ -569,6 +578,7 @@ class meshBuilder:
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
 
+        self.dlg.tableWidget.setRowCount(0)
         self.dlg.tableWidget.setRowCount(layer.featureCount())
         self.dlg.tableWidget.setColumnCount(5)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'符合邊界',
@@ -824,9 +834,13 @@ class meshBuilder:
         process = self.currentProcess
         if process == 1:
             self.writeTableToLayer()
+            iface.messageBar().pushMessage('Data in table wrote to main layer \
+attributes, load point layer...', level=QgsMessageBar.INFO)
             self.step2_1()
         elif process == 2:
             self.writeTableToLayer()
+            iface.messageBar().pushMessage('Data in table wrote to point layer,\
+ load line layer...', level=QgsMessageBar.INFO)
             self.step2_2()
         elif process == 3:
             self.writeTableToLayer()
@@ -834,10 +848,14 @@ class meshBuilder:
             self.lineFrameObj.pointFrame = self.pointLayer
 
             lineFrame.lineCombine(self.lineFrameObj)
+            iface.messageBar().pushMessage('Line segments combined according to\
+ break point setting in point layer.')
             self.setTableToLine(self.lineLayer)
             self.step2_3()
         elif process == 4:
             self.writeTableToLayer()
+            iface.messageBar().pushMessage('Data in table wrote into line layer\
+ attribute table, procced to mesh generation.', level=QgsMessageBar.INFO)
 
     def step2(self, source):
         # polygon layer
@@ -914,7 +932,10 @@ class meshBuilder:
     def step2_3(self):
         self.dlg.setCompleteBtn.setText(u'圖層設定完成')
         self.currentProcess = 4
-        self.dlg.nextBtn2.clicked.connect(self.step3)
+        self.dlg.nextBtn2.setEnabled(True)
+        self.dlg.nextBtn2.pressed.connect(self.step3)
+        iface.messageBar().pushMessage("Please complete boundary settings to \
+proceed to mesh generation.", level=QgsMessageBar.INFO)
 
     def step3(self):
         self.dlg.tabWidget.setTabEnabled(2, True)
@@ -924,6 +945,8 @@ class meshBuilder:
         OutDir = self.dlg.whereMshLayerEdit.text()
         meshFile = self.dlg.whereMshEdit.text()
         meshOutput(OutDir, meshFile, self.nodeLayer, self.segLayer)
+        message = u'New mesh data wrote to ' + meshFile
+        iface.messageBar().pushMessage(message, level=QgsMessageBar.INFO)
 
     def resizeDialog(self):
         currentTab = self.dlg.tabWidget.currentIndex()
@@ -1007,12 +1030,14 @@ class meshBuilder:
         dirname = os.path.dirname(path2dm)
         ibcPath = os.path.join(dirname, ibcName)
         if os.path.isfile(ibcPath):
-            command = ("GMSH2SRH.exe" + " " + mshPath + " " + path2dm + " " +
-                       ibcPath)
+            command = ("GMSH2SRH.exe" + ' "' + mshPath + '" ' + path2dm + ' "' +
+                       ibcPath + '"')
         else:
-            command = "GMSH2SRH.exe" + " " + mshPath + " " + path2dm
+            command = "GMSH2SRH.exe" + ' "' + mshPath + '" ' + path2dm + '"'
 
         os.system(command)
+        iface.messageBar().pushMessage(".msh Transfomed to .2dm",
+                                       level=QgsMessageBar.INFO)
 
     def mshInterp(self):
         def writeMsgToLabel(P):
@@ -1037,9 +1062,17 @@ class meshBuilder:
         env = QProcessEnvironment.systemEnvironment()
         env.remove("TERM")
         P.setProcessEnvironment(env)
-        command = "ZInterporate.exe" + " " + mshPath + " TW40M.xyz " + Path
-        P.start(command)
-        P.finished.connect(onFinished)
+        try:
+            command = ("ZInterporate.exe" + ' "' + mshPath + '" "' +
+                       self.xyzName + '" "' + Path + '"')
+            P.start(command)
+            P.finished.connect(onFinished)
+        except(AttributeError):
+            command = "ZInterporate.exe" + " " + mshPath + " TW40M.xyz " + Path
+            P.start(command)
+            P.finished.connect(onFinished)
+        except(IOError):
+            onCritical()
 
     def dirEmpty(self, directory, lineEdit, lineEditText):
         try:
@@ -1056,7 +1089,7 @@ class meshBuilder:
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
         caption = u'請選擇一個專案資料夾'
-        self.dlg.FileBrowseBtn.clicked.connect(
+        self.dlg.FileBrowseBtn.pressed.connect(
             lambda: folderBrowser(self.dlg,
                                   caption,
                                   lineEdit=self.dlg.lineEdit))
@@ -1103,34 +1136,34 @@ class meshBuilder:
         Caption = u"請選擇一個多邊形圖層"
         lineEdit = self.dlg.polyIndicator
         wherePolyBtn = self.dlg.wherePolyBtn
-        wherePolyBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+        wherePolyBtn.pressed.connect(lambda: fileBrowser(self.dlg,
                                                          Caption,
                                                          self.projFolder,
                                                          lineEdit=lineEdit))
         p_Caption = u"請選擇一個點圖層"
         wherePointBtn = self.dlg.wherePointBtn
         p_lineEdit = self.dlg.pointIndicator
-        wherePointBtn.clicked.connect(lambda: fileBrowser(self.dlg, p_Caption,
+        wherePointBtn.pressed.connect(lambda: fileBrowser(self.dlg, p_Caption,
                                                           self.projFolder,
                                                           lineEdit=p_lineEdit))
         l_Caption = u"請選擇一個線圖層"
         whereLineBtn = self.dlg.whereLineBtn
         l_lineEdit = self.dlg.lineIndicator
-        whereLineBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+        whereLineBtn.pressed.connect(lambda: fileBrowser(self.dlg,
                                                          l_Caption,
                                                          self.projFolder,
                                                          lineEdit=l_lineEdit))
         g_Caption = u'請選擇GMSH.exe的檔案位置'
         whereGMSH = self.dlg.whereGMSH
         gmshExeEdit = self.dlg.gmshExeEdit
-        whereGMSH.clicked.connect(lambda: fileBrowser(self.dlg,
+        whereGMSH.pressed.connect(lambda: fileBrowser(self.dlg,
                                                       g_Caption, os.getcwd(),
                                                       lineEdit=gmshExeEdit,
                                                       presetType='.exe'))
         geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
         whereGeo = self.dlg.whereGeo
         geoEdit = self.dlg.geoEdit
-        whereGeo.clicked.connect(lambda: saveFileBrowser(self.dlg,
+        whereGeo.pressed.connect(lambda: saveFileBrowser(self.dlg,
                                                          geoCaption,
                                                          self.getProj(),
                                                          lineEdit=geoEdit,
@@ -1139,7 +1172,7 @@ class meshBuilder:
         mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
         mshEdit = self.dlg.mshEdit
         whereMsh = self.dlg.whereMsh
-        whereMsh.clicked.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
+        whereMsh.pressed.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
                                                          self.getProj(),
                                                          lineEdit=mshEdit,
                                                          presetType='.msh'))
@@ -1147,7 +1180,7 @@ class meshBuilder:
         loadMshCaption = u'請選擇一個.msh檔案'
         whereMshEdit = self.dlg.whereMshEdit
         whereMshBtn = self.dlg.whereMshBtn
-        whereMshBtn.clicked.connect(lambda: fileBrowser(self.dlg,
+        whereMshBtn.pressed.connect(lambda: fileBrowser(self.dlg,
                                                         loadMshCaption,
                                                         self.getProj(),
                                                         lineEdit=whereMshEdit,
@@ -1155,14 +1188,14 @@ class meshBuilder:
         MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
         whereMshLayerEdit = self.dlg.whereMshLayerEdit
         whereMshLayerBtn = self.dlg.whereMshLayerBtn
-        whereMshLayerBtn.clicked.connect(
+        whereMshLayerBtn.pressed.connect(
             lambda: folderBrowser(self.dlg, MshLayerCaption, self.getProj(),
                                   whereMshLayerEdit))
 
         interpMshCaption = u'請選擇要內插高程的網格檔案'
         whereInterpEdit = self.dlg.whereInterpEdit
         whereInterpBtn = self.dlg.whereInterpBtn
-        whereInterpBtn.clicked.connect(
+        whereInterpBtn.pressed.connect(
             lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
                                     lineEdit=whereInterpEdit,
                                     presetType='.msh'))
@@ -1170,9 +1203,11 @@ class meshBuilder:
         where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
         where2dmEdit = self.dlg.where2dmEdit
         where2dmBtn = self.dlg.where2dmBtn
-        where2dmBtn.clicked.connect(
+        where2dmBtn.pressed.connect(
             lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
                                     lineEdit=where2dmEdit, presetType='.2dm'))
+        xyzBtn = self.dlg.chooseXyzBtn
+        xyzBtn.pressed.connect(self.selectXyz)
 
         self.dlg.polyConfirm.clicked.connect(
             lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
@@ -1189,7 +1224,7 @@ class meshBuilder:
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
 
-        self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
+        # self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -1198,6 +1233,11 @@ class meshBuilder:
             # substitute with your code.
             pass
 
+    def selectXyz(self):
+        chooseXyzCaption = u'請選擇.xyz格式之高程檔案'
+        self.xyzName = fileBrowser(self.dlg, chooseXyzCaption, self.getProj(),
+                                   lineEdit='', presetType='.xyz')
+        self.dlg.label_xyz.setText(u'已選擇DEM檔案')
 
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 

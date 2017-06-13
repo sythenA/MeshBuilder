@@ -84,7 +84,7 @@ def copyMainLayer(layer, folder):
             attr = {struct_idx: 1}
             newlayer.dataProvider().changeAttributeValues({featId: attr})
         if type(featureFields[geo_idx]) == QPyNullVariant:
-            name = "IS+" + str(feature.id())
+            name = "IS+" + str(feature.id()+1)
             attr = {geo_idx: name}
             newlayer.dataProvider().changeAttributeValues({featId: attr})
     newlayer.commitChanges()

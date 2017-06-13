@@ -62,6 +62,8 @@ def fileBrowser(parent, Caption, presetFolder, lineEdit="",
         if fileName:
             lineEdit.setText(fileName)
 
+    return fileName
+
 
 def saveFileBrowser(parent, Caption, presetFolder, lineEdit="",
                     presetType=".shp"):

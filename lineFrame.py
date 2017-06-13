@@ -6,6 +6,7 @@ from PyQt4.QtCore import QVariant, QFileInfo, QPyNullVariant
 import os.path
 import collections
 from math import sqrt
+from collections import Counter
 
 
 class TransformedDict(collections.MutableMapping):
@@ -91,7 +92,7 @@ class pointFrame:
         for feature in pointLayer.getFeatures():
             featureList = self.checkRepetitive(feature, featureList)
 
-        geoNum = 0
+        geoNum = 1
         for feature in featureList:
             newFeature = QgsFeature()
             newFeature.setGeometry(QgsGeometry.fromPoint(
@@ -182,7 +183,7 @@ class lineFrame:
         for feature in lineLayer.getFeatures():
             featureList = self.checkRepetitive(feature, featureList)
 
-        geoNum = 0
+        geoNum = 1
         for feature in featureList:
             startCoor = feature.geometry().asPolyline()[0]
             endCoor = feature.geometry().asPolyline()[-1]
@@ -231,20 +232,76 @@ def pointRef(pointFrame):
 def lineInverse(lineGeo):
     InverseGeo = list()
     for i in range(0, len(lineGeo)):
-        InverseGeo.append(lineGeo[len(lineGeo)-1-i])
+        InverseGeo.append(QgsPoint(lineGeo[len(lineGeo)-1-i]))
     return InverseGeo
 
 
+def findConn(multiLines, pointDict):
+    allPointList = list()
+    for line in multiLines:
+        for point in line:
+            allPointList.append(pointDict[point]['geoName'])
+    pointCount = Counter(allPointList)
+
+    connPoints = list()
+    for key in pointCount.keys():
+        if pointCount[key] == 2:
+            connPoints.append(key)
+    return connPoints
+
+
+#  Change connected multipolyline geometry to polyline.
+#  (Still buggy.)
 def multiToPoly(lineFrameLayer, pointDict):
+    def insertLine(newGeo, multiGeo, connPoint):
+        for i in range(1, len(multiGeo)):
+            if pointDict[multiGeo[i][0]]['geoName'] == connPoint:
+                newGeo.append(multiGeo.pop(i))
+                break
+            elif pointDict[multiGeo[i][-1]]['geoName'] == connPoint:
+                newGeo.append(lineInverse(multiGeo.pop(i)))
+                break
+        return newGeo, multiGeo
+
+    def newStartLine(multiGeo, connPoints):
+        for i in range(0, len(multiGeo)):
+            line = multiGeo[i]
+            if line[0] not in connPoints and line[-1] not in connPoints:
+                line0 = multiGeo.pop(i)
+                break
+        multiGeo.insert(line0, 0)
+        return multiGeo
+
     for feature in lineFrameLayer.getFeatures():
         geo = feature.geometry().asPolyline()
         multiGeo = feature.geometry().asMultiPolyline()
         if multiGeo and not geo:
+            connPoints = findConn(multiGeo, pointDict)
+            newGeo = list()
+            line0 = multiGeo[0]
+            if (pointDict[line0[0]]['geoName'] in connPoints and
+                    pointDict[line0[-1]]['geoName'] in connPoints):
+                multiGeo = newStartLine(multiGeo, connPoints)
+            elif pointDict[line0[0]]['geoName'] in connPoints:
+                line0 = lineInverse(line0)
+
+            newGeo.append(line0)
+            for i in range(1, len(multiGeo)):
+                tarPoint = pointDict[line0[-1]]['geoName']
+                newGeo, multiGeo = insertLine(newGeo, multiGeo, tarPoint)
+                line0 = newGeo[-1]
+
             lineFrameLayer.startEditing()
             feat_id = feature.id()
-            newGeo = list()
-            firstPoint = multiGeo[0][0]
-            newGeo.append(firstPoint)
+            _geo = list()
+            _geo = newGeo[0]
+            for i in range(1, len(newGeo)):
+                for j in range(1, len(newGeo[i])):
+                    _geo.append(newGeo[i][j])
+
+            """
+            newGeo = QgsGeometry()
+            # firstPoint = multiGeo[0][0]
 
             for i in range(1, len(multiGeo)):
                 name1 = pointDict[multiGeo[i][0]]['geoName']
@@ -252,12 +309,16 @@ def multiToPoly(lineFrameLayer, pointDict):
                 if name1 != name2:
                     multiGeo[i] = lineInverse(multiGeo[i])
 
+            newGeo = QgsGeometry().fromPolyline(multiGeo[0])
+            for i in range(1, len(multiGeo)):
+                newGeo.combine(QgsGeometry().fromPolyline(multiGeo[i]))
+            newGeo = list()
             for i in range(0, len(multiGeo)):
                 for j in range(1, len(multiGeo[i])):
-                    newGeo.append(multiGeo[i][j])
+                    newGeo.append(multiGeo[i][j])"""
 
-            lineFrameLayer.changeGeometry(feat_id,
-                                          QgsGeometry().fromPolyline(newGeo))
+            newGeo = QgsGeometry().fromPolyline(_geo)
+            lineFrameLayer.changeGeometry(feat_id, newGeo)
             lineFrameLayer.commitChanges()
 
 
@@ -468,7 +529,7 @@ def lineToLoop(lineFrameObj, polygonLayer):
                 lineFrameLayer.dataProvider().deleteFeatures([empty_id])
                 lineFrameLayer.commitChanges()"""
 
-        LoopName = 'ILL+' + str(counter-1)
+        LoopName = 'ILL+' + str(counter)
         counter = counter + 1
         LoopDict.update({feature['geoName']:
                          [{LoopName: featureLoop(lineList)}]})
@@ -487,7 +548,7 @@ def lineToLoop(lineFrameObj, polygonLayer):
 
                         lineName = lineDict[key]['geoName']
                         lineList.append((key[0], key[-1], lineName))
-                LoopName = 'ILL+' + str(counter-1)
+                LoopName = 'ILL+' + str(counter)
                 counter = counter + 1
                 LoopDict[feature['geoName']].append({LoopName:
                                                      featureLoop(lineList)})

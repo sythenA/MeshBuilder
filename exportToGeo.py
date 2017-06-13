@@ -549,6 +549,7 @@ class lineWriter:
 
         for feature in lineLayer.getFeatures():
             geo = feature.geometry().asPolyline()
+            _geo = feature.geometry().asMultiPolyline()
             if geo:
                 geoName = feature[l_Name_idx]
                 line = "Line(" + geoName + ") = {"
@@ -556,13 +557,15 @@ class lineWriter:
                     line = line + pointDict[point]['geoName'] + ", "
                 line = line[:-2] + "};\n"
                 lines_List.append(line)
-            else:
-                """
-                lineLayer.startEditing()
-                empty_id = feature.id()
-                lineLayer.dataProvider().deleteFeatures([empty_id])
-                lineLayer.commitChanges()"""
-                pass
+            elif _geo:
+                geoName = feature[l_Name_idx]
+                line = "Line(" + geoName + ") = {"
+                line = line + pointDict[_geo[0][0]]['geoName'] + ", "
+                for i in range(0, len(_geo)):
+                    for j in range(1, len(_geo[i])):
+                        line = line + pointDict[_geo[i][j]]['geoName'] + ", "
+                line = line[:-2] + "};\n"
+                lines_List.append(line)
 
         for feature in lineLayer.getFeatures():
             if not type(feature[l_Phx_idx]) == QPyNullVariant:

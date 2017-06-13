@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>srhpreUI</class>
+ <widget class="QDialog" name="srhpreUI">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -113,7 +113,7 @@
     <item>
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>_SOF.DAT</string>
+       <string>_SIF.DAT</string>
       </property>
      </widget>
     </item>
@@ -378,7 +378,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tabFlowSetting">
     <attribute name="title">
@@ -749,7 +749,7 @@
      </property>
      <property name="font">
       <font>
-       <pointsize>13</pointsize>
+       <pointsize>9</pointsize>
       </font>
      </property>
     </widget>

@@ -217,7 +217,7 @@ class shepred:
         f.write('// Intermediate Result Output Control: INTERVAL(hour) OR List \
 of T1 T2 ...  EMPTY means the end\n')
         if self.dlg.fixIntvBtn.isChecked():
-            f.write('INTERVAL\n')
+            f.write('1\n')
         elif self.dlg.asigOutBtn.isChecked():
             table = self.dlg.OutIntvTable
             column = table.columnCount()
@@ -226,6 +226,7 @@ of T1 T2 ...  EMPTY means the end\n')
                 line = line + table.item(0, j).text() + ' '
             line = line[:-1] + '\n'
             f.write(line)
+            f.write('\n')
         return f
 
     def fixOutputIntv(self):
@@ -303,7 +304,7 @@ of T1 T2 ...  EMPTY means the end\n')
         self.dlg.mannTable.setCellWidget(0, 1, button)
 
     def export(self):
-        fileName = self.dlg.lineEditCaseName.text() + '_SOF.DAT'
+        fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
         saveFolder = self.dlg.saveFolderEdit.text()
         fullPath = os.path.join(saveFolder, fileName)
 
@@ -311,16 +312,12 @@ of T1 T2 ...  EMPTY means the end\n')
 
         f.write('// Simulation Description (not used by SRH-2D):\n')
         f.write(self.dlg.lineEditDescription.text()+'\n')
-        f.write('\n')
         f.write('// Module/Solver Selected (FLOW MORP MOB TEM TC)\n')
         f.write(self.chooseSolver()+'\n')
-        f.write('\n')
         f.write('// Monitor-Point-Info: NPOINT\n')
         f.write(str(0)+'\n')
-        f.write('\n')
         f.write('// Steady-or-Unsteady (STEADY/UNS)\n')
         f.write(self.chooseSteady()+'\n')
-        f.write('\n')
         f.write('// Tstart Time_Step and Total_Simulation_Time: TSTART DT \
 T_SIMU [FLAG]\n')
         TSTART, DT, T_SIMU = self.timeSetup()
@@ -330,9 +327,7 @@ T_SIMU [FLAG]\n')
 
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
-        f.write("                    " +
-                self.dlg.lineEditMeshFileName.text()+'\n')
-        f.write('\n')
+        f.write(self.dlg.lineEditMeshFileName.text()+'\n')
         f.write('// Manning Roughness Input Method(1=constant 2=material-type\
  3=(x y) distributed)\n')
         mannInput = self.getManningVal()
@@ -342,14 +337,14 @@ T_SIMU [FLAG]\n')
             f.write(str(1)+'\n')
         elif type(mannInput) == list:
             f.write(str(2)+'\n')
-            f.write('\n')
             f.write('// Number of Material Types\n')
             f.write(str(len(mannInput))+'\n')
-            f.write('\n')
             f.write('// For each Material Type: Manning-Coef\n')
             for i in range(0, len(mannInput)):
                 f.write(str(mannInput[i])+'\n')
-                f.write('\n')
+
+        f.write('// Any-Special-Modeling-Options? (0/1=no/yes)\n')
+        f.write(str(0) + '\n')
         f = self.boundaryOutput(f)
         f = self.onOutputFormat(f)
         f.write('// Headers of Output Variables specified by the User: EMPTY li\
@@ -373,7 +368,6 @@ ne means default is used\n')
             line = line + " " + "EN\n"
 
         f.write(line)
-        f.write('\n')
         return f
 
     def boundaryOutput(self, f):
@@ -384,7 +378,6 @@ ne means default is used\n')
             f.write('// Boundary Type (INLET-Q EXIT-H etc)\n')
             if table.cellWidget(i, 1).currentText() == 'INLET-Q':
                 f.write('INLET-Q\n')
-                f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText()
@@ -396,14 +389,12 @@ ne means default is used\n')
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-H':
                 f.write('EXIT-H\n')
-                f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 3).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-Q':
                 f.write('EXIT-Q\n')
-                f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText()
@@ -415,7 +406,6 @@ ne means default is used\n')
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'INLET-SC':
                 f.write('INLET-SC\n')
-                f.write('\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + str(float(table.item(i, 3).text()))
@@ -425,7 +415,6 @@ ne means default is used\n')
                 f.write('EXIT-EX\n')
             elif table.cellWidget(i, 1).currentText() == 'EXIT-ND':
                 f.write('EXIT-ND\n')
-                f.write('\n')
                 if table.item(i, 7) is None:
                     onCritical(112)
                 else:
@@ -453,17 +442,14 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
                 f.write('SYMM\n')
             elif table.cellWidget(i, 1).currentText() == 'MONITOR':
                 f.write('MONITOR\n')
-            f.write('\n')
 
         if wallRoughness:
             for i in range(0, len(wallRoughness)):
                 f.write('// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch\
 -ID\n')
                 f.write(str(wallRoughness[i][0]+1) + '\n')
-                f.write('\n')
                 f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
                 f.write(str(wallRoughness[i][1]) + '\n')
-                f.write('\n')
         else:
             f.write('// Wall-Roughess-Height-Specification (empty-line=DONE)\n')
             f.write('\n')
@@ -548,7 +534,6 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
 
         if selected == 'PARA':
             f.write('PARA\n')
-            f.write('\n')
             f.write('// A_TURB for the PARA Model (0.05 to 1.0)\n')
             if isfloat(self.dlg.turbParaInput.text()):
                 f.write(self.dlg.turbParaInput.text()+'\n')
@@ -556,7 +541,6 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
                 onCritical(106)
         elif selected == 'KE':
             f.write('KE\n')
-        f.write('\n')
 
         return f
 
@@ -588,7 +572,6 @@ WSE [TK] [ED] [T]\n')
 
         f.write('// Mesh-Unit (FOOT METER INCH MM MILE KM GSCALE)\n')
         f.write(self.onMeshUnit()+'\n')
-        f.write('\n')
 
         return f
 
