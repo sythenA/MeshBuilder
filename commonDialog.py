@@ -99,6 +99,15 @@ def warningBox(title, message, lineEdit, lineEditText):
             lineEdit.clear()
 
 
+def infoBox(title, message):
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText(message)
+    msg.setWindowTitle(title)
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.exec_()
+
+
 def onComment(label, num):
     detail = Explaination[num]['detail']
     label.setText(detail)
@@ -109,6 +118,13 @@ def onCritical(num):
     detail = criticalMessages[num]['detail']
 
     criticalBox(title, detail)
+
+
+def onInfo(num):
+    title = Explaination[num]['title']
+    detail = Explaination[num]['detail']
+
+    infoBox(title, detail)
 
 
 def onWarning(num, lineEdit="", lineEditText=""):

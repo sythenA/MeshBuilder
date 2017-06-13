@@ -8,8 +8,10 @@ from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog
 from shepredDialog import shepredDialog
-from commonDialog import onCritical, onWarning, onComment
+from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
+from shutil import copyfile
+import subprocess
 
 
 def read2dmMesh(meshLines):
@@ -100,7 +102,28 @@ class shepred:
         elif self.dlg.rbtnManningDistributed.isChecked():
             self.distriMann()
 
+    def callSrhpre(self):
+        onInfo(1008)
+        folderPath = self.dlg.saveFolderEdit.text()
+        appFolder = os.path.dirname(__file__)
+        srcPath = os.path.join(appFolder, 'srhpre_32bit.bat')
+        dstPath = os.path.join(folderPath, 'srhpre_32bit.bat')
+        os.chdir(folderPath)
+        copyfile(srcPath, dstPath)
+        subprocess.Popen([dstPath])
+
+    def callSRH2D(self):
+        folderPath = self.dlg.saveFolderEdit.text()
+        appFolder = os.path.dirname(__file__)
+        srcPath = os.path.join(appFolder, 'srh2d_32bit.bat')
+        dstPath = os.path.join(folderPath, 'srh2d_32bit.bat')
+        os.chdir(folderPath)
+        copyfile(srcPath, dstPath)
+        subprocess.Popen([dstPath])
+
     def run(self):
+        self.dlg.callSrhpreBtn.setEnabled(False)
+        self.dlg.callSRH2DBtn.setEnabled(False)
         onComment(self.dlg.mannLabel, 1006)
         onComment(self.dlg.initLabel, 1000)
         meshFileCaption = u'請選擇輸入網格(.2dm格式)'
@@ -137,6 +160,8 @@ class shepred:
         self.dlg.asigOutBtn.pressed.connect(self.userOutputIntv)
         self.dlg.addIntvBtn.clicked.connect(self.setIntvTable)
         self.dlg.deleteIntvBtn.clicked.connect(self.deleteIntvTableColumn)
+        self.dlg.callSrhpreBtn.pressed.connect(self.callSrhpre)
+        self.dlg.callSRH2DBtn.pressed.connect(self.callSRH2D)
 
         self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
         result = self.dlg.exec_()
@@ -199,7 +224,7 @@ class shepred:
         self.dlg.addRstFileBtn.clicked.connect(
             lambda: fileBrowser(self.dlg, caption, os.path.expanduser("~"),
                                 lineEdit=self.dlg.rstFileEdit,
-                                presetType='.*'))
+                                presetType='*.dat'))
 
     def setIntvTable(self):
         table = self.dlg.OutIntvTable
@@ -354,6 +379,9 @@ ne means default is used\n')
 
         f.close()
         self.dlg.label_Complete.setText(u'完成')
+        onInfo(1009)
+        self.dlg.callSrhpreBtn.setEnabled(True)
+        self.dlg.callSRH2DBtn.setEnabled(True)
 
     def onOutputFormat(self, f):
         f.write('// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
@@ -371,6 +399,24 @@ ne means default is used\n')
         return f
 
     def boundaryOutput(self, f):
+        def checkStage(text):
+            if text:
+                try:
+                    float(text)
+                except:
+                    onCritical(120)
+            else:
+                onCritical(118)
+
+        def checkFlowRate(text):
+            if text:
+                try:
+                    float(text)
+                except:
+                    onCritical(121)
+            else:
+                onCritical(119)
+
         table = self.dlg.boundaryTable
         rows = table.rowCount()
         wallRoughness = list()
@@ -379,6 +425,7 @@ ne means default is used\n')
             if table.cellWidget(i, 1).currentText() == 'INLET-Q':
                 f.write('INLET-Q\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
+                checkFlowRate(table.item(i, 2).text())
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText()
                 if table.cellWidget(i, 5).currentIndex() != 0:
@@ -390,12 +437,14 @@ ne means default is used\n')
             elif table.cellWidget(i, 1).currentText() == 'EXIT-H':
                 f.write('EXIT-H\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
+                checkStage(table.item(i, 3).text())
                 line = str(float(table.item(i, 3).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-Q':
                 f.write('EXIT-Q\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
+                checkFlowRate(table.item(i, 2).text())
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + table.cellWidget(i, 4).currentText()
                 if table.cellWidget(i, 5).currentIndex() != 0:
@@ -407,6 +456,8 @@ ne means default is used\n')
             elif table.cellWidget(i, 1).currentText() == 'INLET-SC':
                 f.write('INLET-SC\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
+                checkFlowRate(table.item(i, 2).text())
+                checkStage(table.item(i, 3).text())
                 line = str(float(table.item(i, 2).text())) + " "
                 line = line + str(float(table.item(i, 3).text()))
                 line = line + table.cellWidget(i, 4).currentText() + '\n'
@@ -450,6 +501,7 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
                 f.write(str(wallRoughness[i][0]+1) + '\n')
                 f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
                 f.write(str(wallRoughness[i][1]) + '\n')
+            f.write('\n')
         else:
             f.write('// Wall-Roughess-Height-Specification (empty-line=DONE)\n')
             f.write('\n')
@@ -565,8 +617,17 @@ ame]\n')
                 f.write('// Constant-Value Initial Condition for Mesh Zone: U V\
 WSE [TK] [ED] [T]\n')
                 line = ""
-                for j in range(0, 5):
+                for j in range(0, 3):
                     line = line + table.item(i, j).text() + " "
+                if self.dlg.rbtnTurbKE.isChecked():
+                    if table.item(i, 3).text():
+                        line = line + table.item(i, 3).text() + " "
+                    else:
+                        line = line + str(0) + " "
+                    if table.item(i, 4).text():
+                        line = line + table.item(i, 4).text() + " "
+                    else:
+                        line = line + str(0) + " "
                 line = line[:-1] + '\n'
                 f.write(line)
 
