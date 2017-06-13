@@ -999,17 +999,23 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             systemCRS = self.systemCRS
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
-        loadMesh(meshFile, systemCRS, outDir, self.dlg)
+        try:
+            loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
-        Instance = QgsMapLayerRegistry.instance()
-        NodeLayer = Instance.mapLayersByName("Nodes")[0]
-        iface.setActiveLayer(NodeLayer)
-        self.setTableToNodes(NodeLayer)
-        self.nodeLayer = NodeLayer
+            Instance = QgsMapLayerRegistry.instance()
+            NodeLayer = Instance.mapLayersByName("Nodes")[0]
+            iface.setActiveLayer(NodeLayer)
+            self.setTableToNodes(NodeLayer)
+            self.nodeLayer = NodeLayer
 
-        SegmentLayer = Instance.mapLayersByName("Segments")[0]
-        self.segLayer = SegmentLayer
-        self.dlg.meshOutputBtn.setEnabled(True)
+            SegmentLayer = Instance.mapLayersByName("Segments")[0]
+            self.segLayer = SegmentLayer
+            self.dlg.meshOutputBtn.setEnabled(True)
+        except:
+            if not os.path.isfile(meshFile):
+                onCritical(116)
+            elif not os.path.isdir(outDir):
+                onCritical(117)
 
     def getProj(self):
         try:
@@ -1072,7 +1078,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             P.start(command)
             P.finished.connect(onFinished)
         except(IOError):
-            onCritical()
+            onCritical(105)
 
     def dirEmpty(self, directory, lineEdit, lineEditText):
         try:
@@ -1236,7 +1242,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
     def selectXyz(self):
         chooseXyzCaption = u'請選擇.xyz格式之高程檔案'
         self.xyzName = fileBrowser(self.dlg, chooseXyzCaption, self.getProj(),
-                                   lineEdit='', presetType='.xyz')
+                                   lineEdit='', presetType='(*.xyz *.asc)')
         self.dlg.label_xyz.setText(u'已選擇DEM檔案')
 
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
@@ -1462,7 +1468,7 @@ def whereHead(physLines, twoEnds):
     return (head, tail)
 
 
-def physSegArrange(physicalSeg, head, tail):
+def physSegArrange(physicalSeg, twoEnds):
     def findNext(node):
         for i in range(0, len(physicalSeg)):
             line = physicalSeg[i]
@@ -1477,11 +1483,25 @@ def physSegArrange(physicalSeg, head, tail):
     _ArrangedSegs = list()
     for i in range(0, len(physicalSeg)):
         line = physicalSeg[i]
-        if line[0] == head:
+        if line[0] in twoEnds:
             _ArrangedSegs.append(physicalSeg.pop(i))
             break
+        elif line[-1] in twoEnds:
+            newline = list()
+            newline.append(line[-1])
+            newline.append(line[0])
+            _ArrangedSegs.append(newline)
+            physicalSeg.pop(i)
+            break
 
-    startNode = _ArrangedSegs[0][1]
+    try:
+        startNode = _ArrangedSegs[0][1]
+    except:
+        f = open('error.txt', 'w')
+        for i in range(0, len(physicalSeg)):
+            line = str(physicalSeg[i])
+            f.write(line+'\n')
+        f.close()
     while len(physicalSeg) > 1:
         try:
             line = findNext(startNode)
@@ -1496,8 +1516,8 @@ e:' + str(startNode), 2)
 
 
 def headAndTail(refList, physicalSeg):
-    f = open(os.path.join(os.path.dirname(__file__), 'errorText.txt'), 'w')
-    f.write(str(len(refList)) + "\n")
+    # f = open(os.path.join(os.path.dirname(__file__), 'errorText.txt'), 'w')
+    # f.write(str(len(refList)) + "\n")
     ArrangedSeg = copy(physicalSeg)
     for key in refList.keys():
         if len(physicalSeg[key]) > 0:
@@ -1509,12 +1529,12 @@ def headAndTail(refList, physicalSeg):
                 if nodes[node] == 1:
                     terminals.append(node)
 
-            (head, tail) = whereHead(physicalSeg[key], terminals)
-            f.write(str(head) + " " + str(tail) + "\n")
-            ArrangedSeg[key] = physSegArrange(physicalSeg[key], head, tail)
+            # (head, tail) = whereHead(physicalSeg[key], terminals)
+            # f.write(str(head) + " " + str(tail) + "\n")
+            ArrangedSeg[key] = physSegArrange(physicalSeg[key], terminals)
         else:
             continue
-    f.close()
+    # f.close()
     return ArrangedSeg
 
 
