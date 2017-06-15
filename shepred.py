@@ -12,6 +12,7 @@ from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from shutil import copyfile
 import subprocess
+import pickle
 
 
 def read2dmMesh(meshLines):
@@ -122,6 +123,17 @@ class shepred:
         subprocess.Popen([dstPath])
 
     def run(self):
+        try:
+            path = os.path.join(os.path.dirname(__file__), '__parameter__')
+            f = open(path, 'rb')
+            param = pickle.load(f)
+            f.close()
+            projFolder = param['projFolder'].replace('/', '\\')
+        except:
+            param = dict()
+            param.update({'projFolder': ''})
+            projFolder = ''
+
         self.dlg.callSrhpreBtn.setEnabled(False)
         self.dlg.callSRH2DBtn.setEnabled(False)
         onComment(self.dlg.mannLabel, 1006)
@@ -129,22 +141,23 @@ class shepred:
         meshFileCaption = u'請選擇輸入網格(.2dm格式)'
         self.dlg.pbtnFileSelector.clicked.connect(
             lambda: fileBrowser(self.dlg, meshFileCaption,
-                                os.path.expanduser("~"),
+                                param['projFolder'],
                                 self.dlg.lineEditMeshFileName,
                                 presetType='.2dm'))
         meshFileCaption2 = u'請選擇輸入網格(.msh格式)'
         self.dlg.mshFileSelector.clicked.connect(
             lambda: fileBrowser(self.dlg, meshFileCaption2,
-                                os.path.expanduser("~"),
+                                param['projFolder'],
                                 self.dlg.lineMeshFilePath,
                                 presetType='.msh'))
 
+        self.dlg.saveFolderEdit.setText(projFolder)
         saveFolderCaption = u'請選擇儲存SIF檔案的資料夾'
-        self.dlg.saveFolderBtn.clicked.connect(
+        self.dlg.saveFolderBtn.pressed.connect(
             lambda: folderBrowser(self.dlg,
-                                  saveFolderCaption, os.path.expanduser("~"),
+                                  saveFolderCaption, Dir=projFolder,
                                   lineEdit=self.dlg.saveFolderEdit))
-        self.dlg.readMeshBtn.clicked.connect(self.readMesh)
+        self.dlg.readMeshBtn.pressed.connect(self.readMesh)
         self.dlg.rbtnManningConstant.pressed.connect(self.constantManning)
         self.dlg.rbtnManningMaterial.pressed.connect(self.mannMaterial)
         self.dlg.rbtnManningDistributed.pressed.connect(self.distriMann)
@@ -158,8 +171,8 @@ class shepred:
         self.dlg.rbtnICAuto.pressed.connect(self.initAuto)
         self.dlg.fixIntvBtn.pressed.connect(self.fixOutputIntv)
         self.dlg.asigOutBtn.pressed.connect(self.userOutputIntv)
-        self.dlg.addIntvBtn.clicked.connect(self.setIntvTable)
-        self.dlg.deleteIntvBtn.clicked.connect(self.deleteIntvTableColumn)
+        self.dlg.addIntvBtn.pressed.connect(self.setIntvTable)
+        self.dlg.deleteIntvBtn.pressed.connect(self.deleteIntvTableColumn)
         self.dlg.callSrhpreBtn.pressed.connect(self.callSrhpre)
         self.dlg.callSRH2DBtn.pressed.connect(self.callSRH2D)
 

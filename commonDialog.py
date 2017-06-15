@@ -45,7 +45,7 @@ textParse(criticalText)
 
 def folderBrowser(parent, caption="", Dir=os.getcwd(),
                   lineEdit=""):
-    folderName = QFileDialog.getExistingDirectory(parent, caption)
+    folderName = QFileDialog.getExistingDirectory(parent, caption, Dir)
     if lineEdit:
         if folderName:
             lineEdit.setText(folderName)

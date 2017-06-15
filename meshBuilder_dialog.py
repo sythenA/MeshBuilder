@@ -25,6 +25,7 @@ import os
 
 from PyQt4 import QtGui, uic
 from qgis.utils import iface
+import pickle
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'meshBuilder_dialog_base.ui'))
@@ -40,3 +41,15 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.__parameter__ = dict()
+
+    def closeEvent(self, event):
+        if self.__parameter__:
+            path = os.path.join(os.path.dirname(__file__), '__parameter__')
+            f = open(path, 'wb')
+            pickle.dump(self.__parameter__, f)
+            f.close()
+
+        iface.messageBar().pushMessage('Closed')
+
+        return QtGui.QDialog.closeEvent(self, event)

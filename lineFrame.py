@@ -164,6 +164,39 @@ class lineFrame:
             featureList.append(feature)
         return featureList
 
+    def setBreakPoint(self):
+        pointLayer = self.pointFrame
+        pointDict = self.pointDict
+        lineFrameLayer = self.frameLayer
+
+        twoEnds = list()
+        for feature in lineFrameLayer.getFeatures():
+            geo = feature.geometry().asPolyline()
+            if geo:
+                twoEnds.append(pointDict[geo[0]]['geoName'])
+                twoEnds.append(pointDict[geo[-1]]['geoName'])
+        endsCounter = Counter(twoEnds)
+
+        breakPoints = list()
+        for key in endsCounter.keys():
+            if endsCounter[key] >= 3:
+                breakPoints.append(key)
+        brk_idx = pointLayer.fieldNameIndex('breakPoint')
+
+        pointLayer.startEditing()
+        for feature in pointLayer.getFeatures():
+            geo = feature.geometry().asPoint()
+            if pointDict[geo]['geoName'] in breakPoints:
+                fid = feature.id()
+                if feature['breakPoint'] is None or feature['breakPoint'] == 0:
+                    pointLayer.changeAttributeValue(fid, brk_idx, 1)
+                    msg = str(fid) + " in pointLayer changed to Break Point"
+                    iface.messageBar().pushMessage(msg)
+        pointLayer.commitChanges()
+        self.pointLayer = pointLayer
+
+        return pointLayer
+
     def copyLines(self):
         lineLayer = self.lineLayer
         pointDict = self.pointDict

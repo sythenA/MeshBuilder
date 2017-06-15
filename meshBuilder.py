@@ -47,7 +47,7 @@ from shutil import rmtree
 from collections import Counter
 from copy import copy
 import os
-import sys
+import pickle
 
 
 class meshBuilder:
@@ -284,7 +284,9 @@ class meshBuilder:
             elif not os.path.isdir(self.dlg.lineEdit.text()):
                 onCritical(102)
             else:
+                self.__parameter__['projFolder'] = self.dlg.lineEdit.text()
                 self.step1_1()
+            self.dlg.__parameter__ = self.__parameter__
 
         layers = self.iface.legendInterface().layers()
         self.dlg.comboBox.clear()
@@ -405,6 +407,7 @@ class meshBuilder:
         layer.commitChanges()
         self.iface.messageBar().pushMessage('Data in meshBuilder table wrote \
 into layer attributes.', level=QgsMessageBar.INFO)
+        layer.reload()
 
     def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object', prefix=0):
@@ -844,8 +847,10 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
             self.step2_2()
         elif process == 3:
             self.writeTableToLayer()
+            self.pointLayer.reload()
             self.lineFrameObj.frameLayer = self.lineLayer
             self.lineFrameObj.pointFrame = self.pointLayer
+            self.lineFrameObj.pointDict = lineFrame.pointRef(self.pointLayer)
 
             lineFrame.lineCombine(self.lineFrameObj)
             iface.messageBar().pushMessage('Line segments combined according to\
@@ -926,6 +931,9 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
+        self.pointLayer = lineFrameObj.setBreakPoint()
+        self.pointDict = lineFrame.pointRef(self.pointLayer)
+
         self.currentProcess = 3
         self.dlg.setCompleteBtn.setText(u'合併線段')
 
@@ -972,6 +980,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
     def runGMSH(self):
         GMSH = self.dlg.gmshExeEdit.text()
+        self.__parameter__['GMSH'] = GMSH
+        self.dlg.__parameter__ = self.__parameter__
         geoPath = self.dlg.geoEdit.text()
         mshPath = self.dlg.mshEdit.text()
 
@@ -1091,6 +1101,18 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             pass
 
     def run(self):
+        try:
+            parameterPath = os.path.join(os.path.dirname(__file__),
+                                         '__parameter__')
+            f = open(parameterPath, 'rb')
+            param = pickle.load(f)
+            f.close()
+        except:
+            param = dict()
+            param.update({'GMSH': ''})
+            param.update({'projFolder': ''})
+        self.__parameter__ = param
+
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
@@ -1162,8 +1184,13 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         g_Caption = u'請選擇GMSH.exe的檔案位置'
         whereGMSH = self.dlg.whereGMSH
         gmshExeEdit = self.dlg.gmshExeEdit
+        try:
+            path = os.path.dirname(param['GMSH'])
+        except:
+            path = ''
+        gmshExeEdit.setText(param['GMSH'])
         whereGMSH.pressed.connect(lambda: fileBrowser(self.dlg,
-                                                      g_Caption, os.getcwd(),
+                                                      g_Caption, path,
                                                       lineEdit=gmshExeEdit,
                                                       presetType='.exe'))
         geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
@@ -1232,6 +1259,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
         # self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
         # Run the dialog event loop
+
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
@@ -1244,6 +1272,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.xyzName = fileBrowser(self.dlg, chooseXyzCaption, self.getProj(),
                                    lineEdit='', presetType='(*.xyz *.asc)')
         self.dlg.label_xyz.setText(u'已選擇DEM檔案')
+
+
 
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 

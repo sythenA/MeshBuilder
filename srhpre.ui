@@ -378,7 +378,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tabFlowSetting">
     <attribute name="title">
@@ -611,13 +611,44 @@
      <property name="geometry">
       <rect>
        <x>330</x>
-       <y>160</y>
+       <y>150</y>
        <width>261</width>
-       <height>41</height>
+       <height>51</height>
       </rect>
      </property>
      <property name="text">
       <string>TextLabel</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>Special Option</string>
+    </attribute>
+    <widget class="QCheckBox" name="checkBox">
+     <property name="geometry">
+      <rect>
+       <x>-580</x>
+       <y>-200</y>
+       <width>85</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>CheckBox</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBox_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>20</y>
+       <width>221</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Momentumless water sink/source</string>
      </property>
     </widget>
    </widget>
