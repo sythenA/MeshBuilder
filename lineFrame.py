@@ -206,6 +206,7 @@ class lineFrame:
         fields.append(QgsField('ForceBound', QVariant.Int))
         fields.append(QgsField('geoName', QVariant.String))
         fields.append(QgsField('Transfinite', QVariant.Int))
+        fields.append(QgsField('seq', QVariant.Int))
         fields.append(QgsField('Cells', QVariant.Int))
 
         pointFrameWriter = QgsVectorFileWriter(savePath, 'utf-8', fields,

@@ -254,6 +254,10 @@ class innerLayersExport:
                     pointDict.update({point: Attr})
                     last_pid = last_pid + 1
 
+            line_Phx_Names = list()
+            for i in range(0, len(line_Phx_list)):
+                line_Phx_Names.append(line_Phx_list[i][0])
+
             for feature in layer.getFeatures():
                 linePoints = list()
                 for point in feature.geometry().asPolyline():
@@ -269,10 +273,14 @@ class innerLayersExport:
                     lineDict.update({linePoints: Attr})
                     self.innerLineLayer.update({linePoints: Attr})
 
-                    if feature[phx_id] in line_Phx_list.keys():
-                        line_Phx_list[feature[phx_id]].append(str(last_lid))
+                    if feature[phx_id] in line_Phx_Names:
+                        for i in range(0, len(line_Phx_list)):
+                            if line_Phx_list[i][0] == feature[phx_id]:
+                                line_Phx_list[i][1].append(str(last_lid))
+                            else:
+                                pass
                     else:
-                        line_Phx_list.update({feature[phx_id]: [str(last_lid)]})
+                        line_Phx_list.append([feature[phx_id], [str(last_lid)]])
 
                     last_lid = last_lid + 1
                 else:
@@ -285,11 +293,15 @@ class innerLayersExport:
                                 "geoName": str(last_lid)}
                         lineDict.update({newLine: Attr})
                         self.innerLineLayer.update({newLine: Attr})
-                        if feature[phx_id] in line_Phx_list.keys():
-                            line_Phx_list[feature[phx_id]].append(str(last_lid))
+                        if feature[phx_id] in line_Phx_Names:
+                            for i in range(0, len(line_Phx_list)):
+                                if line_Phx_list[i][0] == feature[phx_id]:
+                                    line_Phx_list[i][1].append(str(last_lid))
+                                else:
+                                    pass
                         else:
-                            line_Phx_list.update({feature[phx_id]:
-                                                  [str(last_lid)]})
+                            line_Phx_list.append([feature[phx_id],
+                                                  [str(last_lid)]])
                         last_lid = last_lid + 1
 
         self.innerLine_lines = innerLine_lines

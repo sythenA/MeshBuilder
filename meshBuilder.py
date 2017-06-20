@@ -32,9 +32,9 @@ from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 # Initialize Qt resources from file resources.py
+import resources
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
 from commonDialog import onCritical, onWarning
-import resources
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
 import shepred
@@ -46,6 +46,7 @@ from exportToGeo import genGeo
 from shutil import rmtree
 from collections import Counter
 from copy import copy
+from operator import itemgetter
 import os
 import pickle
 
@@ -567,6 +568,15 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif Type == 'ComboBox2':
+                widget = QComboBox()
+                for k in range(0, len(physLineDict.keys())):
+                    widget.addItem(str(k+1))
+                idx = physLineDict[self.dlg.tableWidget.item(i, 1).text()]
+                widget.setCurrentIndex(idx)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+                cell = self.dlg.tableWidget.cellWidget(i, j)
+                cell.currentIndexChanged.connect(self.linePhysSeqChanged)
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -574,6 +584,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
         iface.setActiveLayer(vl[0])
@@ -583,28 +594,34 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         self.dlg.tableWidget.setRowCount(0)
         self.dlg.tableWidget.setRowCount(layer.featureCount())
-        self.dlg.tableWidget.setColumnCount(5)
+        self.dlg.tableWidget.setColumnCount(6)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'符合邊界',
                                                         u'邊界性質',
+                                                        u'邊界輸出序',
                                                         u'輸出名',
                                                         u'結構化',
                                                         u'切分數量'])
+        physLineDict = countPhysics(layer)
+        self.linePhysSeq = physLineDict
         counter = 0
         for feature in layer.getFeatures():
             setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox',
                          prefix=1)
             setTableItem(counter, 1, feature['Physical'])
-            setTableItem(counter, 2, feature['geoName'])
-            setTableItem(counter, 3, feature['Transfinit'], Type='ComboBox',
+            if feature['Physical']:
+                setTableItem(counter, 2, self.tr(u''), Type='ComboBox2')
+            setTableItem(counter, 3, feature['geoName'])
+            setTableItem(counter, 4, feature['Transfinit'], Type='ComboBox',
                          prefix=1)
-            setTableItem(counter, 4, feature['Cells'])
+            setTableItem(counter, 5, feature['Cells'])
             counter = counter + 1
 
         fieldDict = {0: 'ForceBound',
                      1: 'Physical',
-                     2: 'geoName',
-                     3: 'Transfinit',
-                     4: 'Cells'}
+                     2: 'seq',
+                     3: 'geoName',
+                     4: 'Transfinit',
+                     5: 'Cells'}
 
         self.fieldDict = fieldDict
         self.currentLayer = layer
@@ -615,11 +632,65 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                          u'切分數量'])
         self.tableAttrNameDict = {u'符合邊界': 0,
                                   u'邊界性質': 1,
-                                  u'輸出名': 2,
-                                  u'結構化': 3,
-                                  u'切分數量': 4}
+                                  u'邊界輸出序': 2,
+                                  u'輸出名': 3,
+                                  u'結構化': 4,
+                                  u'切分數量': 5}
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
+
+    def linePhysSeqChanged(self):
+        physDict = self.linePhysSeq
+        physList = dictToList(physDict)
+
+        c_row = self.dlg.tableWidget.currentRow()
+        c_column = self.dlg.tableWidget.currentColumn()
+
+        table = self.dlg.tableWidget
+
+        newSeq = table.cellWidget(c_row, c_column).currentIndex()
+        physName = table.item(c_row, 1).text()
+        for i in range(0, table.rowCount()):
+            if table.item(i, 1).text() == physName:
+                table.cellWidget(i, 2).setCurrentIndex(newSeq)
+
+        oldSeq = physDict[physName]
+        if newSeq > oldSeq:
+            physList.insert(newSeq+1, physName)
+            physList.pop(oldSeq)
+        elif newSeq <= oldSeq:
+            physList.insert(newSeq, physName)
+            physList.pop(oldSeq+1)
+
+        phySeq_dict = makeDict(physList)
+
+        for j in range(0, table.rowCount()):
+            if table.item(j, 1).text() and table.cellWidget(j, 2):
+                try:
+                    name = table.item(j, 1).text()
+                    table.cellWidget(j, 2).setCurrentIndex(phySeq_dict[name])
+                except:
+                    pass
+        self.linePhysSeq = phySeq_dict
+
+    def getCurrentPhysSeq(self):
+        newPhysList = list()
+        table = self.dlg.tableWidget
+        for i in range(0, table.rowCount()):
+            if table.item(i, 1) and table.cellWidget(i, 2):
+                name = table.item(i, 1).text()
+                phySeq = table.cellWidget(i, 2).currentIndex()
+                newPhysList.append((name, phySeq))
+        newPhysList = set(newPhysList)
+        newPhysList = list(newPhysList)
+        newPhysList = sorted(newPhysList, key=itemgetter(1))
+        iface.messageBar().pushMessage(str(len(newPhysList)))
+
+        newPhyseq = list()
+        for i in range(0, len(newPhysList)):
+            newPhyseq.append(newPhysList[i][0])
+
+        return newPhyseq
 
     def setTableToNodes(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
@@ -856,6 +927,11 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
             iface.messageBar().pushMessage('Line segments combined according to\
  break point setting in point layer.')
             self.setTableToLine(self.lineLayer)
+            # Change layer legend style to arrow
+            lLayer = iface.activeLayer()
+            qmlPath = os.path.join(os.path.dirname(__file__), 'arrow.qml')
+            lLayer.loadNamedStyle(qmlPath)
+            lLayer.triggerRepaint()
             self.step2_3()
         elif process == 4:
             self.writeTableToLayer()
@@ -1603,6 +1679,13 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
     return physicalLines
 
 
+def makeDict(c_phySeq):
+    newDict = dict()
+    for i in range(0, len(c_phySeq)):
+        newDict.update({c_phySeq[i]: i})
+    return newDict
+
+
 def arangeMesh(OutDir, gridNames, physicsRef, nodeRef):
     meshLines = list()
     for name in gridNames:
@@ -1713,3 +1796,39 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
 
     f.write("$EndElements")
     f.close()
+
+
+def dictToList(physDict):
+    seq = physDict.values()
+    seq.sort()
+
+    physList = list()
+    for i in range(0, len(seq)):
+        for key in physDict.keys():
+            if physDict[key] == seq[i]:
+                physList.append(key)
+    return physList
+
+
+def countPhysics(lineLayer):
+    allphysics = list()
+    for feature in lineLayer.getFeatures():
+        if feature['Physical']:
+            allphysics.append(feature['Physical'])
+
+    allphysics = set(allphysics)
+    allphysics = list(allphysics)
+    allphysics.sort()
+    for i in range(0, len(allphysics)):
+        allphysics[i] = (allphysics[i], i)
+
+    physicalDict = dict()
+    for i in range(0, len(allphysics)):
+        physicalDict.update({allphysics[i][0]: allphysics[i][1]})
+
+    for feature in lineLayer.getFeatures():
+        if feature['Physical'] and feature['seq']:
+            phys = feature['Physical']
+            physicalDict[phys] = feature['seq']-1
+
+    return physicalDict

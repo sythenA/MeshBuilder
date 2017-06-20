@@ -130,9 +130,9 @@ class fileWriter:
 
     def physicalLinesArange(self):
         if self.physicalLines:
-            for key in sorted(self.physicalLines.keys()):
-                line = "Physical Line('" + key + "') = {"
-                for ids in sorted(self.physicalLines[key]):
+            for i in range(0, len(self.physicalLines)):
+                line = "Physical Line('" + self.physicalLines[i][0] + "') = {"
+                for ids in sorted(self.physicalLines[i][1]):
                     line = line + ids + ", "
                 line = line[:-2] + "};\n"
                 self.physicalList.append(line)
@@ -531,18 +531,9 @@ class lineWriter:
         self.getLinesFromLayer()
         self.TransfiniteLines()
 
-        if self.Phx_lines:
-            for key in self.Phx_lines.keys():
-                if self.Phx_lines[key]:
-                    line = "Physical Line('" + key + "') = {"
-                    for ids in self.Phx_lines[key]:
-                        line = line + ids + ", "
-                    line = line[:-2] + "};\n"
-
     def getLinesFromLayer(self):
         lineLayer = self.lineFrame.frameLayer
         pointDict = self.pointDict
-        l_Phx_idx = self.l_Phx_idx
         l_Name_idx = self.l_Name_idx
 
         Phx_lines = list()
@@ -567,16 +558,23 @@ class lineWriter:
                 line = line[:-2] + "};\n"
                 lines_List.append(line)
 
+        allPhysicLines = list()
         for feature in lineLayer.getFeatures():
-            if not type(feature[l_Phx_idx]) == QPyNullVariant:
-                Phx_lines.append(feature[l_Phx_idx])
+            if feature['Physical']:
+                allPhysicLines.append((feature['Physical'], feature['seq']))
+        allPhysicLines = set(allPhysicLines)
+        allPhysicLines = list(allPhysicLines)
+        allPhysicLines = sorted(allPhysicLines, key=itemgetter(1))
 
-        Phx_lines = linePhxIdx(Phx_lines)
+        Phx_lines = list()
+        for i in range(0, len(allPhysicLines)):
+            Phx_lines.append([allPhysicLines[i][0], []])
 
-        for key in Phx_lines.keys():
-            for feature in lineLayer.getFeatures():
-                if key == feature[l_Phx_idx]:
-                    Phx_lines[key].append(feature['geoName'])
+        for feature in lineLayer.getFeatures():
+            if feature['Physical']:
+                for j in range(0, len(Phx_lines)):
+                    if feature['Physical'] == Phx_lines[j][0]:
+                        Phx_lines[j][1].append(feature['geoName'])
 
         self.Phx_lines = Phx_lines
 
