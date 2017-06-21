@@ -41,6 +41,7 @@ import shepred
 import os.path
 import newPointLayer
 import lineFrame
+import subprocess
 from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
@@ -209,17 +210,27 @@ class meshBuilder:
         files = os.listdir(projFolder)
         for name in files:
             if os.path.isfile(os.path.join(projFolder, name)):
-                os.remove(os.path.join(projFolder, name))
+                try:
+                    os.remove(os.path.join(projFolder, name))
+                except:
+                    subprocess.Popen(['del', os.path.join(projFolder, name)])
 
         if os.path.isdir(os.path.join(projFolder, 'MainLayers')):
-            files = rmtree(os.path.join(projFolder, 'MainLayers'))
-            os.mkdir(os.path.join(projFolder, 'MainLayers'))
+            try:
+                files = rmtree(os.path.join(projFolder, 'MainLayers'))
+                os.mkdir(os.path.join(projFolder, 'MainLayers'))
+            except:
+                subprocess.Popen(['RD', os.path.join(projFolder, 'MainLayers')])
         else:
             os.mkdir(os.path.join(projFolder, 'MainLayers'))
 
         if os.path.isdir(os.path.join(projFolder, 'InnerLayers')):
-            files = rmtree(os.path.join(projFolder, 'InnerLayers'))
-            os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+            try:
+                files = rmtree(os.path.join(projFolder, 'InnerLayers'))
+                os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+            except:
+                subprocess.Popen(['RD', os.path.join(projFolder, 'InnerLayers')]
+                                 )
         else:
             os.mkdir(os.path.join(projFolder, 'InnerLayers'))
 
@@ -570,9 +581,14 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
             elif Type == 'ComboBox2':
                 widget = QComboBox()
-                for k in range(0, len(physLineDict.keys())):
+                for k in range(0, len(boundaryOrder)):
                     widget.addItem(str(k+1))
-                idx = physLineDict[self.dlg.tableWidget.item(i, 1).text()]
+                physName = self.dlg.tableWidget.item(i, 1).text()
+                try:
+                    idx = boundaryOrder.index(physName)
+                except(ValueError):
+                    boundaryOrder.append(physName)
+                    idx = boundaryOrder.index(physName)
                 widget.setCurrentIndex(idx)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
                 cell = self.dlg.tableWidget.cellWidget(i, j)
@@ -584,6 +600,12 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+
+        try:
+            boundaryOrder = self.boundaryOrder
+        except:
+            boundaryOrder = countPhysics(self.lineLayer)
+            self.boundaryOrder = boundaryOrder
 
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
@@ -601,8 +623,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                                         u'輸出名',
                                                         u'結構化',
                                                         u'切分數量'])
-        physLineDict = countPhysics(layer)
-        self.linePhysSeq = physLineDict
         counter = 0
         for feature in layer.getFeatures():
             setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox',
@@ -638,8 +658,102 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'切分數量': 5}
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
+        self.dlg.tableWidget.itemChanged.connect(self.arrangeLineTable)
 
     def linePhysSeqChanged(self):
+        boundaryOrder = self.boundaryOrder
+
+        c_row = self.dlg.tableWidget.currentRow()
+        c_column = self.dlg.tableWidget.currentColumn()
+
+        table = self.dlg.tableWidget
+        try:
+            newSeq = table.cellWidget(c_row, c_column).currentIndex()
+            physName = table.item(c_row, 1).text()
+
+            # Replace the boundary order in boundaries list to the new position.
+            oldSeq = boundaryOrder.index(physName)
+            boundaryOrder.pop(oldSeq)
+            boundaryOrder.insert(newSeq, physName)
+            msg = ''
+            for i in range(0, len(boundaryOrder)):
+                msg = msg + ", " + boundaryOrder[i]
+            iface.messageBar().pushMessage(msg)
+
+            for i in range(0, table.rowCount()):
+                if table.item(i, 1):
+                    name = table.item(i, 1).text()
+                    try:
+                        idx = boundaryOrder.index(name)
+                        table.cellWidget(i, 2).setCurrentIndex(idx)
+                    except:
+                        pass
+                elif table.item(i, 1).text() == physName:
+                    idx = boundaryOrder.index(physName)
+                    table.cellWidget(i, 2).setCurrentIndex(idx)
+        except:
+            pass
+        self.boundaryOrder = boundaryOrder
+
+    def arrangeLineTable(self):
+        boundaryOrder = self.boundaryOrder
+        table = self.dlg.tableWidget
+        Boundaries = list()
+        for i in range(0, table.rowCount()):
+            if table.item(i, 1).text():
+                Boundaries.append(table.item(i, 1).text())
+            elif not table.item(i, 1) and table.cellWidget(i, 2):
+                table.removeCellWidget(i, 2)
+
+        Boundaries = set(Boundaries)
+        Boundaries = list(Boundaries)
+
+        for m in range(0, len(Boundaries)):
+            if not Boundaries[m] in boundaryOrder:
+                boundaryOrder.append(Boundaries[m])
+
+        popIdx = list()
+        for k in range(0, len(boundaryOrder)):
+            if not boundaryOrder[k] in Boundaries:
+                popIdx.append(k)
+        if popIdx:
+            boundaryOrder = [i for j,
+                             i in enumerate(boundaryOrder) if j not in popIdx]
+
+        for i in range(0, table.rowCount()):
+            if table.item(i, 1).text():
+                name = table.item(i, 1).text()
+                idx = boundaryOrder.index(name)
+                if not table.cellWidget(i, 2):
+                    widget = QComboBox()
+                    for k in range(0, len(boundaryOrder)):
+                        widget.addItem(str(k+1))
+                    widget.setCurrentIndex(boundaryOrder.index(name))
+                    table.setCellWidget(i, 2, widget)
+                    widget.currentIndexChanged.connect(self.linePhysSeqChanged)
+                else:
+                    wigItems = table.cellWidget(i, 2).count()
+                    if wigItems < len(boundaryOrder):
+                        table.cellWidget(i, 2).setMaxCount(len(boundaryOrder))
+                        for z in range(wigItems, len(boundaryOrder)):
+                            table.cellWidget(i, 2).addItem(str(z+1))
+                        for f in range(0, len(boundaryOrder)):
+                            table.cellWidget(i, 2).setItemText(f, str(f+1))
+                    elif wigItems > len(boundaryOrder):
+                        num = table.cellWidget(i, 2).count()
+                        while num > len(boundaryOrder):
+                            table.cellWidget(i, 2).removeItem(0)
+                            num = table.cellWidget(i, 2).count()
+                        for f in range(0, table.cellWidget(i, 2).count()):
+                            table.cellWidget(i, 2).setItemText(f, str(f+1))
+
+                    table.cellWidget(i, 2).setCurrentIndex(idx)
+            else:
+                if table.cellWidget(i, 2):
+                    table.removeCellWidget(i, 2)
+        self.boundaryOrder = boundaryOrder
+
+    def segPhysOrdChanged(self):
         physDict = self.linePhysSeq
         physList = dictToList(physDict)
 
@@ -649,10 +763,10 @@ into layer attributes.', level=QgsMessageBar.INFO)
         table = self.dlg.tableWidget
 
         newSeq = table.cellWidget(c_row, c_column).currentIndex()
-        physName = table.item(c_row, 1).text()
+        physName = table.item(c_row, 0).text()
         for i in range(0, table.rowCount()):
-            if table.item(i, 1).text() == physName:
-                table.cellWidget(i, 2).setCurrentIndex(newSeq)
+            if table.item(i, 0).text() == physName:
+                table.cellWidget(i, 1).setCurrentIndex(newSeq)
 
         oldSeq = physDict[physName]
         if newSeq > oldSeq:
@@ -665,32 +779,13 @@ into layer attributes.', level=QgsMessageBar.INFO)
         phySeq_dict = makeDict(physList)
 
         for j in range(0, table.rowCount()):
-            if table.item(j, 1).text() and table.cellWidget(j, 2):
+            if table.item(j, 0).text() and table.cellWidget(j, 1):
                 try:
-                    name = table.item(j, 1).text()
-                    table.cellWidget(j, 2).setCurrentIndex(phySeq_dict[name])
+                    name = table.item(j, 0).text()
+                    table.cellWidget(j, 1).setCurrentIndex(phySeq_dict[name])
                 except:
                     pass
         self.linePhysSeq = phySeq_dict
-
-    def getCurrentPhysSeq(self):
-        newPhysList = list()
-        table = self.dlg.tableWidget
-        for i in range(0, table.rowCount()):
-            if table.item(i, 1) and table.cellWidget(i, 2):
-                name = table.item(i, 1).text()
-                phySeq = table.cellWidget(i, 2).currentIndex()
-                newPhysList.append((name, phySeq))
-        newPhysList = set(newPhysList)
-        newPhysList = list(newPhysList)
-        newPhysList = sorted(newPhysList, key=itemgetter(1))
-        iface.messageBar().pushMessage(str(len(newPhysList)))
-
-        newPhyseq = list()
-        for i in range(0, len(newPhysList)):
-            newPhyseq.append(newPhysList[i][0])
-
-        return newPhyseq
 
     def setTableToNodes(self, layer):
         def setTableItem(i, j, Object, Type='Object'):
@@ -758,6 +853,15 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif Type == 'ComboBox2':
+                widget = QComboBox()
+                for k in range(0, len(physLineDict.keys())):
+                    widget.addItem(str(k+1))
+                idx = physLineDict[self.dlg.tableWidget.item(i, 0).text()]
+                widget.setCurrentIndex(idx)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+                cell = self.dlg.tableWidget.cellWidget(i, j)
+                cell.currentIndexChanged.connect(self.segPhysOrdChanged)
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -773,22 +877,35 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.dlg.attrSelectBox.clear()
 
         self.dlg.tableWidget.setRowCount(layer.featureCount())
-        self.dlg.tableWidget.setColumnCount(1)
-        self.dlg.tableWidget.setHorizontalHeaderLabels([u'邊界性質'])
+        self.dlg.tableWidget.setColumnCount(2)
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'邊界性質',
+                                                        u'邊界輸出序'])
         counter = 0
+
+        try:
+            physLineDict = self.mshPhysDict
+            del self.mshPhysDict
+        except:
+            physLineDict = self.linePhysSeq
+        self.linePhysSeq = physLineDict
         for feature in layer.getFeatures():
-            setTableItem(counter, 0, feature['Boundary'])
+            setTableItem(counter, 0, feature['Physical'])
+            if feature['Physical']:
+                setTableItem(counter, 1, self.tr(u''), Type='ComboBox2')
             counter = counter + 1
 
-        fieldDict = {0: 'Boundary'}
+        fieldDict = {0: 'Physical',
+                     1: 'seq'}
 
         self.fieldDict = fieldDict
         self.currentLayer = layer
         self.dlg.attrSelectBox.addItems([u'邊界性質'])
-        self.tableAttrNameDict = {u'邊界性質': 0}
+        self.tableAttrNameDict = {u'邊界性質': 0,
+                                  u'邊界輸出序': 1}
 
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
+        self.writeTableToLayer()
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -871,6 +988,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.lineLayer = layer
         self.attrTable(layer, Type='line')
         self.dlg.lineAttrBtn.setEnabled(True)
+        self.boundaryOrder = countPhysics(self.lineLayer)
 
         lineFrameObj = lineFrame.lineFrame(self.projFolder,
                                            pointLayer=self.pointLayer,
@@ -922,6 +1040,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
             self.lineFrameObj.frameLayer = self.lineLayer
             self.lineFrameObj.pointFrame = self.pointLayer
             self.lineFrameObj.pointDict = lineFrame.pointRef(self.pointLayer)
+            self.boundaryOrder = countPhysics(self.lineLayer)
 
             lineFrame.lineCombine(self.lineFrameObj)
             iface.messageBar().pushMessage('Line segments combined according to\
@@ -1086,7 +1205,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
         try:
-            loadMesh(meshFile, systemCRS, outDir, self.dlg)
+            self.physFromMsh = loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
             Instance = QgsMapLayerRegistry.instance()
             NodeLayer = Instance.mapLayersByName("Nodes")[0]
@@ -1097,6 +1216,16 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             SegmentLayer = Instance.mapLayersByName("Segments")[0]
             self.segLayer = SegmentLayer
             self.dlg.meshOutputBtn.setEnabled(True)
+
+            mshPhysDict = dict()
+            counter = 0
+            keys = self.physFromMsh.keys()
+            keys.sort()
+            for key in keys:
+                if self.physFromMsh[key][0] == 1:
+                    mshPhysDict.update({self.physFromMsh[key][1]: counter})
+                    counter = counter + 1
+            self.mshPhysDict = mshPhysDict
         except:
             if not os.path.isfile(meshFile):
                 onCritical(116)
@@ -1350,7 +1479,6 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.dlg.label_xyz.setText(u'已選擇DEM檔案')
 
 
-
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 
 
@@ -1379,7 +1507,8 @@ def loadMesh(filename, crs, outDir, dlg):
                                      QGis.WKBPoint, crs, "ESRI Shapefile")
     SegFields = QgsFields()
     SegFields.append(QgsField("id", QVariant.Int))
-    SegFields.append(QgsField("Boundary", QVariant.String))
+    SegFields.append(QgsField("Physical", QVariant.String))
+    SegFields.append(QgsField("seq", QVariant.Int))
     SegPath = os.path.join(outDir, "Segments.shp")
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
@@ -1531,6 +1660,8 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.outputMeshPointsBtn.setEnabled(True)
     dlg.outputSegmentsBtn.setEnabled(True)
 
+    return physicalNames
+
 
 def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
     meshName.replace('.msh', '')
@@ -1653,11 +1784,11 @@ def arangeSegLines(SegLayer, physicsRef, nodeRef):
         refList.update({key: []})
         _physicalSegs.update({key: []})
     for feature in SegLayer.getFeatures():
-        if feature['Boundary']:
+        if feature['Physical']:
             lineGeo = feature.geometry().asPolyline()
             id1 = nodeRef[lineGeo[0]]
             id2 = nodeRef[lineGeo[-1]]
-            physName = feature['Boundary']
+            physName = feature['Physical']
             ref = physicCode(physName, physicsRef)
             refList[ref].append(id1)
             refList[ref].append(id2)
@@ -1726,8 +1857,8 @@ def getGridNames(OutDir, NodeLayer, SegLayer):
 
     linePhysics = list()
     for feature in SegLayer.getFeatures():
-        if feature['Boundary'] != None:
-            linePhysics.append(feature['Boundary'])
+        if feature['Physical'] != None:
+            linePhysics.append((feature['Physical'], feature['seq']))
     linePhysics = set(linePhysics)
 
     return pointPhysics, linePhysics, gridNames
@@ -1738,6 +1869,8 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
     nodeRef = lineFrame.pointRefDict()
     pointPhysics, linePhysics, gridNames = getGridNames(OutDir, NodeLayer,
                                                         SegLayer)
+    linePhysics = list(linePhysics)
+    linePhysics = sorted(linePhysics, key=itemgetter(1))
     counter = 1
     if pointPhysics:
         for physic in pointPhysics:
@@ -1745,7 +1878,7 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
             counter = counter + 1
     if linePhysics:
         for physic in linePhysics:
-            physicsRef.update({counter: [physic, 1]})
+            physicsRef.update({counter: [physic[0], 1]})
             counter = counter + 1
     if gridNames:
         for physic in gridNames:
@@ -1819,16 +1952,23 @@ def countPhysics(lineLayer):
     allphysics = set(allphysics)
     allphysics = list(allphysics)
     allphysics.sort()
-    for i in range(0, len(allphysics)):
-        allphysics[i] = (allphysics[i], i)
 
-    physicalDict = dict()
-    for i in range(0, len(allphysics)):
-        physicalDict.update({allphysics[i][0]: allphysics[i][1]})
-
+    NumberedPhysics = list()
     for feature in lineLayer.getFeatures():
         if feature['Physical'] and feature['seq']:
-            phys = feature['Physical']
-            physicalDict[phys] = feature['seq']-1
+            NumberedPhysics.append((feature['Physical'], feature['seq']))
+    NumberedPhysics = set(NumberedPhysics)
+    try:
+        NumberedPhysics = sorted(NumberedPhysics, key=itemgetter(1))
+    except:
+        pass
+    _NumberedPhysics = list()
+    if NumberedPhysics:
+        for physName in NumberedPhysics:
+            _NumberedPhysics.append(physName[0])
 
-    return physicalDict
+    for name in allphysics:
+        if name not in _NumberedPhysics:
+            _NumberedPhysics.append(name)
+
+    return _NumberedPhysics
