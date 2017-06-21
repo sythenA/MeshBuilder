@@ -592,7 +592,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 widget.setCurrentIndex(idx)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
                 cell = self.dlg.tableWidget.cellWidget(i, j)
-                cell.currentIndexChanged.connect(self.linePhysSeqChanged)
+                cell.currentIndexChanged.connect(lambda:
+                                                 self.linePhysSeqChanged(1, 2))
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -658,9 +659,10 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'切分數量': 5}
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
-        self.dlg.tableWidget.itemChanged.connect(self.arrangeLineTable)
+        self.dlg.tableWidget.itemChanged.connect(lambda:
+                                                 self.arrangeLineTable(1, 2))
 
-    def linePhysSeqChanged(self):
+    def linePhysSeqChanged(self, nameCol, comCol, push=True):
         boundaryOrder = self.boundaryOrder
 
         c_row = self.dlg.tableWidget.currentRow()
@@ -669,41 +671,43 @@ into layer attributes.', level=QgsMessageBar.INFO)
         table = self.dlg.tableWidget
         try:
             newSeq = table.cellWidget(c_row, c_column).currentIndex()
-            physName = table.item(c_row, 1).text()
+            physName = table.item(c_row, nameCol).text()
 
             # Replace the boundary order in boundaries list to the new position.
             oldSeq = boundaryOrder.index(physName)
             boundaryOrder.pop(oldSeq)
             boundaryOrder.insert(newSeq, physName)
-            msg = ''
-            for i in range(0, len(boundaryOrder)):
-                msg = msg + ", " + boundaryOrder[i]
-            iface.messageBar().pushMessage(msg)
+            if push:
+                msg = ''
+                for i in range(0, len(boundaryOrder)):
+                    msg = msg + ", " + boundaryOrder[i]
+                msg = msg[1:-1]
+                iface.messageBar().pushMessage(msg)
 
             for i in range(0, table.rowCount()):
-                if table.item(i, 1):
-                    name = table.item(i, 1).text()
+                if table.item(i, nameCol):
+                    name = table.item(i, nameCol).text()
                     try:
                         idx = boundaryOrder.index(name)
-                        table.cellWidget(i, 2).setCurrentIndex(idx)
+                        table.cellWidget(i, comCol).setCurrentIndex(idx)
                     except:
                         pass
-                elif table.item(i, 1).text() == physName:
+                elif table.item(i, nameCol).text() == physName:
                     idx = boundaryOrder.index(physName)
-                    table.cellWidget(i, 2).setCurrentIndex(idx)
+                    table.cellWidget(i, comCol).setCurrentIndex(idx)
         except:
             pass
         self.boundaryOrder = boundaryOrder
 
-    def arrangeLineTable(self):
+    def arrangeLineTable(self, nameCol, comCol):
         boundaryOrder = self.boundaryOrder
         table = self.dlg.tableWidget
         Boundaries = list()
         for i in range(0, table.rowCount()):
-            if table.item(i, 1).text():
-                Boundaries.append(table.item(i, 1).text())
-            elif not table.item(i, 1) and table.cellWidget(i, 2):
-                table.removeCellWidget(i, 2)
+            if table.item(i, nameCol).text():
+                Boundaries.append(table.item(i, nameCol).text())
+            elif not table.item(i, 1) and table.cellWidget(i, comCol):
+                table.removeCellWidget(i, comCol)
 
         Boundaries = set(Boundaries)
         Boundaries = list(Boundaries)
@@ -721,36 +725,38 @@ into layer attributes.', level=QgsMessageBar.INFO)
                              i in enumerate(boundaryOrder) if j not in popIdx]
 
         for i in range(0, table.rowCount()):
-            if table.item(i, 1).text():
-                name = table.item(i, 1).text()
+            if table.item(i, nameCol).text():
+                name = table.item(i, nameCol).text()
                 idx = boundaryOrder.index(name)
-                if not table.cellWidget(i, 2):
+                if not table.cellWidget(i, comCol):
                     widget = QComboBox()
                     for k in range(0, len(boundaryOrder)):
                         widget.addItem(str(k+1))
                     widget.setCurrentIndex(boundaryOrder.index(name))
-                    table.setCellWidget(i, 2, widget)
-                    widget.currentIndexChanged.connect(self.linePhysSeqChanged)
+                    table.setCellWidget(i, comCol, widget)
+                    widget.currentIndexChanged.connect(lambda:
+                                                       self.linePhysSeqChanged(nameCol, comCol))
                 else:
-                    wigItems = table.cellWidget(i, 2).count()
+                    wigItems = table.cellWidget(i, comCol).count()
                     if wigItems < len(boundaryOrder):
-                        table.cellWidget(i, 2).setMaxCount(len(boundaryOrder))
+                        table.cellWidget(i,
+                                         comCol).setMaxCount(len(boundaryOrder))
                         for z in range(wigItems, len(boundaryOrder)):
-                            table.cellWidget(i, 2).addItem(str(z+1))
+                            table.cellWidget(i, comCol).addItem(str(z+1))
                         for f in range(0, len(boundaryOrder)):
-                            table.cellWidget(i, 2).setItemText(f, str(f+1))
+                            table.cellWidget(i, comCol).setItemText(f, str(f+1))
                     elif wigItems > len(boundaryOrder):
-                        num = table.cellWidget(i, 2).count()
+                        num = table.cellWidget(i, comCol).count()
                         while num > len(boundaryOrder):
-                            table.cellWidget(i, 2).removeItem(0)
-                            num = table.cellWidget(i, 2).count()
-                        for f in range(0, table.cellWidget(i, 2).count()):
-                            table.cellWidget(i, 2).setItemText(f, str(f+1))
+                            table.cellWidget(i, comCol).removeItem(0)
+                            num = table.cellWidget(i, comCol).count()
+                        for f in range(0, table.cellWidget(i, comCol).count()):
+                            table.cellWidget(i, comCol).setItemText(f, str(f+1))
 
-                    table.cellWidget(i, 2).setCurrentIndex(idx)
+                    table.cellWidget(i, comCol).setCurrentIndex(idx)
             else:
-                if table.cellWidget(i, 2):
-                    table.removeCellWidget(i, 2)
+                if table.cellWidget(i, comCol):
+                    table.removeCellWidget(i, comCol)
         self.boundaryOrder = boundaryOrder
 
     def segPhysOrdChanged(self):
@@ -855,13 +861,15 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
             elif Type == 'ComboBox2':
                 widget = QComboBox()
-                for k in range(0, len(physLineDict.keys())):
+                for k in range(0, len(boundaryOrder)):
                     widget.addItem(str(k+1))
-                idx = physLineDict[self.dlg.tableWidget.item(i, 0).text()]
+                name = self.dlg.tableWidget.item(i, 0).text()
+                idx = boundaryOrder.index(name)
                 widget.setCurrentIndex(idx)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
                 cell = self.dlg.tableWidget.cellWidget(i, j)
-                cell.currentIndexChanged.connect(self.segPhysOrdChanged)
+                cell.currentIndexChanged.connect(lambda:
+                                                 self.linePhysSeqChanged(0, 1, False))
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -873,6 +881,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
         vl = registry.mapLayersByName("Segments")
         iface.setActiveLayer(vl[0])
 
+        boundaryOrder = self.boundaryOrder
+
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
 
@@ -882,12 +892,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                                         u'邊界輸出序'])
         counter = 0
 
-        try:
-            physLineDict = self.mshPhysDict
-            del self.mshPhysDict
-        except:
-            physLineDict = self.linePhysSeq
-        self.linePhysSeq = physLineDict
         for feature in layer.getFeatures():
             setTableItem(counter, 0, feature['Physical'])
             if feature['Physical']:
@@ -905,7 +909,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
-        self.writeTableToLayer()
+        self.dlg.tableWidget.itemChanged.connect(lambda:
+                                                 self.arrangeLineTable(0, 1))
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -1205,7 +1210,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
         try:
-            self.physFromMsh = loadMesh(meshFile, systemCRS, outDir, self.dlg)
+            self.boundaryOrder = loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
             Instance = QgsMapLayerRegistry.instance()
             NodeLayer = Instance.mapLayersByName("Nodes")[0]
@@ -1513,6 +1518,7 @@ def loadMesh(filename, crs, outDir, dlg):
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
     counter = 0
+    boundaryOrder = list()
     for l in mesh:
         w = l.split()
 
@@ -1538,6 +1544,7 @@ def loadMesh(filename, crs, outDir, dlg):
                 layerType = QGis.WKBPoint
             elif dim == 1:
                 layerType = QGis.WKBLineString
+                boundaryOrder.append(name)
             elif dim >= 2:
                 layerType = QGis.WKBPolygon
             writer = QgsVectorFileWriter(path, "UTF-8", fields, layerType,
@@ -1660,7 +1667,7 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.outputMeshPointsBtn.setEnabled(True)
     dlg.outputSegmentsBtn.setEnabled(True)
 
-    return physicalNames
+    return boundaryOrder
 
 
 def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
