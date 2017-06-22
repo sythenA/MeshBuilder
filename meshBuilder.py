@@ -23,8 +23,8 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
-from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor
-from PyQt4.QtGui import QTableWidgetItem, QComboBox
+from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor, QFileDialog
+from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
@@ -90,6 +90,142 @@ class meshBuilder:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'meshBuilder')
         self.toolbar.setObjectName(u'meshBuilder')
+
+        try:
+            parameterPath = os.path.join(os.path.dirname(__file__),
+                                         '__parameter__')
+            f = open(parameterPath, 'rb')
+            param = pickle.load(f)
+            f.close()
+        except:
+            param = dict()
+            param.update({'GMSH': ''})
+            param.update({'projFolder': ''})
+        self.__parameter__ = param
+
+        caption = u'請選擇一個專案資料夾'
+        self.dlg.FileBrowseBtn.pressed.connect(
+            lambda: self.folderBrowser(self.dlg,
+                                       caption,
+                                       lineEdit=self.dlg.lineEdit))
+
+        self.dlg.lineEdit.textChanged.connect(
+            lambda: self.dirEmpty(self.dlg.lineEdit.text(),
+                                  self.dlg.lineEdit, self.dlg.lineEdit.text()))
+
+        self.dlg.tabWidget.setCurrentIndex(0)
+        # Set step2, step3 tab temporary unaccessible
+        self.dlg.tabWidget.setTabEnabled(1, False)
+        self.dlg.tabWidget.setTabEnabled(2, False)
+        self.dlg.outputMeshPointsBtn.setEnabled(False)
+        self.dlg.outputSegmentsBtn.setEnabled(False)
+        self.dlg.meshOutputBtn.setEnabled(False)
+
+        self.dlg.batchFillBtn.clicked.connect(self.batchFill)
+        self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
+        self.dlg.setCompleteBtn.clicked.connect(self.processSwitch)
+
+        self.dlg.polyAttrBtn.clicked.connect(lambda: self.switchAttr('poly'))
+        self.dlg.pointAttrBtn.clicked.connect(lambda: self.switchAttr('point'))
+        self.dlg.lineAttrBtn.clicked.connect(lambda: self.switchAttr('line'))
+        self.dlg.polyAttrBtn.setEnabled(False)
+        self.dlg.pointAttrBtn.setEnabled(False)
+        self.dlg.lineAttrBtn.setEnabled(False)
+        self.dlg.gmshExeBtn.clicked.connect(self.runGMSH)
+
+        Caption = u"請選擇一個多邊形圖層"
+        lineEdit = self.dlg.polyIndicator
+        wherePolyBtn = self.dlg.wherePolyBtn
+        wherePolyBtn.pressed.connect(lambda: fileBrowser(self.dlg,
+                                                         Caption,
+                                                         self.projFolder,
+                                                         lineEdit=lineEdit))
+        p_Caption = u"請選擇一個點圖層"
+        wherePointBtn = self.dlg.wherePointBtn
+        p_lineEdit = self.dlg.pointIndicator
+        wherePointBtn.pressed.connect(lambda: fileBrowser(self.dlg, p_Caption,
+                                                          self.projFolder,
+                                                          lineEdit=p_lineEdit))
+        l_Caption = u"請選擇一個線圖層"
+        whereLineBtn = self.dlg.whereLineBtn
+        l_lineEdit = self.dlg.lineIndicator
+        whereLineBtn.pressed.connect(lambda: fileBrowser(self.dlg,
+                                                         l_Caption,
+                                                         self.projFolder,
+                                                         lineEdit=l_lineEdit))
+        g_Caption = u'請選擇GMSH.exe的檔案位置'
+        whereGMSH = self.dlg.whereGMSH
+        gmshExeEdit = self.dlg.gmshExeEdit
+        try:
+            path = os.path.dirname(param['GMSH'])
+        except:
+            path = ''
+        gmshExeEdit.setText(param['GMSH'])
+        whereGMSH.pressed.connect(lambda: fileBrowser(self.dlg,
+                                                      g_Caption, path,
+                                                      lineEdit=gmshExeEdit,
+                                                      presetType='.exe'))
+        geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
+        whereGeo = self.dlg.whereGeo
+        geoEdit = self.dlg.geoEdit
+        whereGeo.pressed.connect(lambda: saveFileBrowser(self.dlg,
+                                                         geoCaption,
+                                                         self.getProj(),
+                                                         lineEdit=geoEdit,
+                                                         presetType='.geo'))
+
+        mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
+        mshEdit = self.dlg.mshEdit
+        whereMsh = self.dlg.whereMsh
+        whereMsh.pressed.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
+                                                         self.getProj(),
+                                                         lineEdit=mshEdit,
+                                                         presetType='.msh'))
+
+        loadMshCaption = u'請選擇一個.msh檔案'
+        whereMshEdit = self.dlg.whereMshEdit
+        whereMshBtn = self.dlg.whereMshBtn
+        whereMshBtn.pressed.connect(lambda: fileBrowser(self.dlg,
+                                                        loadMshCaption,
+                                                        self.getProj(),
+                                                        lineEdit=whereMshEdit,
+                                                        presetType='.msh'))
+        MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
+        whereMshLayerEdit = self.dlg.whereMshLayerEdit
+        whereMshLayerBtn = self.dlg.whereMshLayerBtn
+        whereMshLayerBtn.pressed.connect(
+            lambda: folderBrowser(self.dlg, MshLayerCaption, self.getProj(),
+                                  whereMshLayerEdit))
+
+        interpMshCaption = u'請選擇要內插高程的網格檔案'
+        whereInterpEdit = self.dlg.whereInterpEdit
+        whereInterpBtn = self.dlg.whereInterpBtn
+        whereInterpBtn.pressed.connect(
+            lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
+                                    lineEdit=whereInterpEdit,
+                                    presetType='.msh'))
+
+        where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
+        where2dmEdit = self.dlg.where2dmEdit
+        where2dmBtn = self.dlg.where2dmBtn
+        where2dmBtn.pressed.connect(
+            lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
+                                    lineEdit=where2dmEdit, presetType='.2dm'))
+        xyzBtn = self.dlg.chooseXyzBtn
+        xyzBtn.pressed.connect(self.selectXyz)
+
+        self.dlg.polyConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
+        self.dlg.pointConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
+        self.dlg.lineConfirm.clicked.connect(
+            lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
+        self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
+        self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
+        self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
+        self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
+
+        self.step1()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -534,7 +670,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                          Type='Fixed')
             setTableItem(counter, 1, feature.geometry().asPoint().y(),
                          Type='Fixed')
-            setTableItem(counter, 2, feature['mesh_size'])
+            setTableItem(counter, 2, feature['mesh_size'], Type='Object')
             setTableItem(counter, 3, feature['Physical'])
             setTableItem(counter, 4, feature['geoName'])
             setTableItem(counter, 5, feature['breakPoint'], Type='ComboBox',
@@ -599,6 +735,14 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
                 item = self.dlg.tableWidget.item(i, j)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            elif Type == 'Object2':
+                widget = QLineEdit()
+                if type(Object) != QPyNullVariant:
+                    Object = str(Object)
+                    widget.setText(Object)
+
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+                widget.textChanged.connect(self.setRefLength)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
 
@@ -617,13 +761,14 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         self.dlg.tableWidget.setRowCount(0)
         self.dlg.tableWidget.setRowCount(layer.featureCount())
-        self.dlg.tableWidget.setColumnCount(6)
+        self.dlg.tableWidget.setColumnCount(7)
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'符合邊界',
                                                         u'邊界性質',
                                                         u'邊界輸出序',
                                                         u'輸出名',
                                                         u'結構化',
-                                                        u'切分數量'])
+                                                        u'切分數量',
+                                                        u'參考長度'])
         counter = 0
         for feature in layer.getFeatures():
             setTableItem(counter, 0, feature['ForceBound'], Type='ComboBox',
@@ -634,7 +779,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
             setTableItem(counter, 3, feature['geoName'])
             setTableItem(counter, 4, feature['Transfinit'], Type='ComboBox',
                          prefix=1)
-            setTableItem(counter, 5, feature['Cells'])
+            setTableItem(counter, 5, feature['Cells'], Type='Object2')
             counter = counter + 1
 
         fieldDict = {0: 'ForceBound',
@@ -642,7 +787,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                      2: 'seq',
                      3: 'geoName',
                      4: 'Transfinit',
-                     5: 'Cells'}
+                     5: 'Cells',
+                     6: 'refLength'}
 
         self.fieldDict = fieldDict
         self.currentLayer = layer
@@ -656,7 +802,24 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'邊界輸出序': 2,
                                   u'輸出名': 3,
                                   u'結構化': 4,
-                                  u'切分數量': 5}
+                                  u'切分數量': 5,
+                                  u'參考長度': 6}
+
+        for i in range(0, self.dlg.tableWidget.rowCount()):
+            item = QTableWidgetItem()
+            if (self.dlg.tableWidget.cellWidget(i, 4).currentIndex() == 0 and
+                    self.dlg.tableWidget.cellWidget(i, 5).text()):
+                self.lineLayer.setSelectedFeatures([i])
+                feature = self.lineLayer.selectedFeatures()[0]
+                length = feature.geometry().length()
+                try:
+                    n = int(self.dlg.tableWidget.cellWidget(i, 5).text())
+                    item.setText(str(length/(n-1)))
+                except:
+                    item.setText('')
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            self.dlg.tableWidget.setItem(i, 6, item)
+
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
@@ -704,8 +867,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
         table = self.dlg.tableWidget
         Boundaries = list()
         for i in range(0, table.rowCount()):
-            if table.item(i, nameCol).text():
-                Boundaries.append(table.item(i, nameCol).text())
+            if table.item(i, nameCol):
+                if table.item(i, nameCol).text():
+                    Boundaries.append(table.item(i, nameCol).text())
             elif not table.item(i, 1) and table.cellWidget(i, comCol):
                 table.removeCellWidget(i, comCol)
 
@@ -725,39 +889,55 @@ into layer attributes.', level=QgsMessageBar.INFO)
                              i in enumerate(boundaryOrder) if j not in popIdx]
 
         for i in range(0, table.rowCount()):
-            if table.item(i, nameCol).text():
-                name = table.item(i, nameCol).text()
-                idx = boundaryOrder.index(name)
-                if not table.cellWidget(i, comCol):
-                    widget = QComboBox()
-                    for k in range(0, len(boundaryOrder)):
-                        widget.addItem(str(k+1))
-                    widget.setCurrentIndex(boundaryOrder.index(name))
-                    table.setCellWidget(i, comCol, widget)
-                    widget.currentIndexChanged.connect(lambda:
-                                                       self.linePhysSeqChanged(nameCol, comCol))
-                else:
-                    wigItems = table.cellWidget(i, comCol).count()
-                    if wigItems < len(boundaryOrder):
-                        table.cellWidget(i,
-                                         comCol).setMaxCount(len(boundaryOrder))
-                        for z in range(wigItems, len(boundaryOrder)):
-                            table.cellWidget(i, comCol).addItem(str(z+1))
-                        for f in range(0, len(boundaryOrder)):
-                            table.cellWidget(i, comCol).setItemText(f, str(f+1))
-                    elif wigItems > len(boundaryOrder):
-                        num = table.cellWidget(i, comCol).count()
-                        while num > len(boundaryOrder):
-                            table.cellWidget(i, comCol).removeItem(0)
+            if table.item(i, nameCol):
+                if table.item(i, nameCol).text():
+                    name = table.item(i, nameCol).text()
+                    idx = boundaryOrder.index(name)
+                    if not table.cellWidget(i, comCol):
+                        widget = QComboBox()
+                        for k in range(0, len(boundaryOrder)):
+                            widget.addItem(str(k+1))
+                        widget.setCurrentIndex(boundaryOrder.index(name))
+                        table.setCellWidget(i, comCol, widget)
+                        widget.currentIndexChanged.connect(lambda:
+                                       self.linePhysSeqChanged(nameCol, comCol))
+                    else:
+                        wigItems = table.cellWidget(i, comCol).count()
+                        if wigItems < len(boundaryOrder):
+                            table.cellWidget(i,
+                                            comCol).setMaxCount(len(boundaryOrder))
+                            for z in range(wigItems, len(boundaryOrder)):
+                                table.cellWidget(i, comCol).addItem(str(z+1))
+                            for f in range(0, len(boundaryOrder)):
+                                table.cellWidget(i, comCol).setItemText(f, str(f+1))
+                        elif wigItems > len(boundaryOrder):
                             num = table.cellWidget(i, comCol).count()
-                        for f in range(0, table.cellWidget(i, comCol).count()):
-                            table.cellWidget(i, comCol).setItemText(f, str(f+1))
+                            while num > len(boundaryOrder):
+                                table.cellWidget(i, comCol).removeItem(0)
+                                num = table.cellWidget(i, comCol).count()
+                            for f in range(0, table.cellWidget(i, comCol).count()):
+                                table.cellWidget(i, comCol).setItemText(f, str(f+1))
 
                     table.cellWidget(i, comCol).setCurrentIndex(idx)
             else:
                 if table.cellWidget(i, comCol):
                     table.removeCellWidget(i, comCol)
         self.boundaryOrder = boundaryOrder
+
+    def setRefLength(self):
+        table = self.dlg.tableWidget
+        c_row = table.currentRow()
+
+        if (table.cellWidget(c_row, 4).currentIndex() == 0 and
+                table.cellWidget(c_row, 5).text()):
+            self.lineLayer.setSelectedFeatures([c_row])
+            feature = self.lineLayer.selectedFeatures()[0]
+            length = feature.geometry().length()
+            try:
+                n = int(table.cellWidget(c_row, 5).text())
+                table.item(c_row, 6).setText(str(length/(n-1)))
+            except:
+                table.item(c_row, 6).setText('')
 
     def segPhysOrdChanged(self):
         physDict = self.linePhysSeq
@@ -869,7 +1049,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
                 cell = self.dlg.tableWidget.cellWidget(i, j)
                 cell.currentIndexChanged.connect(lambda:
-                                                 self.linePhysSeqChanged(0, 1, False))
+                                                 self.linePhysSeqChanged(0, 1,
+                                                                         False))
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -881,7 +1062,12 @@ into layer attributes.', level=QgsMessageBar.INFO)
         vl = registry.mapLayersByName("Segments")
         iface.setActiveLayer(vl[0])
 
-        boundaryOrder = self.boundaryOrder
+        if len(self.boundaryOrder) == 0:
+            meshFile = self.dlg.whereMshEdit.text()
+            self.boundaryOrder = loadMshBoundaries(meshFile)
+            boundaryOrder = self.boundaryOrder
+        else:
+            boundaryOrder = self.boundaryOrder
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -923,6 +1109,10 @@ into layer attributes.', level=QgsMessageBar.INFO)
             self.setTableToLine(layer)
 
     def switchAttr(self, Type):
+        try:
+            self.dlg.tableWidget.itemChanged.disconnect()
+        except:
+            pass
         if Type == 'poly':
             self.setTableToPoly(self.mainLayer)
         elif Type == 'point':
@@ -1020,6 +1210,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                         item.setCurrentIndex(0)
                     elif fillText == u'否':
                         item.setCurrentIndex(1)
+                elif type(item) == QLineEdit:
+                    item.setText(fillText)
             elif item is None:
                 item = self.dlg.tableWidget.item(row, currentAttrIdx)
                 if fillText:
@@ -1209,9 +1401,20 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             systemCRS = self.systemCRS
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
-        try:
-            self.boundaryOrder = loadMesh(meshFile, systemCRS, outDir, self.dlg)
 
+        if os.path.isfile('meshfile'):
+            self.boundaryOrder = loadMesh(meshFile, systemCRS, outDir,
+                                          self.dlg)
+        else:
+            onCritical(122)
+
+        msg = ''
+        for i in range(0, len(self.boundaryOrder)):
+            msg = self.boundaryOrder[i] + ", "
+        msg = msg[:-2]
+        iface.messageBar().pushMessage(msg)
+
+        try:
             Instance = QgsMapLayerRegistry.instance()
             NodeLayer = Instance.mapLayersByName("Nodes")[0]
             iface.setActiveLayer(NodeLayer)
@@ -1222,15 +1425,6 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             self.segLayer = SegmentLayer
             self.dlg.meshOutputBtn.setEnabled(True)
 
-            mshPhysDict = dict()
-            counter = 0
-            keys = self.physFromMsh.keys()
-            keys.sort()
-            for key in keys:
-                if self.physFromMsh[key][0] == 1:
-                    mshPhysDict.update({self.physFromMsh[key][1]: counter})
-                    counter = counter + 1
-            self.mshPhysDict = mshPhysDict
         except:
             if not os.path.isfile(meshFile):
                 onCritical(116)
@@ -1311,164 +1505,29 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             pass
 
     def run(self):
-        try:
-            parameterPath = os.path.join(os.path.dirname(__file__),
-                                         '__parameter__')
-            f = open(parameterPath, 'rb')
-            param = pickle.load(f)
-            f.close()
-        except:
-            param = dict()
-            param.update({'GMSH': ''})
-            param.update({'projFolder': ''})
-        self.__parameter__ = param
-
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
-        caption = u'請選擇一個專案資料夾'
-        self.dlg.FileBrowseBtn.pressed.connect(
-            lambda: folderBrowser(self.dlg,
-                                  caption,
-                                  lineEdit=self.dlg.lineEdit))
-
-        self.dlg.lineEdit.textChanged.connect(
-            lambda: self.dirEmpty(self.dlg.lineEdit.text(),
-                                  self.dlg.lineEdit, self.dlg.lineEdit.text()))
 
         self.dlg.polyIndicator.clear()
         self.dlg.pointIndicator.clear()
         self.dlg.lineIndicator.clear()
 
         """Run method that performs all the real work"""
-        self.dlg.tabWidget.setCurrentIndex(0)
-        # Set step2, step3 tab temporary unaccessible
-        self.dlg.tabWidget.setTabEnabled(1, False)
-        self.dlg.tabWidget.setTabEnabled(2, False)
-        self.dlg.outputMeshPointsBtn.setEnabled(False)
-        self.dlg.outputSegmentsBtn.setEnabled(False)
-        self.dlg.meshOutputBtn.setEnabled(False)
-
         self.dlg.tabWidget.currentChanged.connect(self.resizeDialog)
 
         # show the dialog
         self.dlg.show()
         self.dlg.resize(self.dlg.minimumSize())
-        self.step1()
 
         self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
         self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
         self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
-        self.dlg.batchFillBtn.clicked.connect(self.batchFill)
-        self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
-        self.dlg.setCompleteBtn.clicked.connect(self.processSwitch)
 
-        self.dlg.polyAttrBtn.clicked.connect(lambda: self.switchAttr('poly'))
-        self.dlg.pointAttrBtn.clicked.connect(lambda: self.switchAttr('point'))
-        self.dlg.lineAttrBtn.clicked.connect(lambda: self.switchAttr('line'))
-        self.dlg.polyAttrBtn.setEnabled(False)
-        self.dlg.pointAttrBtn.setEnabled(False)
-        self.dlg.lineAttrBtn.setEnabled(False)
-        self.dlg.gmshExeBtn.clicked.connect(self.runGMSH)
-
-        Caption = u"請選擇一個多邊形圖層"
-        lineEdit = self.dlg.polyIndicator
-        wherePolyBtn = self.dlg.wherePolyBtn
-        wherePolyBtn.pressed.connect(lambda: fileBrowser(self.dlg,
-                                                         Caption,
-                                                         self.projFolder,
-                                                         lineEdit=lineEdit))
-        p_Caption = u"請選擇一個點圖層"
-        wherePointBtn = self.dlg.wherePointBtn
-        p_lineEdit = self.dlg.pointIndicator
-        wherePointBtn.pressed.connect(lambda: fileBrowser(self.dlg, p_Caption,
-                                                          self.projFolder,
-                                                          lineEdit=p_lineEdit))
-        l_Caption = u"請選擇一個線圖層"
-        whereLineBtn = self.dlg.whereLineBtn
-        l_lineEdit = self.dlg.lineIndicator
-        whereLineBtn.pressed.connect(lambda: fileBrowser(self.dlg,
-                                                         l_Caption,
-                                                         self.projFolder,
-                                                         lineEdit=l_lineEdit))
-        g_Caption = u'請選擇GMSH.exe的檔案位置'
-        whereGMSH = self.dlg.whereGMSH
-        gmshExeEdit = self.dlg.gmshExeEdit
-        try:
-            path = os.path.dirname(param['GMSH'])
-        except:
-            path = ''
-        gmshExeEdit.setText(param['GMSH'])
-        whereGMSH.pressed.connect(lambda: fileBrowser(self.dlg,
-                                                      g_Caption, path,
-                                                      lineEdit=gmshExeEdit,
-                                                      presetType='.exe'))
-        geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
-        whereGeo = self.dlg.whereGeo
-        geoEdit = self.dlg.geoEdit
-        whereGeo.pressed.connect(lambda: saveFileBrowser(self.dlg,
-                                                         geoCaption,
-                                                         self.getProj(),
-                                                         lineEdit=geoEdit,
-                                                         presetType='.geo'))
-
-        mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
-        mshEdit = self.dlg.mshEdit
-        whereMsh = self.dlg.whereMsh
-        whereMsh.pressed.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
-                                                         self.getProj(),
-                                                         lineEdit=mshEdit,
-                                                         presetType='.msh'))
-
-        loadMshCaption = u'請選擇一個.msh檔案'
-        whereMshEdit = self.dlg.whereMshEdit
-        whereMshBtn = self.dlg.whereMshBtn
-        whereMshBtn.pressed.connect(lambda: fileBrowser(self.dlg,
-                                                        loadMshCaption,
-                                                        self.getProj(),
-                                                        lineEdit=whereMshEdit,
-                                                        presetType='.msh'))
-        MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
-        whereMshLayerEdit = self.dlg.whereMshLayerEdit
-        whereMshLayerBtn = self.dlg.whereMshLayerBtn
-        whereMshLayerBtn.pressed.connect(
-            lambda: folderBrowser(self.dlg, MshLayerCaption, self.getProj(),
-                                  whereMshLayerEdit))
-
-        interpMshCaption = u'請選擇要內插高程的網格檔案'
-        whereInterpEdit = self.dlg.whereInterpEdit
-        whereInterpBtn = self.dlg.whereInterpBtn
-        whereInterpBtn.pressed.connect(
-            lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
-                                    lineEdit=whereInterpEdit,
-                                    presetType='.msh'))
-
-        where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
-        where2dmEdit = self.dlg.where2dmEdit
-        where2dmBtn = self.dlg.where2dmBtn
-        where2dmBtn.pressed.connect(
-            lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
-                                    lineEdit=where2dmEdit, presetType='.2dm'))
-        xyzBtn = self.dlg.chooseXyzBtn
-        xyzBtn.pressed.connect(self.selectXyz)
-
-        self.dlg.polyConfirm.clicked.connect(
-            lambda: self.readLayerChk(self.dlg.polyIndicator, 1))
-        self.dlg.pointConfirm.clicked.connect(
-            lambda: self.readLayerChk(self.dlg.pointIndicator, 2))
-        self.dlg.lineConfirm.clicked.connect(
-            lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
-        self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
         self.dlg.outputMeshPointsBtn.clicked.connect(
             lambda: self.switchAttr('Nodes'))
         self.dlg.outputSegmentsBtn.clicked.connect(
             lambda: self.switchAttr('Segments'))
-        self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
-        self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
-        self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
-
-        # self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
-        # Run the dialog event loop
 
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -1478,13 +1537,42 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             pass
 
     def selectXyz(self):
-        chooseXyzCaption = u'請選擇.xyz格式之高程檔案'
+        chooseXyzCaption = u'請選擇.xyz或.asc格式之高程檔案'
         self.xyzName = fileBrowser(self.dlg, chooseXyzCaption, self.getProj(),
                                    lineEdit='', presetType='(*.xyz *.asc)')
         self.dlg.label_xyz.setText(u'已選擇DEM檔案')
 
+    def folderBrowser(self, parent, caption="", Dir=os.getcwd(), lineEdit=""):
+        folderName = QFileDialog.getExistingDirectory(parent, caption, Dir)
+        if lineEdit:
+            if folderName:
+                lineEdit.setText(folderName)
 
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
+
+
+def loadMshBoundaries(filename):
+    meshfile = open(filename, 'r')
+    mesh = meshfile.readlines()
+    meshfile.close()
+
+    read = False
+    boundaryOrder = list()
+    for l in mesh:
+        w = l.split()
+        if w[0] == "$PhysicalNames":
+            read = True
+        if len(w) > 1 and read:
+            dim, tag, name = int(w[0]), int(w[1]), w[2]
+            name = name[1:-1]
+            # Boundaries
+            if dim == 1:
+                boundaryOrder.append(name)
+
+        if w[0] == '$EndPhysicalNames':
+            break
+
+    return boundaryOrder
 
 
 def loadMesh(filename, crs, outDir, dlg):
@@ -1492,6 +1580,7 @@ def loadMesh(filename, crs, outDir, dlg):
     meshName = filename.split('/')[-1]
     mesh = meshfile.readlines()
     SegList = lineFrame.lineRefDict()
+    meshfile.close()
 
     vertices = dict()
     physicalNames = dict()
@@ -1753,7 +1842,7 @@ def physSegArrange(physicalSeg, twoEnds):
             startNode = line[1]
         except(TypeError):
             QgsMessageLog.instance().logMessage('Physical Boundary Break in Nod\
-e:' + str(startNode), 2)
+e:' + str(startNode))
     _ArrangedSegs.append(physicalSeg.pop(0))
 
     return _ArrangedSegs

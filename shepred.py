@@ -95,34 +95,6 @@ class shepred:
 
         self.dlg = shepredDialog()
 
-    def fillMannTable(self):
-        if self.dlg.rbtnManningConstant.isChecked():
-            self.constantManning()
-        elif self.dlg.rbtnManningMaterial.isChecked():
-            self.mannMaterial()
-        elif self.dlg.rbtnManningDistributed.isChecked():
-            self.distriMann()
-
-    def callSrhpre(self):
-        onInfo(1008)
-        folderPath = self.dlg.saveFolderEdit.text()
-        appFolder = os.path.dirname(__file__)
-        srcPath = os.path.join(appFolder, 'srhpre_32bit.bat')
-        dstPath = os.path.join(folderPath, 'srhpre_32bit.bat')
-        os.chdir(folderPath)
-        copyfile(srcPath, dstPath)
-        subprocess.Popen([dstPath])
-
-    def callSRH2D(self):
-        folderPath = self.dlg.saveFolderEdit.text()
-        appFolder = os.path.dirname(__file__)
-        srcPath = os.path.join(appFolder, 'srh2d_32bit.bat')
-        dstPath = os.path.join(folderPath, 'srh2d_32bit.bat')
-        os.chdir(folderPath)
-        copyfile(srcPath, dstPath)
-        subprocess.Popen([dstPath])
-
-    def run(self):
         try:
             path = os.path.join(os.path.dirname(__file__), '__parameter__')
             f = open(path, 'rb')
@@ -176,7 +148,35 @@ class shepred:
         self.dlg.callSrhpreBtn.pressed.connect(self.callSrhpre)
         self.dlg.callSRH2DBtn.pressed.connect(self.callSRH2D)
 
-        self.dlg.destroyed.connect(lambda: sys.exit(self.exec_()))
+    def fillMannTable(self):
+        if self.dlg.rbtnManningConstant.isChecked():
+            self.constantManning()
+        elif self.dlg.rbtnManningMaterial.isChecked():
+            self.mannMaterial()
+        elif self.dlg.rbtnManningDistributed.isChecked():
+            self.distriMann()
+
+    def callSrhpre(self):
+        onInfo(1008)
+        folderPath = self.dlg.saveFolderEdit.text()
+        appFolder = os.path.dirname(__file__)
+        srcPath = os.path.join(appFolder, 'srhpre_32bit.bat')
+        dstPath = os.path.join(folderPath, 'srhpre_32bit.bat')
+        os.chdir(folderPath)
+        copyfile(srcPath, dstPath)
+        subprocess.Popen([dstPath])
+
+    def callSRH2D(self):
+        folderPath = self.dlg.saveFolderEdit.text()
+        appFolder = os.path.dirname(__file__)
+        srcPath = os.path.join(appFolder, 'srh2d_32bit.bat')
+        dstPath = os.path.join(folderPath, 'srh2d_32bit.bat')
+        os.chdir(folderPath)
+        copyfile(srcPath, dstPath)
+        subprocess.Popen([dstPath])
+
+    def run(self):
+
         result = self.dlg.exec_()
         if result:
             pass

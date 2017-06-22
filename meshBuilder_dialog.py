@@ -51,5 +51,6 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
             f.close()
 
         iface.messageBar().pushMessage('Closed')
+        self.accept()
 
         return QtGui.QDialog.closeEvent(self, event)
