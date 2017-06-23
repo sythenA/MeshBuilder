@@ -43,7 +43,7 @@ criticalText = f1.readlines()
 textParse(criticalText)
 
 
-def folderBrowser(parent, caption="", Dir=os.getcwd(),
+def folderBrowser(parent, caption="", Dir=os.path.expanduser('~'),
                   lineEdit=""):
     folderName = QFileDialog.getExistingDirectory(parent, caption, Dir)
     if lineEdit:

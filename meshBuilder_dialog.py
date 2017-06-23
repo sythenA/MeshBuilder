@@ -50,7 +50,7 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
             pickle.dump(self.__parameter__, f)
             f.close()
 
-        iface.messageBar().pushMessage('Closed')
+        iface.messageBar().pushMessage('MeshBuilder Closed')
         self.accept()
 
         return QtGui.QDialog.closeEvent(self, event)

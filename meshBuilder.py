@@ -225,7 +225,6 @@ class meshBuilder:
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
 
-        self.step1()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -316,11 +315,18 @@ class meshBuilder:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/meshBuilder/icon.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'Build Mesh For SRH2D'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+        self.meshAction = self.add_action(
+                            icon_path,
+                            text=self.tr(u'Build Mesh For SRH2D'),
+                            callback=self.run,
+                            parent=self.iface.mainWindow())
+        self.srhpredAction = self.add_action(
+                            icon_path,
+                            text=self.tr('srhpre UI'),
+                            callback=self.shepred.run,
+                            parent=self.iface.mainWindow())
+
+        """
         shepredTr = QCoreApplication.translate('shrhpre UI', 'srhpre UI')
         ShepredAction = QAction(QIcon(icon_path), shepredTr,
                                 self.iface.mainWindow())
@@ -330,6 +336,7 @@ class meshBuilder:
         self.actions.append(ShepredAction)
         self.toolbar = self.iface.addToolBar(u'srhpre UI')
         self.toolbar.setObjectName(u'srhpreUI')
+        self.toolbar.addAction(ShepredAction)"""
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -518,39 +525,46 @@ class meshBuilder:
             for j in range(0, Columns):
                 dat = ""
                 item = self.dlg.tableWidget.cellWidget(i, j)
-                if type(item) == QComboBox:
-                    dat = item.currentText()
-                elif item is None:
+                if item is None:
                     if self.dlg.tableWidget.item(i, j) is not None:
                         dat = self.dlg.tableWidget.item(i, j).text()
+                elif type(item) == QComboBox:
+                    dat = item.currentText()
+                elif isinstance(item, type(QLineEdit())):
+                    dat = self.dlg.tableWidget.cellWidget(i, j).text()
+                    iface.messageBar().pushMessage(dat)
 
-                fieldName = fieldDict[j]
-                idx = layerFields.fieldNameIndex(fieldName)
+                try:
+                    fieldName = fieldDict[j]
+                    idx = layerFields.fieldNameIndex(fieldName)
+                except:
+                    idx = None
                 #
                 # From the data type of layer attribute table, change the
                 # text in data table to the same type of attribute field,
                 # then fill in the attribute table.
                 #
-                fieldType = layerFields[idx].typeName()
-                if fieldType == 'String':
-                    layer.changeAttributeValue(i, idx, dat)
+                if idx:
+                    fieldType = layerFields[idx].typeName()
+                    if fieldType == 'String':
+                        layer.changeAttributeValue(i, idx, dat)
 
-                elif fieldType == 'Integer' and dat:
-                    if dat == u'是':
-                        dat = 1
-                    elif dat == u'否':
-                        dat = 0
-                    layer.changeAttributeValue(i, idx, int(dat))
+                    elif fieldType == 'Integer' and dat:
+                        if dat == u'是':
+                            dat = 1
+                        elif dat == u'否':
+                            dat = 0
+                        layer.changeAttributeValue(i, idx, int(dat))
 
-                elif fieldType == 'Integer64' and dat:
-                    if dat == u'是':
-                        dat = long(1)
-                    elif dat == u'否':
-                        dat = long(0)
-                    layer.changeAttributeValue(i, idx, int(dat))
+                    elif fieldType == 'Integer64' and dat:
+                        if dat == u'是':
+                            dat = long(1)
+                        elif dat == u'否':
+                            dat = long(0)
+                        layer.changeAttributeValue(i, idx, int(dat))
 
-                elif fieldType == 'Real' and dat:
-                    layer.changeAttributeValue(i, idx, float(dat))
+                    elif fieldType == 'Real' and dat:
+                        layer.changeAttributeValue(i, idx, float(dat))
 
         layer.commitChanges()
         self.iface.messageBar().pushMessage('Data in meshBuilder table wrote \
@@ -787,8 +801,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                      2: 'seq',
                      3: 'geoName',
                      4: 'Transfinit',
-                     5: 'Cells',
-                     6: 'refLength'}
+                     5: 'Cells'}
 
         self.fieldDict = fieldDict
         self.currentLayer = layer
@@ -807,18 +820,20 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         for i in range(0, self.dlg.tableWidget.rowCount()):
             item = QTableWidgetItem()
-            if (self.dlg.tableWidget.cellWidget(i, 4).currentIndex() == 0 and
-                    self.dlg.tableWidget.cellWidget(i, 5).text()):
-                self.lineLayer.setSelectedFeatures([i])
-                feature = self.lineLayer.selectedFeatures()[0]
-                length = feature.geometry().length()
-                try:
-                    n = int(self.dlg.tableWidget.cellWidget(i, 5).text())
-                    item.setText(str(length/(n-1)))
-                except:
-                    item.setText('')
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            self.dlg.tableWidget.setItem(i, 6, item)
+            if self.dlg.tableWidget.cellWidget(i, 4):
+                if (self.dlg.tableWidget.cellWidget(i,
+                                                    4).currentIndex() == 0 and
+                        self.dlg.tableWidget.cellWidget(i, 5).text()):
+                    self.lineLayer.setSelectedFeatures([i])
+                    feature = self.lineLayer.selectedFeatures()[0]
+                    length = feature.geometry().length()
+                    try:
+                        n = int(self.dlg.tableWidget.cellWidget(i, 5).text())
+                        item.setText(str(length/(n-1)))
+                    except:
+                        item.setText('')
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.dlg.tableWidget.setItem(i, 6, item)
 
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
@@ -899,24 +914,27 @@ into layer attributes.', level=QgsMessageBar.INFO)
                             widget.addItem(str(k+1))
                         widget.setCurrentIndex(boundaryOrder.index(name))
                         table.setCellWidget(i, comCol, widget)
-                        widget.currentIndexChanged.connect(lambda:
-                                       self.linePhysSeqChanged(nameCol, comCol))
+                        widget.currentIndexChanged.connect(
+                            lambda: self.linePhysSeqChanged(nameCol, comCol))
                     else:
                         wigItems = table.cellWidget(i, comCol).count()
                         if wigItems < len(boundaryOrder):
-                            table.cellWidget(i,
-                                            comCol).setMaxCount(len(boundaryOrder))
+                            table.cellWidget(i, comCol).setMaxCount(
+                                len(boundaryOrder))
                             for z in range(wigItems, len(boundaryOrder)):
                                 table.cellWidget(i, comCol).addItem(str(z+1))
                             for f in range(0, len(boundaryOrder)):
-                                table.cellWidget(i, comCol).setItemText(f, str(f+1))
+                                table.cellWidget(i, comCol).setItemText(
+                                    f, str(f+1))
                         elif wigItems > len(boundaryOrder):
                             num = table.cellWidget(i, comCol).count()
                             while num > len(boundaryOrder):
                                 table.cellWidget(i, comCol).removeItem(0)
                                 num = table.cellWidget(i, comCol).count()
-                            for f in range(0, table.cellWidget(i, comCol).count()):
-                                table.cellWidget(i, comCol).setItemText(f, str(f+1))
+                            for f in range(0, table.cellWidget(i,
+                                                               comCol).count()):
+                                table.cellWidget(i, comCol).setItemText(
+                                    f, str(f+1))
 
                     table.cellWidget(i, comCol).setCurrentIndex(idx)
             else:
@@ -926,18 +944,21 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
     def setRefLength(self):
         table = self.dlg.tableWidget
-        c_row = table.currentRow()
 
-        if (table.cellWidget(c_row, 4).currentIndex() == 0 and
-                table.cellWidget(c_row, 5).text()):
-            self.lineLayer.setSelectedFeatures([c_row])
-            feature = self.lineLayer.selectedFeatures()[0]
-            length = feature.geometry().length()
+        for i in range(0, table.rowCount()):
             try:
-                n = int(table.cellWidget(c_row, 5).text())
-                table.item(c_row, 6).setText(str(length/(n-1)))
+                if (table.cellWidget(i, 4).currentIndex() == 0 and
+                        table.cellWidget(i, 5).text()):
+                    self.lineLayer.setSelectedFeatures([i])
+                    feature = self.lineLayer.selectedFeatures()[0]
+                    length = feature.geometry().length()
+                    try:
+                        n = int(table.cellWidget(i, 5).text())
+                        table.item(i, 6).setText(str(length/(n-1)))
+                    except:
+                        table.item(i, 6).setText('')
             except:
-                table.item(c_row, 6).setText('')
+                pass
 
     def segPhysOrdChanged(self):
         physDict = self.linePhysSeq
@@ -1402,7 +1423,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         meshFile = self.dlg.whereMshEdit.text()
         outDir = self.dlg.whereMshLayerEdit.text()
 
-        if os.path.isfile('meshfile'):
+        if os.path.isfile(meshFile):
             self.boundaryOrder = loadMesh(meshFile, systemCRS, outDir,
                                           self.dlg)
         else:
@@ -1519,6 +1540,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         # show the dialog
         self.dlg.show()
         self.dlg.resize(self.dlg.minimumSize())
+        # Read current layer in mapLayerRegistry, begin the first step.
+        self.step1()
 
         self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
         self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
