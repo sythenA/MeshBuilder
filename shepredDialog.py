@@ -1,8 +1,8 @@
 
 import os
+import sys
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog
-from PyQt4.QtCore import Qt
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -21,5 +21,18 @@ class shepredDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
 
     def closeEvent(self, event):
+        self.lineEditCaseName.clear()
+        self.lineEditDescription.clear()
+        self.lineEditMeshFileName.clear()
+        self.lineMeshFilePath.clear()
+        self.lineEditTStep.clear()
+        self.lineEditTTotal.clear()
+        self.turbParaInput.clear()
+        self.mannTable.clear()
+        self.InitCondTable.clear()
+        self.OutIntvTable.clear()
+        self.boundaryTable.clear()
+
         self.accept()
+        self.close()
         return QDialog.closeEvent(self, event)

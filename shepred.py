@@ -3,8 +3,7 @@
 import os
 import os.path
 import re
-import sys
-from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
+from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog
 from shepredDialog import shepredDialog
@@ -106,6 +105,9 @@ class shepred:
             param.update({'projFolder': ''})
             projFolder = ''
 
+        self.dlg.solverTabWidget.setCurrentIndex(0)
+        self.dlg.tabWidget.setCurrentIndex(0)
+
         self.dlg.callSrhpreBtn.setEnabled(False)
         self.dlg.callSRH2DBtn.setEnabled(False)
         onComment(self.dlg.mannLabel, 1006)
@@ -147,6 +149,11 @@ class shepred:
         self.dlg.deleteIntvBtn.pressed.connect(self.deleteIntvTableColumn)
         self.dlg.callSrhpreBtn.pressed.connect(self.callSrhpre)
         self.dlg.callSRH2DBtn.pressed.connect(self.callSRH2D)
+        self.dlg.rbtnSpecialNone.setCheckState(Qt.Checked)
+        self.dlg.tabSpecialOps.setEnabled(False)
+        self.dlg.tabSpecialOps.setTabEnabled(0, False)
+        self.dlg.tabSpecialOps.setTabEnabled(1, False)
+        self.dlg.tabSpecialOps.setTabEnabled(2, False)
 
     def fillMannTable(self):
         if self.dlg.rbtnManningConstant.isChecked():
@@ -175,7 +182,32 @@ class shepred:
         copyfile(srcPath, dstPath)
         subprocess.Popen([dstPath])
 
+    def addSource(self):
+        self.dlg.rbtnSpecialNone.setCheckState(Qt.Unchecked)
+        if self.dlg.rbtnSpecialMomentumless.checkState() == Qt.Checked:
+            self.dlg.tabSpecialOps.setEnabled(True)
+            self.dlg.tabSpecialOps.setTabEnabled(0, True)
+        else:
+            self.dlg.tabSpecialOps.setTabEnabled(0, False)
+
+    def addInfil(self):
+        self.dlg.rbtnSpecialNone.setCheckState(Qt.Unchecked)
+        if self.dlg.rbtnSpecialInfiltration.checkState() == Qt.Checked:
+            self.dlg.tabSpecialOps.setEnabled(True)
+            self.dlg.tabSpecialOps.setTabEnabled(1, True)
+        else:
+            self.dlg.tabSpecialOps.setTabEnabled(1, False)
+
+    def setNoSpecials(self):
+        if self.dlg.rbtnSpecialNone.checkState == Qt.Checked:
+            self.dlg.tabSpecialOps.setTabEnabled(0, False)
+            self.dlg.tabSpecialOps.setTabEnabled(1, False)
+            self.dlg.tabSpecialOps.setTabEnabled(2, False)
+
     def run(self):
+        self.dlg.rbtnSpecialMomentumless.stateChanged.connect(self.addSource)
+        self.dlg.rbtnSpecialInfiltration.stateChanged.connect(self.addInfil)
+        self.dlg.rbtnSpecialNone.stateChanged.connect(self.setNoSpecials)
 
         result = self.dlg.exec_()
         if result:

@@ -31,8 +31,7 @@ from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
 from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
-# Initialize Qt resources from file resources.py
-import resources
+from lineFlip import flip
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
 from commonDialog import onCritical, onWarning
 # Import the code for the dialog
@@ -50,6 +49,8 @@ from copy import copy
 from operator import itemgetter
 import os
 import pickle
+# Initialize Qt resources from file resources.py
+import resources
 
 
 class meshBuilder:
@@ -322,21 +323,14 @@ class meshBuilder:
                             parent=self.iface.mainWindow())
         self.srhpredAction = self.add_action(
                             icon_path,
-                            text=self.tr('srhpre UI'),
+                            text=self.tr(u'srhpre UI'),
                             callback=self.shepred.run,
                             parent=self.iface.mainWindow())
-
-        """
-        shepredTr = QCoreApplication.translate('shrhpre UI', 'srhpre UI')
-        ShepredAction = QAction(QIcon(icon_path), shepredTr,
-                                self.iface.mainWindow())
-        ShepredAction.triggered.connect(lambda: self.shepred.run())
-        ShepredAction.setEnabled(True)
-        self.iface.addPluginToMenu(self.menu, ShepredAction)
-        self.actions.append(ShepredAction)
-        self.toolbar = self.iface.addToolBar(u'srhpre UI')
-        self.toolbar.setObjectName(u'srhpreUI')
-        self.toolbar.addAction(ShepredAction)"""
+        self.flipAction = self.add_action(
+                            icon_path,
+                            text=self.tr(u'Flip Line'),
+                            callback=flip,
+                            parent=self.iface.mainWindow())
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -363,7 +357,12 @@ class meshBuilder:
                 files = rmtree(os.path.join(projFolder, 'MainLayers'))
                 os.mkdir(os.path.join(projFolder, 'MainLayers'))
             except:
-                subprocess.Popen(['RD', os.path.join(projFolder, 'MainLayers')])
+                try:
+                    subprocess.Popen(['RD', os.path.join(projFolder,
+                                                         'MainLayers')])
+                    os.mkdir(os.path.join(projFolder, 'MainLayers'))
+                except:
+                    pass
         else:
             os.mkdir(os.path.join(projFolder, 'MainLayers'))
 
@@ -372,8 +371,12 @@ class meshBuilder:
                 files = rmtree(os.path.join(projFolder, 'InnerLayers'))
                 os.mkdir(os.path.join(projFolder, 'InnerLayers'))
             except:
-                subprocess.Popen(['RD', os.path.join(projFolder, 'InnerLayers')]
-                                 )
+                try:
+                    subprocess.Popen(['RD', os.path.join(projFolder,
+                                                         'InnerLayers')])
+                    os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+                except:
+                    pass
         else:
             os.mkdir(os.path.join(projFolder, 'InnerLayers'))
 
@@ -528,7 +531,7 @@ class meshBuilder:
                 if item is None:
                     if self.dlg.tableWidget.item(i, j) is not None:
                         dat = self.dlg.tableWidget.item(i, j).text()
-                elif type(item) == QComboBox:
+                elif isinstance(item, type(QComboBox())):
                     dat = item.currentText()
                 elif isinstance(item, type(QLineEdit())):
                     dat = self.dlg.tableWidget.cellWidget(i, j).text()
@@ -602,7 +605,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                                         u'符合邊界',
                                                         u'區域分類',
                                                         u'輸出名',
-                                                        u'合併網格',
+                                                        u'四邊形網格',
                                                         u'結構化網格'])
         counter = 0
         for feature in layer.getFeatures():
@@ -629,13 +632,13 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                          u'符合邊界',
                                          u'區域分類',
                                          u'輸出名',
-                                         u'合併網格',
+                                         u'四邊形網格',
                                          u'結構化網格'])
         self.tableAttrNameDict = {u'網格間距': 0,
                                   u'符合邊界': 1,
                                   u'區域分類': 2,
                                   u'輸出名': 3,
-                                  u'合併網格': 4,
+                                  u'四邊形網格': 4,
                                   u'結構化網格': 5}
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
@@ -1526,6 +1529,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             pass
 
     def run(self):
+        QgsMapLayerRegistry.instance().legendLayersAdded.connect(self.step1)
+
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         self.dlg.lineEdit.clear()
