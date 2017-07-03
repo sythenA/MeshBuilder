@@ -5,10 +5,11 @@ import os.path
 import re
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
-from PyQt4.QtGui import QFileDialog
+from PyQt4.QtGui import QFileDialog, QPixmap
 from shepredDialog import shepredDialog
 from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
+from sedimentMod import sedimentModule
 from shutil import copyfile
 import subprocess
 import pickle
@@ -100,10 +101,27 @@ class shepred:
             param = pickle.load(f)
             f.close()
             projFolder = param['projFolder'].replace('/', '\\')
+            self.dlg.projFolder = projFolder
         except:
             param = dict()
             param.update({'projFolder': ''})
             projFolder = ''
+
+        dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
+                                'Pressure_Unit.png')
+        pic = QPixmap(dirToPic)
+        self.dlg.label_34.setPixmap(pic)
+        self.dlg.label_35.setPixmap(pic)
+
+        dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
+                                'FallSpeed2.png')
+        pic = QPixmap(dirToPic)
+        self.dlg.label_37.setPixmap(pic)
+
+        dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
+                                'SIconcentration.png')
+        pic = QPixmap(dirToPic)
+        self.dlg.label_36.setPixmap(pic)
 
         self.dlg.solverTabWidget.setCurrentIndex(0)
         self.dlg.tabWidget.setCurrentIndex(0)
@@ -154,6 +172,15 @@ class shepred:
         self.dlg.tabSpecialOps.setTabEnabled(0, False)
         self.dlg.tabSpecialOps.setTabEnabled(1, False)
         self.dlg.tabSpecialOps.setTabEnabled(2, False)
+
+        self.dlg.solverTabWidget.setTabEnabled(1, False)
+        self.dlg.rbtnSolverMobile.toggled.connect(self.mobileEnabled)
+        self.dlg.label_40.setText(u'')
+
+    def mobileEnabled(self):
+        self.dlg.solverTabWidget.setTabEnabled(1, True)
+        Mod = sedimentModule(self.dlg)
+        self.sediMod = Mod
 
     def fillMannTable(self):
         if self.dlg.rbtnManningConstant.isChecked():

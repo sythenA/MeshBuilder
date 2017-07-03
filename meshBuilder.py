@@ -23,7 +23,7 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
-from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor, QFileDialog
+from PyQt4.QtGui import QAction, QIcon, QListWidgetItem, QColor
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
@@ -47,6 +47,7 @@ from shutil import rmtree
 from collections import Counter
 from copy import copy
 from operator import itemgetter
+from loadPara import loadParaView
 import os
 import pickle
 # Initialize Qt resources from file resources.py
@@ -106,9 +107,9 @@ class meshBuilder:
 
         caption = u'請選擇一個專案資料夾'
         self.dlg.FileBrowseBtn.pressed.connect(
-            lambda: self.folderBrowser(self.dlg,
-                                       caption,
-                                       lineEdit=self.dlg.lineEdit))
+            lambda: folderBrowser(self.dlg,
+                                  caption,
+                                  lineEdit=self.dlg.lineEdit))
 
         self.dlg.lineEdit.textChanged.connect(
             lambda: self.dirEmpty(self.dlg.lineEdit.text(),
@@ -225,7 +226,8 @@ class meshBuilder:
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
-
+        self.dlg.backButton.pressed.connect(self.backSwitch)
+        self.dlg.backButton.setEnabled(False)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -316,6 +318,8 @@ class meshBuilder:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/meshBuilder/icon.png'
+        dirPath = os.path.dirname(__file__)
+        paraview_icon = os.path.join(dirPath, 'paraview.png')
         self.meshAction = self.add_action(
                             icon_path,
                             text=self.tr(u'Build Mesh For SRH2D'),
@@ -331,6 +335,11 @@ class meshBuilder:
                             text=self.tr(u'Flip Line'),
                             callback=flip,
                             parent=self.iface.mainWindow())
+        self.paraViewAction = self.add_action(
+                                paraview_icon,
+                                text=self.tr('ParaView'),
+                                callback=loadParaView,
+                                parent=self.iface.mainWindow())
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -535,7 +544,6 @@ class meshBuilder:
                     dat = item.currentText()
                 elif isinstance(item, type(QLineEdit())):
                     dat = self.dlg.tableWidget.cellWidget(i, j).text()
-                    iface.messageBar().pushMessage(dat)
 
                 try:
                     fieldName = fieldDict[j]
@@ -1242,6 +1250,77 @@ into layer attributes.', level=QgsMessageBar.INFO)
                     item.setText(fillText)
                 else:
                     item.setText("")
+        for i in range(0, self.dlg.tableWidget.rowCount()):
+            for j in range(0, self.dlg.tableWidget.columnCount()):
+                if self.dlg.tableWidget.item(i, j):
+                    if self.dlg.tableWidget.item(i, j).isSelected():
+                        self.dlg.tableWidget.item(i, j).setSelected(False)
+
+    def backSwitch(self):
+        process = self.currentProcess
+        if process == 4:
+            layerList = QgsMapLayerRegistry.instance().mapLayersByName(
+                'MainLines_frame')
+            idList = list()
+            for layer in layerList:
+                idList.append(layer.id())
+            QgsMapLayerRegistry.instance().removeMapLayers(idList)
+            del self.lineLayer
+            del self.lineFrameObj
+            del self.pointDict
+            self.switchAttr(Type='point')
+
+            folderFiles = os.listdir(self.projFolder)
+            for fileName in folderFiles:
+                if 'MainLines_frame' in fileName:
+                    os.remove(os.path.join(self.projFolder, fileName))
+            self.step2_2()
+        elif process == 3:
+            layerList = QgsMapLayerRegistry.instance().mapLayersByName(
+                'MainLines_frame')
+            idList = list()
+            for layer in layerList:
+                idList.append(layer.id())
+            QgsMapLayerRegistry.instance().removeMapLayers(idList)
+            del self.lineLayer
+            del self.lineFrameObj
+            del self.pointDict
+
+            layerList = QgsMapLayerRegistry.instance().mapLayersByName(
+                'MainPoint_frame')
+            idList = list()
+            for layer in layerList:
+                idList.append(layer.id())
+            QgsMapLayerRegistry.instance().removeMapLayers(idList)
+            del self.pointLayer
+            self.switchAttr(Type='poly')
+            subprocess.call(['rm', self.projFolder, 'MainLines_frame.*'])
+            subprocess.call(['rm', self.projFolder, 'MainPoint_frame.*'])
+            self.step2_1()
+            self.dlg.setCompleteBtn.setText(u'圖層設定完成')
+            self.dlg.lineIndicator.clear()
+            self.dlg.lineAttrBtn.setEnabled(False)
+        elif process == 2:
+            layerList = QgsMapLayerRegistry.instance().mapLayersByName(
+                'MainPoint_frame')
+            idList = list()
+            for layer in layerList:
+                idList.append(layer.id())
+            QgsMapLayerRegistry.instance().removeMapLayers(idList)
+            del self.pointLayer
+            self.switchAttr(Type='poly')
+            # subprocess.call(['rm', self.projFolder, 'MainPoint_frame.*'])
+            folderFiles = os.listdir(self.projFolder)
+            for fileName in folderFiles:
+                if 'MainPoint_frame' in fileName:
+                    try:
+                        os.remove(os.path.join(self.projFolder, fileName))
+                    except:
+                        pass
+
+            self.dlg.pointIndicator.clear()
+            self.dlg.pointAttrBtn.setEnabled(False)
+            self.currentProcess = 1
 
     def processSwitch(self):
         process = self.currentProcess
@@ -1250,6 +1329,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
             iface.messageBar().pushMessage('Data in table wrote to main layer \
 attributes, load point layer...', level=QgsMessageBar.INFO)
             self.step2_1()
+            self.dlg.backButton.setEnabled(True)
         elif process == 2:
             self.writeTableToLayer()
             iface.messageBar().pushMessage('Data in table wrote to point layer,\
@@ -1299,9 +1379,11 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         self.currentProcess = 1
 
     def step2_1(self):
-        self.orgPoint, self.orgLine = newPointLayer.pointAndLine(self.mainLayer,
-                                                                 self.projFolder
-                                                                 )
+        fileNames = os.listdir(os.path.join(self.projFolder, 'MainLayers'))
+        if ('polygon-line.shp' not in fileNames and
+                'polygon-points' not in fileNames):
+            self.orgPoint, self.orgLine = newPointLayer.pointAndLine(
+                self.mainLayer, self.projFolder)
         pointFrameObj = lineFrame.pointFrame(self.projFolder,
                                              orgPointsLayer=self.orgPoint,
                                              CRS=self.systemCRS)
@@ -1395,7 +1477,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             self.dlg.textBrowser.append(line)
 
     def runGMSH(self):
-        GMSH = self.dlg.gmshExeEdit.text()
+        GMSH = self.dlg.gmshExeEdit.text().replace(' ', '\ ')
         self.__parameter__['GMSH'] = GMSH
         self.dlg.__parameter__ = self.__parameter__
         geoPath = self.dlg.geoEdit.text()
@@ -1416,6 +1498,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         P.start(command)
 
         self.dlg.textBrowser.setText(command)
+        self.dlg.Finished = True
 
     def loadGeneratedMesh(self):
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
@@ -1570,17 +1653,12 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
                                    lineEdit='', presetType='(*.xyz *.asc)')
         self.dlg.label_xyz.setText(u'已選擇DEM檔案')
 
-    def folderBrowser(self, parent, caption="", Dir=os.getcwd(), lineEdit=""):
-        folderName = QFileDialog.getExistingDirectory(parent, caption, Dir)
-        if lineEdit:
-            if folderName:
-                lineEdit.setText(folderName)
 
 mshTypeRef = {15: 1, 1: 2, 2: 3, 3: 4, 4: 5}
 
 
 def loadMshBoundaries(filename):
-    meshfile = open(filename, 'r')
+    meshfile = open(filename, 'r',)
     mesh = meshfile.readlines()
     meshfile.close()
 

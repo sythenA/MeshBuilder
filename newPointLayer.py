@@ -75,7 +75,7 @@ def copyMainLayer(layer, folder):
         #  1 in "ForceBound" to show force boundary in preset, and fill "Domain"
         #  in "Physical" to express the physical domain in grid generation.
         if type(featureFields[FB_idx]) == QPyNullVariant:
-            attr = {FB_idx: 1}
+            attr = {FB_idx: 0}
             newlayer.dataProvider().changeAttributeValues({featId: attr})
         if type(featureFields[Phx_idx]) == QPyNullVariant:
             attr = {Phx_idx: "Domain"}

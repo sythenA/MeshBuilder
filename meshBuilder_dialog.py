@@ -24,6 +24,7 @@
 import os
 
 from PyQt4 import QtGui, uic
+from PyQt4.QtCore import Qt
 from qgis.utils import iface
 import pickle
 
@@ -42,6 +43,7 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.__parameter__ = dict()
+        self.Finished = False
 
     def closeEvent(self, event):
         if self.__parameter__:
@@ -51,6 +53,9 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
             f.close()
 
         iface.messageBar().pushMessage('MeshBuilder Closed')
-        self.accept()
+        if not self.Finished:
+            self.setWindowState(Qt.WindowMinimized)
+        else:
+            self.close()
 
         return QtGui.QDialog.closeEvent(self, event)

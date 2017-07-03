@@ -1,8 +1,8 @@
 
 import os
-import sys
+import os.path
 from PyQt4 import uic
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QPixmap
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -19,6 +19,7 @@ class shepredDialog(QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.projFolder = ''
 
     def closeEvent(self, event):
         self.lineEditCaseName.clear()

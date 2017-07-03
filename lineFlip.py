@@ -28,7 +28,7 @@ def flip():
                 newGeo = list()
                 for line in feature.geometry().asMultiPolyline():
                     newGeo.append(lineInverse(line))
-                feature.changeGeoemtry(
-                    fid, QgsGeometry().fromMultiPolyline())
+                layer.changeGeoemtry(
+                    fid, QgsGeometry().fromMultiPolyline(newGeo))
 
     layer.commitChanges()

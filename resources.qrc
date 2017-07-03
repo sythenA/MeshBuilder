@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/plugins/meshBuilder" >
         <file>icon.png</file>
+        <file>paraview.png</file>
     </qresource>
 </RCC>
