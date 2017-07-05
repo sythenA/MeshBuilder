@@ -381,6 +381,9 @@
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
      <widget class="QLabel" name="label_7">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="text">
        <string>.2dm Mesh</string>
       </property>
@@ -541,7 +544,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabFlowSetting">
       <attribute name="title">
@@ -1115,7 +1118,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
@@ -1303,6 +1306,9 @@
          </item>
          <item row="3" column="1">
           <widget class="QRadioButton" name="rdoMixedEqn">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Mixed</string>
            </property>
@@ -1577,7 +1583,7 @@
          <string>Active Layer Thickness</string>
         </property>
        </widget>
-       <widget class="QComboBox" name="comboBox">
+       <widget class="QComboBox" name="aTMode">
         <property name="geometry">
          <rect>
           <x>10</x>
@@ -2249,6 +2255,11 @@
          <height>191</height>
         </rect>
        </property>
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
       </widget>
       <widget class="QCheckBox" name="rockErosionCheck">
        <property name="geometry">
@@ -2353,19 +2364,6 @@
         <string>說明</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton_3">
-       <property name="geometry">
-        <rect>
-         <x>370</x>
-         <y>20</y>
-         <width>111</width>
-         <height>28</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>使用檔案輸入</string>
-       </property>
-      </widget>
      </widget>
     </widget>
    </widget>
@@ -2383,7 +2381,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_5">
       <attribute name="title">

@@ -2,6 +2,7 @@
 import os.path
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
+from commonDialog import onCritical
 from bedLayerDiag import bedLayerDialog
 
 
@@ -26,7 +27,11 @@ class bedLayer:
         self.dlg = bedLayerDialog()
         self.dlg.label.setText(caption)
 
-        self.grads = int(gradNum)
+        try:
+            self.grads = int(gradNum)
+        except(ValueError):
+            onCritical(127)
+
         self.rockType = rockTypes
         items1 = ['Fraction', 'Cumulative']
         items2 = ['Fraction', 'Cumulative', 'Rock']
@@ -96,7 +101,8 @@ class bedLayer:
 
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
-            table.setItem(0, 2, QTableWidgetItem('Density of\nClay'))
+            table.setItem(0, 2, QTableWidgetItem(
+                'Density of\nClay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))
@@ -112,7 +118,8 @@ class bedLayer:
 
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
-            table.setItem(0, 2, QTableWidgetItem('Density of\nClay'))
+            table.setItem(0, 2, QTableWidgetItem(
+                'Density of\nClay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))
@@ -134,7 +141,8 @@ class bedLayer:
 
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
-            table.setItem(0, 2, QTableWidgetItem('Density of\nClay'))
+            table.setItem(0, 2, QTableWidgetItem(
+                'Density of\nClay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))

@@ -4,6 +4,7 @@ import os
 import os.path
 import re
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
+from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog, QPixmap
 from shepredDialog import shepredDialog
@@ -404,8 +405,14 @@ of T1 T2 ...  EMPTY means the end\n')
         fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
         saveFolder = self.dlg.saveFolderEdit.text()
         fullPath = os.path.join(saveFolder, fileName)
+        useMobile = False
 
         f = open(fullPath, 'w')
+
+        if self.dlg.rbtnSolverMobile.isChecked():
+            sediMod = self.sediMod
+            sediMod.sediExport()
+            useMobile = True
 
         f.write('// Simulation Description (not used by SRH-2D):\n')
         f.write(self.dlg.lineEditDescription.text()+'\n')
@@ -413,14 +420,19 @@ of T1 T2 ...  EMPTY means the end\n')
         f.write(self.chooseSolver()+'\n')
         f.write('// Monitor-Point-Info: NPOINT\n')
         f.write(str(0)+'\n')
-        f.write('// Steady-or-Unsteady (STEADY/UNS)\n')
-        f.write(self.chooseSteady()+'\n')
+        if not useMobile:
+            f.write('// Steady-or-Unsteady (STEADY/UNS)\n')
+            f.write(self.chooseSteady()+'\n')
         f.write('// Tstart Time_Step and Total_Simulation_Time: TSTART DT \
 T_SIMU [FLAG]\n')
         TSTART, DT, T_SIMU = self.timeSetup()
         f.write(str(TSTART) + " " + str(DT) + " " + str(T_SIMU)+'\n')
 
         f = self.onTubulenceModel(f)
+
+        if useMobile:
+            f.write(sediMod.sediGradText)
+            f.write(sediMod.capacityText)
 
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
@@ -596,8 +608,8 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
             mannValue = list()
             for i in range(0, count):
                 try:
-                    mannValue.append(float(self.dlg.mannTable.item(2, i).text())
-                                     )
+                    mannValue.append(
+                        float(self.dlg.mannTable.item(2, i).text()))
                 except:
                     onCritical(110)
             return mannValue
@@ -727,12 +739,96 @@ WSE [TK] [ED] [T]\n')
             typeWidget.addItems(boundaryTypes)
             self.dlg.boundaryTable.setItem(i, 0, item)
             self.dlg.boundaryTable.setCellWidget(i, 1, typeWidget)
+            typeWidget.currentIndexChanged.connect(
+                self.setSediBoundaryEnableWidgets)
+            self.dlg.boundaryTable.setItem(
+                i, 2, QTableWidgetItem(u''))
+            self.dlg.boundaryTable.setItem(
+                i, 3, QTableWidgetItem(u''))
             unitWidget = QComboBox()
             unitWidget.addItems(['SI', 'EN'])
             self.dlg.boundaryTable.setCellWidget(i, 4, unitWidget)
             v_disWidget = QComboBox()
             v_disWidget.addItems(['None', 'C', 'V', 'Q'])
             self.dlg.boundaryTable.setCellWidget(i, 5, v_disWidget)
+            self.dlg.boundaryTable.setItem(
+                i, 6, QTableWidgetItem(u''))
+            self.dlg.boundaryTable.setItem(
+                i, 7, QTableWidgetItem(u''))
+
+        sediLabels = [u'邊界名稱', u'性質', u'入流/出流計算', u'檔案']
+        table2 = self.dlg.sediBoundaryTable
+        table2.clear()
+        table2.setRowCount(self.NScount)
+        table2.setColumnCount(4)
+        table2.setHorizontalHeaderLabels(sediLabels)
+        for i in range(0, self.NScount):
+            try:
+                boundNames = self.boundNames
+                item = QTableWidgetItem(boundNames[i])
+            except(AttributeError):
+                item = QTableWidgetItem(str(i+1))
+            typeWidget = QComboBox()
+            typeWidget.addItems(boundaryTypes)
+            typeWidget.currentIndexChanged.connect(
+                self.setSediBoundaryEnableWidgets)
+            table2.setItem(i, 0, item)
+            table2.setCellWidget(i, 1, typeWidget)
+            InputWidget = QComboBox()
+            InputWidget.addItem('CAPACITY')
+            InputWidget.addItem('File')
+            table2.setCellWidget(i, 2, InputWidget)
+            InputWidget.currentIndexChanged.connect(
+                lambda: self.setSedimentFlowFile(InputWidget.sender()))
+            table2.setItem(i, 3, QTableWidgetItem(u''))
+        table2.setColumnWidth(2, 100)
+        table2.setColumnWidth(3, 300)
+
+    def setSedimentFlowFile(self, obj):
+        table = self.dlg.sediBoundaryTable
+        c_Row = table.currentRow()
+
+        if isinstance(obj, QComboBox):
+            if obj.currentIndex() == 1:
+                item = table.item(c_Row, 3)
+                caption = 'Please choose a file of sediment inflow/outflow.'
+                fileBrowser(self.dlg, caption, self.dlg.projFolder, item,
+                            presetType='*.*')
+            else:
+                item = table.item(c_Row, 3)
+                item.setText(u'')
+        else:
+            # The ComboBox in the last row of table does not return correct
+            # sender(return QFrame rather than QComboBox), that with the signal
+            # emitted, use current row of table to find correct combobox widget.
+            obj = table.cellWidget(c_Row, 2)
+            if obj.currentIndex() == 1:
+                item = table.item(c_Row, 3)
+                caption = 'Please choose a file of sediment inflow/outflow.'
+                fileBrowser(self.dlg, caption, self.dlg.projFolder, item,
+                            presetType='*.*')
+            else:
+                item = table.item(c_Row, 3)
+                item.setText(u'')
+
+    def setSediBoundaryEnableWidgets(self):
+        boundaryTable = self.dlg.boundaryTable
+        table = self.dlg.sediBoundaryTable
+        for i in range(0, boundaryTable.rowCount()):
+            widget = boundaryTable.cellWidget(i, 1)
+            idx = widget.currentIndex()
+            sediWidget = table.cellWidget(i, 1)
+            sediWidget.setCurrentIndex(idx)
+            sediWidget.setEnabled(False)
+
+        sediAllowed = [0, 2, 3]
+        for i in range(0, table.rowCount()):
+            comboWig = table.cellWidget(i, 1)
+            sediWig = table.cellWidget(i, 2)
+            if comboWig.currentIndex() not in sediAllowed:
+                sediWig.setEnabled(False)
+            else:
+                sediWig.setEnabled(True)
 
     def setWidgetFileBrowser(self):
         table = self.dlg.boundaryTable
