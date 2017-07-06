@@ -3,6 +3,7 @@ from PyQt4.QtCore import Qt
 from qgis.utils import iface
 from commonDialog import fileBrowser, onCritical
 from bedLayerSet import bedLayer
+import re
 import shepred
 import os.path
 
@@ -247,8 +248,8 @@ MOD_ALayer NALT (1=const;2=Nalt*d90)\n'
         self.capacityText = capacityString
 
     def cohExportText(self, cohText):
-        cohText += + '// Cohesive Sediment General Properties \
-(C_limit(mm),MOD_consolidation)\n'
+        cohText += '// Cohesive Sediment General Properties (C_limit(mm),\
+MOD_consolidation)\n'
         cohText += self.dlg.cohDiaLimEdit.text() + '\n'
         cohText += '// Cohesive Sediment Fall Velocity Method: 0 -1 or\
  filename\n'
@@ -291,6 +292,9 @@ slope_s slope_m\n'
         self.sediCapacity()
         self.cohesiveExport()
 
+        self.bedSet.bedLayersExport()
+        self.bedLayerText = self.bedSet.layerText
+
 
 class bedSettingModule:
     def __init__(self, dlg):
@@ -319,7 +323,7 @@ class bedSettingModule:
         rockTypes = int(self.dlg.typesOfRockEdit.text())
         table = self.dlg.bedRockSetTable
         table.setRowCount(2*rockTypes)
-        table.setColumnCount(6)
+        table.setColumnCount(7)
 
         for i in range(0, rockTypes):
             proSelector = QComboBox()
@@ -342,6 +346,8 @@ class bedSettingModule:
                 i*2, 4, QTableWidgetItem('K_a'))
             self.dlg.bedRockSetTable.setItem(
                 i*2, 5, QTableWidgetItem('Young'))
+            self.dlg.bedRockSetTable.setItem(
+                i*2, 6, QTableWidgetItem('Tensile'))
 
     def setRockPropertyType(self):
         c_Row = self.dlg.bedRockSetTable.currentRow()
@@ -357,6 +363,8 @@ class bedSettingModule:
                 c_Row, 4, QTableWidgetItem('K_a'))
             self.dlg.bedRockSetTable.setItem(
                 c_Row, 5, QTableWidgetItem('Young'))
+            self.dlg.bedRockSetTable.setItem(
+                c_Row, 6, QTableWidgetItem('Tensile'))
             if self.dlg.bedRockSetTable.cellWidget(c_Row+1, 5):
                 self.dlg.bedRockSetTable.removeCellWidget(c_Row+1, 5)
                 self.dlg.bedRockSetTable.setItem(
@@ -531,3 +539,70 @@ class bedSettingModule:
                 item.setText(1, (layerPhys + "; " + recString))
             except:
                 pass
+
+    def bedLayersExport(self):
+        tree = self.dlg.bedLayerTree
+        regions = tree.topLevelItemCount()
+
+        layerText = '// Bed Property Spatial Distribution Method (UNI ZON \
+POINT)\n'
+        if self.dlg.rdoBedUniform.isChecked():
+            layerText += 'UNIFORM\n'
+        elif self.dlg.rdoBedZonal.isChecked():
+            layerText += 'ZONAL\n'
+            layerText += '// Bed Gradation Zone Input Method: 2DM File Name\n'
+            if self.dlg.sameFileAsFlowBox.isChecked():
+                layerText += (self.dlg.lineEditMeshFileName.text() + '\n')
+            else:
+                layerText += (self.dlg.bedDistriEdit.text() + '\n')
+            layerText += '// Number of Bed Property Zones\n'
+            layerText += (str(regions) + '\n')
+        else:
+            layerText += 'POINT\n'
+
+        if (self.dlg.rdoBedUniform.isChecked() or
+                self.dlg.rdoBedZonal.isChecked()):
+            for i in range(0, regions):
+                bedItem = tree.topLevelItem(i)
+                layerText += '// Number of Bed Layers\n'
+                layerText += (str(bedItem.childCount()) + '\n')
+                for j in range(0, bedItem.childCount()):
+                    string = bedItem.child(j).text(1)
+                    string = re.split(';', string)
+                    layerText += '// Thickness Unit(SI/EN) Den_Clay(Cohesive) \
+for eachlayer and zone\n'
+                    layerText += (string[0] + '\n')
+                    layerText += '// FRACTION V1 V2 ... Vsed_nclass for each \
+bed layer and bed zone\n'
+                    layerText += (string[1] + '\n')
+        else:
+            layerText += '// File Name for Bed Gradation on Survey Points:\n'
+            bedItem = tree.topLevelItem(0)
+            fileName = bedItem.text(1)
+            layerText += (fileName + '\n')
+
+        table = self.dlg.bedRockSetTable
+        if self.dlg.rockErosionCheck.isChecked():
+            for i in range(0, int(self.dlg.typesOfRockEdit.text())):
+                layerText += '// Erodible Rock Model Used (REC or STREAM)\n'
+                if table.cellWidget(i*2, 0).currentIndex() == 0:
+                    layerText += 'RECLAMATION\n'
+                    layerText += '// Erodible Rock Properties: d_cover Kh \
+Tau_cri Ka Young Tensile\n'
+                else:
+                    layerText += 'STREAM\n'
+
+                for j in range(1, 5):
+                    layerText += (table.item(i*2+1, j).text() + ' ')
+
+                if table.cellWidget(i*2+1, 5):
+                    layerText += table.cellWidget(i*2+1, 5).text()
+                else:
+                    layerText += table.item(i*2+1, 5).text()
+
+                if table.cellWidget(i*2, 0).currentIndex() == 0:
+                    layerText += (' ' + table.item(i*2+1, 6).text() + '\n')
+                else:
+                    layerText += '\n'
+
+        self.layerText = layerText

@@ -433,10 +433,15 @@ T_SIMU [FLAG]\n')
         if useMobile:
             f.write(sediMod.sediGradText)
             f.write(sediMod.capacityText)
+            f.write(sediMod.cohText)
 
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
         f.write(self.dlg.lineEditMeshFileName.text()+'\n')
+        #  Bed Properties (If use Mobile)
+        if useMobile:
+            f.write(sediMod.bedLayerText)
+
         f.write('// Manning Roughness Input Method(1=constant 2=material-type\
  3=(x y) distributed)\n')
         mannInput = self.getManningVal()
@@ -511,13 +516,23 @@ ne means default is used\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 checkFlowRate(table.item(i, 2).text())
                 line = str(float(table.item(i, 2).text())) + " "
+                #  Sediment input(If Mobile is used)
+                if self.dlg.rbtnSolverMobile.isChecked():
+                    capacityCombo = self.dlg.sediBoundaryTable.cellWidget(i, 2)
+                    if capacityCombo.currentIndex() == 0:
+                        line += (capacityCombo.currentText() + ' ')
+                    else:
+                        line += (self.dlg.sediBoundaryTable.item(i, 3).text() +
+                                 ' ')
                 line = line + table.cellWidget(i, 4).currentText()
+
                 if table.cellWidget(i, 5).currentIndex() != 0:
                     line = (line + " " + table.cellWidget(i, 5).currentText() +
                             '\n')
                 else:
                     line = line + '\n'
                 f.write(line)
+
             elif table.cellWidget(i, 1).currentText() == 'EXIT-H':
                 f.write('EXIT-H\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
