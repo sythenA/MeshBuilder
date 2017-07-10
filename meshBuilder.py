@@ -213,6 +213,18 @@ class meshBuilder:
         where2dmBtn.pressed.connect(
             lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
                                     lineEdit=where2dmEdit, presetType='.2dm'))
+        distriMshCaption = u'請選擇欲改變分區的 .msh 檔案'
+        distriMshEdit = self.dlg.readDistriEdit
+        self.dlg.readDistriBtn.pressed.connect(
+            lambda: fileBrowser(self.dlg, distriMshCaption, self.getProj(),
+                                distriMshEdit, '(*.msh)'))
+        saveShpCaption = u'請選擇儲存暫存檔的位置'
+        saveShpEdit = self.dlg.distriShpEdit
+        self.dlg.distriShpSlct.pressed.connect(
+            lambda: saveFileBrowser(self.dlg, saveShpCaption, self.getProj(),
+                                    saveShpEdit, '(*.shp)'))
+        self.dlg.readMeshDist.pressed.connect(self.readMshDistri)
+
         xyzBtn = self.dlg.chooseXyzBtn
         xyzBtn.pressed.connect(self.selectXyz)
 
@@ -388,6 +400,21 @@ class meshBuilder:
                     pass
         else:
             os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+
+    def readMshDistri(self):
+        nodeRef, Boundaries = readMshDistri(self.dlg.readDistriEdit.text(),
+                                            self.dlg.distriShpEdit.text(),
+                                            self.dlg.distLoadProgress)
+        newMshHeader = dict()
+        newMshHeader.update({'nodes': nodeRef})
+        newMshHeader.update({'boundaries': Boundaries})
+        self.mshHeader = newMshHeader
+
+        layerFile = self.dlg.distriShpEdit.text()
+        mshLayer = self.iface.addVectorLayer(layerFile,
+                                             QFileInfo(layerFile).baseName(),
+                                             'ogr')
+        self.mshLayer = mshLayer
 
     def step1_1(self):
 
@@ -1129,6 +1156,18 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(0, 1))
+
+    def setTableToDistri(self):
+        mshLayer = self.mshLayer
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName(mshLayer.name())
+        iface.setActiveLayer(vl[0])
+
+        self.dlg.tableWidget.clear()
+        self.dlg.attrSelectBox.clear()
+
+        self.dlg.tableWidget.setRowCount(mshLayer.featureCount())
+        self.dlg.tableWidget.setColumnCount(3)
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -2114,7 +2153,6 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
     physicalSegs = arangeSegLines(SegLayer, physicsRef, nodeRef)
     meshes = arangeMesh(OutDir, gridNames, physicsRef, nodeRef)
     meshes.sort()
-    meshes.sort(key=len)
 
     f.write("$Elements\n")
     f.write(str(len(physicalNodes)+len(physicalSegs)+len(meshes)) + "\n")
@@ -2174,3 +2212,72 @@ def countPhysics(lineLayer):
             _NumberedPhysics.append(name)
 
     return _NumberedPhysics
+
+
+def readMshDistri(meshFile, savePath, progressBar):
+    f = open(meshFile, 'r')
+    data = f.readlines()
+
+    Boundaries = list()
+    DistriRef = dict()
+    nodeRef = dict()
+
+    fields = QgsFields()
+    fields.append(QgsField('id', QVariant.Int))
+    fields.append(QgsField('Distri', QVariant.String))
+    DistriWriter = QgsVectorFileWriter(savePath, "utf-8", fields,
+                                       QGis.WKBPolygon, None, "ESRI Shapefile")
+    endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
+
+    mode = 0
+    counter = 0
+    for line in data:
+        w = line.split()
+
+        if not w:
+            pass
+        elif w[0] == '$PhysicalNames':
+            mode = 1
+        elif w[0] == '$Nodes':
+            mode = 2
+        elif w[0] == '$Elements':
+            mode = 3
+        elif w[0] in endStatements:
+            continue
+
+        if mode == 1 and len(w) > 1:
+            if w[0] == '15' or w[0] == '1':
+                Boundaries.append(line)
+            elif w[0] == '2' and len(w) > 1:
+                DistriRef.update({int(w[1]): w[2][1:-1]})
+        elif mode == 2 and len(w) > 1:
+            nodeRef.update(
+                {int(w[0]): {'pos': QgsPoint(float(w[1]), float(w[2])),
+                             'Z': float(w[3])}})
+        elif mode == 3 and len(w) > 1:
+            try:
+                physType = DistriRef[int(w[3])]
+                feature = QgsFeature()
+                feature.setFields(fields)
+                feature['id'] = int(w[0])
+                vertices = int(w[1]) + 1
+                feature['Distri'] = physType
+
+                meshString = 'POLYGON (('
+                for i in range(5, vertices+5):
+                    meshString += (str(nodeRef[int(w[i])]['pos'][0]) + ' ')
+                    meshString += (str(nodeRef[int(w[i])]['pos'][1]) + ',')
+                meshString += (str(nodeRef[int(w[5])]['pos'][0]) + ' ')
+                meshString += (str(nodeRef[int(w[5])]['pos'][1]) + '))')
+                feature.setGeometry(QgsGeometry().fromWkt(meshString))
+                DistriWriter.addFeature(feature)
+            except:
+                pass
+        counter += 1
+        progressBar.setValue(int(float(counter)/len(data)*100))
+
+    progressBar.setValue(100)
+
+    del DistriWriter
+
+    return nodeRef, Boundaries

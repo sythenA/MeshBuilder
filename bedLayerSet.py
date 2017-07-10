@@ -54,7 +54,7 @@ class bedLayer:
 
     def resultString(self):
         table = self.dlg.layerPropTable
-        firstEle = self.dlg.recTypeCombo.currentText()
+        firstEle = self.dlg.recTypeCombo.currentText().upper()
 
         columns = table.columnCount()
         physicString = (self.dlg.layerPropTable.item(1, 0).text() + " " +
@@ -113,8 +113,8 @@ class bedLayer:
         elif self.dlg.recTypeCombo.currentIndex() == 1:
             self.dlg.addColumnBtn.setEnabled(True)
             self.dlg.removeColumnBtn.setEnabled(True)
-            table.setRowCount(4)
-            table.setColumnCount(3)
+            table.setRowCount(6)
+            table.setColumnCount(7)
 
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
