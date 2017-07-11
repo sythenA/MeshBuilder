@@ -241,6 +241,12 @@ class meshBuilder:
         self.dlg.backButton.pressed.connect(self.backSwitch)
         self.dlg.backButton.setEnabled(False)
 
+        distCaption = u'請選擇輸出網格檔案的名稱及位置'
+        self.dlg.newDistWhere.pressed.connect(
+            lambda: saveFileBrowser(self.dlg, distCaption, self.getProj(),
+                                    self.dlg.newDistEdit, '(*.msh)'))
+        self.dlg.newDistOutput.pressed.connect(self.outputToNewMeshRegions)
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -402,19 +408,24 @@ class meshBuilder:
             os.mkdir(os.path.join(projFolder, 'InnerLayers'))
 
     def readMshDistri(self):
-        nodeRef, Boundaries = readMshDistri(self.dlg.readDistriEdit.text(),
-                                            self.dlg.distriShpEdit.text(),
-                                            self.dlg.distLoadProgress)
+        nodeRef, Boundaries, elementRec, regionOrder = readMshDistri(
+            self.dlg.readDistriEdit.text(), self.dlg.distriShpEdit.text(),
+            self.dlg.distLoadProgress)
         newMshHeader = dict()
         newMshHeader.update({'nodes': nodeRef})
         newMshHeader.update({'boundaries': Boundaries})
+        newMshHeader.update({'elements': elementRec})
         self.mshHeader = newMshHeader
+        self.regionOrder = regionOrder
 
         layerFile = self.dlg.distriShpEdit.text()
         mshLayer = self.iface.addVectorLayer(layerFile,
                                              QFileInfo(layerFile).baseName(),
                                              'ogr')
         self.mshLayer = mshLayer
+        self.setTableToDistri()
+        size = self.dlg.maximumSize()
+        self.dlg.resize(size)
 
     def step1_1(self):
 
@@ -608,6 +619,12 @@ class meshBuilder:
         self.iface.messageBar().pushMessage('Data in meshBuilder table wrote \
 into layer attributes.', level=QgsMessageBar.INFO)
         layer.reload()
+
+    def outputToNewMeshRegions(self):
+        newDistriRegionOutput(self.dlg.newDistEdit.text(),
+                              self.regionOrder,
+                              self.mshHeader,
+                              self.mshLayer)
 
     def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object', prefix=0):
@@ -915,6 +932,43 @@ into layer attributes.', level=QgsMessageBar.INFO)
             pass
         self.boundaryOrder = boundaryOrder
 
+    def regionOrderChanged(self, nameCol, comCol, push=True):
+        regionOrder = self.regionOrder
+
+        c_row = self.dlg.tableWidget.currentRow()
+        c_column = self.dlg.tableWidget.currentColumn()
+
+        table = self.dlg.tableWidget
+        try:
+            newSeq = table.cellWidget(c_row, c_column).currentIndex()
+            physName = table.item(c_row, nameCol).text()
+
+            # Replace the boundary order in boundaries list to the new position.
+            oldSeq = regionOrder.index(physName)
+            regionOrder.pop(oldSeq)
+            regionOrder.insert(newSeq, physName)
+            if push:
+                msg = ''
+                for i in range(0, len(regionOrder)):
+                    msg = msg + ", " + regionOrder[i]
+                msg = msg[1:-1]
+                iface.messageBar().pushMessage(msg)
+
+            for i in range(0, table.rowCount()):
+                if table.item(i, nameCol):
+                    name = table.item(i, nameCol).text()
+                    try:
+                        idx = regionOrder.index(name)
+                        table.cellWidget(i, comCol).setCurrentIndex(idx)
+                    except:
+                        pass
+                elif table.item(i, nameCol).text() == physName:
+                    idx = regionOrder.index(physName)
+                    table.cellWidget(i, comCol).setCurrentIndex(idx)
+        except:
+            pass
+        self.regionOrder = regionOrder
+
     def arrangeLineTable(self, nameCol, comCol):
         boundaryOrder = self.boundaryOrder
         table = self.dlg.tableWidget
@@ -1158,7 +1212,41 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                                  self.arrangeLineTable(0, 1))
 
     def setTableToDistri(self):
+
+        def setTableItem(i, j, Object, Type='Object'):
+            if type(Object) != QPyNullVariant and Type == 'Object':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+            elif Type == 'ComboBox':
+                widget = QComboBox()
+                widget.addItem(u'是')
+                widget.addItem(u'否')
+                if Object == 1:
+                    widget.setCurrentIndex(0)
+                else:
+                    widget.setCurrentIndex(0)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+            elif Type == 'ComboBox2':
+                widget = QComboBox()
+                for k in range(0, len(regionOrder)):
+                    widget.addItem(str(k+1))
+                name = self.dlg.tableWidget.item(i, 1).text()
+                idx = regionOrder.index(name)
+                widget.setCurrentIndex(idx)
+                self.dlg.tableWidget.setCellWidget(i, j, widget)
+                cell = self.dlg.tableWidget.cellWidget(i, j)
+                cell.currentIndexChanged.connect(
+                    lambda: self.regionOrderChanged(1, 2, False))
+            elif type(Object) != QPyNullVariant and Type == 'Fixed':
+                Object = str(Object)
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
+                item = self.dlg.tableWidget.item(i, j)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            else:
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
+
         mshLayer = self.mshLayer
+        regionOrder = self.regionOrder
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(mshLayer.name())
         iface.setActiveLayer(vl[0])
@@ -1168,6 +1256,60 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         self.dlg.tableWidget.setRowCount(mshLayer.featureCount())
         self.dlg.tableWidget.setColumnCount(3)
+
+        self.dlg.tableWidget.setHorizontalHeaderLabels([u'id', u'區域分類',
+                                                        u'輸出序'])
+
+        counter = 0
+        for feature in mshLayer.getFeatures():
+            setTableItem(counter, 0, str(feature['id']), Type='Fixed')
+            setTableItem(counter, 1, feature['Distri'])
+            setTableItem(counter, 2, '', Type='ComboBox2')
+            counter += 1
+
+        fieldDict = {0: 'id',
+                     1: 'Distri'}
+
+        self.fieldDict = fieldDict
+        self.currentLayer = mshLayer
+        self.dlg.attrSelectBox.addItems([u'區域分類'])
+        self.tableAttrNameDict = {u'區域分類': 1}
+        #  Connect QGIS active layer to table, if selection is made in QGIS
+        #  interface, reflect the selection result to data table.
+        layer = iface.activeLayer()
+        layer.selectionChanged.connect(self.selectFromQgis)
+
+        self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
+
+    def checkLayerRegions(self):
+        table = self.dlg.tableWidget
+        regionOrder = self.regionOrder
+
+        regions = list()
+        for i in range(0, table.rowCount()):
+            regions.append(table.item(i, 1).text())
+        regionsSet = set(regions)
+        for item in regionsSet:
+            if item not in regionOrder:
+                regionOrder.append(item)
+        for item in regionOrder:
+            if item not in regionsSet:
+                idx = regionOrder.index(item)
+                regionOrder.pop(idx)
+        self.regionOrder = regionOrder
+
+        for i in range(0, table.rowCount()):
+            comboWidget = table.cellWidget(i, 2)
+
+            if comboWidget.count() < len(regionOrder):
+                for j in range(comboWidget.count(), len(regionOrder)):
+                    comboWidget.addItem(str(j+1))
+            elif comboWidget.count() > len(regionOrder):
+                comboWidget.setMaxCount(len(regionOrder))
+
+            name = table.item(i, 1).text()
+            idx = regionOrder.index(name)
+            comboWidget.setCurrentIndex(idx)
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -2221,6 +2363,7 @@ def readMshDistri(meshFile, savePath, progressBar):
     Boundaries = list()
     DistriRef = dict()
     nodeRef = dict()
+    elementRec = list()
 
     fields = QgsFields()
     fields.append(QgsField('id', QVariant.Int))
@@ -2228,6 +2371,7 @@ def readMshDistri(meshFile, savePath, progressBar):
     DistriWriter = QgsVectorFileWriter(savePath, "utf-8", fields,
                                        QGis.WKBPolygon, None, "ESRI Shapefile")
     endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
+    regionOrder = list()
 
     mode = 0
     counter = 0
@@ -2250,11 +2394,13 @@ def readMshDistri(meshFile, savePath, progressBar):
                 Boundaries.append(line)
             elif w[0] == '2' and len(w) > 1:
                 DistriRef.update({int(w[1]): w[2][1:-1]})
+                regionOrder.append(w[2][1:-1])
         elif mode == 2 and len(w) > 1:
             nodeRef.update(
                 {int(w[0]): {'pos': QgsPoint(float(w[1]), float(w[2])),
                              'Z': float(w[3])}})
         elif mode == 3 and len(w) > 1:
+            w[0] = int(w[0])
             try:
                 physType = DistriRef[int(w[3])]
                 feature = QgsFeature()
@@ -2271,8 +2417,10 @@ def readMshDistri(meshFile, savePath, progressBar):
                 meshString += (str(nodeRef[int(w[5])]['pos'][1]) + '))')
                 feature.setGeometry(QgsGeometry().fromWkt(meshString))
                 DistriWriter.addFeature(feature)
+
+                elementRec.append([w[0], w[1], w[5: vertices+5]])
             except:
-                pass
+                elementRec.append(w)
         counter += 1
         progressBar.setValue(int(float(counter)/len(data)*100))
 
@@ -2280,4 +2428,76 @@ def readMshDistri(meshFile, savePath, progressBar):
 
     del DistriWriter
 
-    return nodeRef, Boundaries
+    return nodeRef, Boundaries, elementRec, regionOrder
+
+
+def newDistriRegionOutput(saveFile, regionOrder, meshHeader, mshLayer):
+
+    def getMeshString(mesh_id):
+        for i in range(0, len(elements)):
+            if elements[i][0] == mesh_id:
+                return elements[i]
+
+    f = open(saveFile, 'w')
+
+    f.write('$MeshFormat\n')
+    f.write('2.2 0 8\n')
+    f.write('$PhysicalNames\n')
+
+    boundaries = meshHeader['boundaries']
+    totalPhysNames = len(boundaries) + len(regionOrder)
+    f.write('$PhysicalNames\n')
+    f.write(str(totalPhysNames) + '\n')
+    for i in range(0, len(boundaries)):
+        f.write(boundaries[i])
+    for j in range(0, len(regionOrder)):
+        f.write('2 ' + str(len(boundaries)+j+1) + ' "' + regionOrder[j] + '"\n')
+    f.write('$EndPhysicalNames\n')
+
+    nodes = meshHeader['nodes']
+    node_ids = sorted(nodes.keys())
+
+    f.write('$Nodes\n')
+    f.write(str(len(node_ids)) + '\n')
+    for i in range(0, len(node_ids)):
+        f.write(str(node_ids[i]) + ' ' + str(nodes[node_ids[i]]['pos'][0]) +
+                ' ' + str(nodes[node_ids[i]]['pos'][1]) + ' ' +
+                str(nodes[node_ids[i]]['Z']) + '\n')
+    f.write('$EndNodes\n')
+    f.write('$Elements\n')
+
+    elements = meshHeader['elements']
+    f.write(str(len(elements)) + '\n')
+    for obj in elements:
+        string = ''
+        if int(obj[1]) == 15:
+            for j in range(0, len(obj)):
+                string += (str(obj[j]) + ' ')
+            string = string[:-1] + '\n'
+            f.write(string)
+        elif int(obj[1]) == 1:
+            for j in range(0, len(obj)):
+                string += (str(obj[j]) + ' ')
+            string = string[:-1] + '\n'
+            f.write(string)
+
+    meshRegions = list()
+    for feature in mshLayer.getFeatures():
+        mesh_id = int(feature['id'])
+        distri = feature['Distri']
+        regionNum = len(boundaries) + regionOrder.index(distri) + 1
+        meshString = getMeshString(mesh_id)
+        meshRegions.append([mesh_id, meshString[1], '2', regionNum,
+                            '0', meshString[2]])
+    meshRegions = sorted(meshRegions, key=itemgetter(0))
+    for j in range(0, len(meshRegions)):
+        lineString = str(meshRegions[j][0]) + ' '
+        lineString += (str(meshRegions[j][1]) + ' ' + meshRegions[j][2] + ' ')
+        lineString += (str(meshRegions[j][3]) + ' ' + meshRegions[j][4] + ' ')
+        for k in range(0, len(meshRegions[j][5])):
+            lineString += (str(meshRegions[j][5][k]) + ' ')
+        lineString = lineString[:-1] + '\n'
+
+        f.write(lineString)
+
+    f.write('$EndElements\n')

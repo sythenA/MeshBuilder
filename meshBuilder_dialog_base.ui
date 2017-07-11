@@ -1168,7 +1168,7 @@
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;設定新網格檔案的輸出位置&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
-        <widget class="QLineEdit" name="lineEdit_2">
+        <widget class="QLineEdit" name="newDistEdit">
          <property name="geometry">
           <rect>
            <x>10</x>
