@@ -237,7 +237,9 @@ class meshBuilder:
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
-        self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
+        self.dlg.to2dmExecBtn.clicked.connect(
+            lambda: self.changeTo2dm(self.dlg.whereMshEdit.text(),
+                                     self.dlg.where2dmEdit.text()))
         self.dlg.backButton.pressed.connect(self.backSwitch)
         self.dlg.backButton.setEnabled(False)
 
@@ -246,6 +248,14 @@ class meshBuilder:
             lambda: saveFileBrowser(self.dlg, distCaption, self.getProj(),
                                     self.dlg.newDistEdit, '(*.msh)'))
         self.dlg.newDistOutput.pressed.connect(self.outputToNewMeshRegions)
+
+        new2dmCaption = u'請選擇輸出新.2dm網格的位置'
+        self.dlg.whereNew2dm.pressed.connect(
+            lambda: saveFileBrowser(self.dlg, new2dmCaption, self.getProj(),
+                                    self.dlg.new2dmEdit, '(*.2dm)'))
+        self.dlg.new2dmOutput.pressed.connect(
+            lambda: self.changeTo2dm(self.dlg.newDistEdit.text(),
+                                     self.dlg.new2dmEdit.text()))
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -1726,22 +1736,22 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             destFolder = os.path.expanduser("~")
         return destFolder
 
-    def changeTo2dm(self):
+    def changeTo2dm(self, inputFile, outputFile):
 
         homeFolder = os.path.dirname(__file__)
         os.chdir(homeFolder)
 
         path2dm = self.dlg.where2dmEdit.text()
-        mshPath = self.dlg.whereMshEdit.text()
 
         ibcName = os.path.basename(path2dm).replace('.2dm', '.ibc')
         dirname = os.path.dirname(path2dm)
         ibcPath = os.path.join(dirname, ibcName)
         if os.path.isfile(ibcPath):
-            command = ("GMSH2SRH.exe" + ' "' + mshPath + '" ' + path2dm + ' "' +
-                       ibcPath + '"')
+            command = ("GMSH2SRH.exe" + ' "' + inputFile + '" ' + outputFile +
+                       ' "' + ibcPath + '"')
         else:
-            command = "GMSH2SRH.exe" + ' "' + mshPath + '" ' + path2dm + '"'
+            command = ("GMSH2SRH.exe" + ' "' + inputFile + '" ' + outputFile +
+                       '"')
 
         os.system(command)
         iface.messageBar().pushMessage(".msh Transfomed to .2dm",
@@ -2442,7 +2452,7 @@ def newDistriRegionOutput(saveFile, regionOrder, meshHeader, mshLayer):
 
     f.write('$MeshFormat\n')
     f.write('2.2 0 8\n')
-    f.write('$PhysicalNames\n')
+    f.write('$EndMeshFormat\n')
 
     boundaries = meshHeader['boundaries']
     totalPhysNames = len(boundaries) + len(regionOrder)

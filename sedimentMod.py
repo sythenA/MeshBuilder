@@ -413,9 +413,15 @@ class bedSettingModule:
             if not os.path.isfile(fileName):
                 onCritical(125)
             elif fileName.endswith('.2dm'):
-                boundsRef, physRef = shepred.read2dmMesh(fileName)
+                f = open(fileName)
+                meshLines = f.readlines()
+                physRef, boundsRef = shepred.read2dmMesh(meshLines)
+                physRef.sort()
+                _physRef = dict()
+                for i in range(0, len(physRef)):
+                    _physRef.update({i+1: str(physRef[i])})
                 self.boundsRef = boundsRef
-                self.physRef = physRef
+                self.physRef = _physRef
             elif fileName.endswith('.msh'):
                 boundsRef, physRef = shepred.readMshMesh(fileName)
                 self.boundsRef = boundsRef
@@ -463,7 +469,6 @@ class bedSettingModule:
             self.dlg.bedLayerTree.setHeaderLabels(['Layers', 'Status'])
             for i in range(0, len(physRef)):
                 item = QTreeWidgetItem()
-                iface.messageBar().pushMessage(physRef[i+1])
                 item.setText(0, str(i+1) + ". " + physRef[i+1])
                 self.dlg.bedLayerTree.addTopLevelItem(item)
                 self.dlg.zoneBedSelector.addItem(str(i+1))
@@ -517,6 +522,10 @@ class bedSettingModule:
     def bedLayerPopUp(self):
         item = self.dlg.bedLayerTree.currentItem()
         zoneItem = item.parent()
+        try:
+            presetString = self.nextLayerpreSet
+        except:
+            presetString = ''
         if zoneItem:
             layerName = item.text(0)
             ZoneName = zoneItem.text(0)
@@ -533,10 +542,12 @@ class bedSettingModule:
                 rockType = 0
             layerDialog = bedLayer(iface, self.dlg.sediSizeClass.text(),
                                    caption, rockUsed=useRock,
-                                   rockTypes=rockType)
+                                   rockTypes=rockType,
+                                   presetString=presetString)
             try:
                 layerPhys, recString = layerDialog.run()
                 item.setText(1, (layerPhys + "; " + recString))
+                self.nextLayerpreSet = layerPhys + "; " + recString
             except:
                 pass
 
