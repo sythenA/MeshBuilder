@@ -72,36 +72,39 @@ class bedLayer:
 
     def setPreset(self):
         if self.preset:
-            string = re.split(';', self.preset)
-            line0 = string[0].split()
-            depth = line0[0]
-            unit = line0[1].upper()
-            self.dlg.layerPropTable.item(1, 0).setText(depth)
-            if unit == 'SI':
-                self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(0)
-            else:
-                self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(1)
+            try:
+                string = re.split(';', self.preset)
+                line0 = string[0].split()
+                depth = line0[0]
+                unit = line0[1].upper()
+                self.dlg.layerPropTable.item(1, 0).setText(depth)
+                if unit == 'SI':
+                    self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(0)
+                else:
+                    self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(1)
 
-            line1 = string[1].split()
-            method = line1[0].upper()
-            if method == 'FRACTION':
-                self.dlg.recTypeCombo.setCurrentIndex(0)
-                for i in range(1, len(line1)):
-                    j = i-1
-                    self.dlg.layerPropTable.item(3, j).setText(line1[i])
-            elif method == 'CUMULATIVE':
-                self.dlg.recTypeCombo.setCurrentIndex(1)
-                j = 0
-                for i in range(1, len(line1), 2):
-                    self.dlg.layerPropTable.item(3, j).setText(line1[i])
-                    j += 1
-                t = 0
-                for k in range(2, len(line1), 2):
-                    self.dlg.layerPropTable.item(5, t).setText(line1[k])
-                    t += 1
-            else:
-                self.dlg.layerPropTable.cellWidget(2, 1).setCurrentIndex(
-                    int(line1[1])-1)
+                line1 = string[1].split()
+                method = line1[0].upper()
+                if method == 'FRACTION':
+                    self.dlg.recTypeCombo.setCurrentIndex(0)
+                    for i in range(1, len(line1)):
+                        j = i-1
+                        self.dlg.layerPropTable.item(3, j).setText(line1[i])
+                elif method == 'CUMULATIVE':
+                    self.dlg.recTypeCombo.setCurrentIndex(1)
+                    j = 0
+                    for i in range(1, len(line1), 2):
+                        self.dlg.layerPropTable.item(3, j).setText(line1[i])
+                        j += 1
+                    t = 0
+                    for k in range(2, len(line1), 2):
+                        self.dlg.layerPropTable.item(5, t).setText(line1[k])
+                        t += 1
+                else:
+                    self.dlg.layerPropTable.cellWidget(2, 1).setCurrentIndex(
+                        int(line1[1])-1)
+            except:
+                pass
 
     def resultString(self):
         table = self.dlg.layerPropTable

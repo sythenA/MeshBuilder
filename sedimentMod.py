@@ -3,6 +3,7 @@ from PyQt4.QtCore import Qt
 from qgis.utils import iface
 from commonDialog import fileBrowser, onCritical
 from bedLayerSet import bedLayer
+from quasiSediOption import quasiSedimentSetting
 import re
 import shepred
 import os.path
@@ -31,6 +32,8 @@ class sedimentModule:
             lambda: fileBrowser(self.dlg, caption, self.dlg.projFolder,
                                 self.dlg.bedDistriEdit, '(*.2dm *.msh)'))
         self.bedSet = bedSettingModule(self.dlg)
+        self.dlg.sediModelingCombo.currentIndexChanged.connect(
+            self.sedimentModelingSetting)
 
     def useTwo2dmFile(self):
         if self.dlg.sameFileAsFlowBox.checkState() == Qt.Unchecked:
@@ -41,6 +44,32 @@ class sedimentModule:
             self.dlg.bedDistriEdit.setEnabled(False)
             self.dlg.selectBedDistriFileBtn.setEnabled(False)
             self.dlg.bedDistri2dmConfirm.setEnabled(False)
+
+    def sedimentModelingSetting(self):
+        try:
+            quasi_interval = self.quasi_interval
+        except:
+            quasi_interval = ''
+        try:
+            quasi_dt = self.quasi_dt
+        except:
+            quasi_dt = ''
+
+        if self.dlg.sediModelingCombo.currentIndex() == 0:
+            self.quasiSedi = False
+        else:
+            self.quasiSedi = True
+            qDlg = quasiSedimentSetting(iface, quasi_interval, quasi_dt)
+            quasi_interval, quasi_dt = qDlg.run()
+            if quasi_interval:
+                self.quasi_interval = quasi_interval
+            if quasi_dt:
+                self.quasi_dt = quasi_dt
+            try:
+                if self.quasi_interval and self.quasi_dt:
+                    self.dlg.label_41.setText('Quasi-Steady set done.')
+            except:
+                pass
 
     def checkCohFallVel(self):
         idx = self.dlg.cohFallVelCombo.currentIndex()
@@ -170,6 +199,17 @@ concentration and falling velocity relation.')
             self.dlg.cohSediEroRateGroup.setEnabled(False)
             self.dlg.cohSediDepRateGroup.setEnabled(False)
 
+    def sediSteadyExport(self):
+        line = '// Quasi Unsteady Modeling for Sediment? [time_interval(hrs) \
+dt_sed(s)] [Empty=Full-Uns]\n'
+        if self.quasiSedi:
+            line += (str(self.quasi_interval) + ' ')
+            line += (str(self.quasi_dt))
+            line += '\n'
+        else:
+            line += '\n'
+        self.quasiString = line
+
     def sediGradExport(self):
         gradString = '// General Sediment Parameters: spec_grav sed_nclass\n'
         gradString = (gradString + self.dlg.sediSGEdit.text() + " " +
@@ -187,6 +227,9 @@ D_Upper(mm) [Den_Bulk] [SI/EN]\n'
                 line = line + table.cellWidget(i, 3).currentText() + '\n'
             else:
                 line = line + '\n'
+        line += '// Are You Specifying Fall-Velocity, Transport-Capacity and \
+Mode for each Size Class? (YES or NO)\n'
+        line += 'NO\n'
         self.sediGradText = gradString + line
 
     def sediCapacity(self):
@@ -227,6 +270,12 @@ d_sand; Theta=T1+(T2-T1)*Exp(-20F_s)\n'
             capacityString += (self.dlg.watTempEdit.text() + '\n')
         else:
             capacityString += ('25.0' + '\n')
+        capacityString += '// Start Time in hours for the Sediment Solver\n'
+        if self.dlg.sediStartingEdit.text():
+            capacityString += str(int(self.dlg.sediStartingEdit.text()))
+            capacityString += '\n'
+        else:
+            capacityString += '\n'
         capacityString = capacityString + '// Adaptation Coefs for Suspended\
  Load: A_DEP A_ERO (0.25 1.0 are defaults)\n'
         capacityString += (self.dlg.suspCoefEdit.text() + ' ')
@@ -288,12 +337,20 @@ slope_s slope_m\n'
         self.cohText = cohText
 
     def sediExport(self):
+        self.sediSteadyExport()
         self.sediGradExport()
         self.sediCapacity()
         self.cohesiveExport()
 
         self.bedSet.bedLayersExport()
         self.bedLayerText = self.bedSet.layerText
+
+    def bankExport(self):
+        bankText = '// BANK Module: OPTION DT_Multiple; [0=NO; 1=User_Supplied;\
+ 2=Linear_Retreat; 3=Failure Moving Mesh; 4=Failure Fixed Mesh; 5=Linear Fixed \
+Mesh; 6=AoR]\n'
+        bankText += '\n'
+        self.bankText = bankText
 
 
 class bedSettingModule:
@@ -591,6 +648,10 @@ bed layer and bed zone\n'
             bedItem = tree.topLevelItem(0)
             fileName = bedItem.text(1)
             layerText += (fileName + '\n')
+
+        layerText += '// Special-Setup-for-Sursurface-Bed-Properties(\
+Varying_Thickness, ZEROing_for_Gradation_and_Elevation) (YES or NO)\n'
+        layerText += ('NO\n')
 
         table = self.dlg.bedRockSetTable
         if self.dlg.rockErosionCheck.isChecked():

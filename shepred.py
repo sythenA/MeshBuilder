@@ -195,8 +195,8 @@ class shepred:
         onInfo(1008)
         folderPath = self.dlg.saveFolderEdit.text()
         appFolder = os.path.dirname(__file__)
-        srcPath = os.path.join(appFolder, 'srhpre_32bit.bat')
-        dstPath = os.path.join(folderPath, 'srhpre_32bit.bat')
+        srcPath = os.path.join(appFolder, 'srhpre.bat')
+        dstPath = os.path.join(folderPath, 'srhpre.bat')
         os.chdir(folderPath)
         copyfile(srcPath, dstPath)
         subprocess.Popen([dstPath])
@@ -204,8 +204,8 @@ class shepred:
     def callSRH2D(self):
         folderPath = self.dlg.saveFolderEdit.text()
         appFolder = os.path.dirname(__file__)
-        srcPath = os.path.join(appFolder, 'srh2d_32bit.bat')
-        dstPath = os.path.join(folderPath, 'srh2d_32bit.bat')
+        srcPath = os.path.join(appFolder, 'srh2d.bat')
+        dstPath = os.path.join(folderPath, 'srh2d.bat')
         os.chdir(folderPath)
         copyfile(srcPath, dstPath)
         subprocess.Popen([dstPath])
@@ -428,6 +428,9 @@ T_SIMU [FLAG]\n')
         TSTART, DT, T_SIMU = self.timeSetup()
         f.write(str(TSTART) + " " + str(DT) + " " + str(T_SIMU)+'\n')
 
+        if self.dlg.rbtnSolverMobile.isChecked():
+            f.write(sediMod.quasiString)
+
         f = self.onTubulenceModel(f)
 
         if useMobile:
@@ -437,7 +440,7 @@ T_SIMU [FLAG]\n')
 
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
-        f.write(self.dlg.lineEditMeshFileName.text()+'\n')
+        f.write(self.dlg.lineEditMeshFileName.text()+' SMS \n')
         #  Bed Properties (If use Mobile)
         if useMobile:
             f.write(sediMod.bedLayerText)
@@ -459,7 +462,14 @@ T_SIMU [FLAG]\n')
 
         f.write('// Any-Special-Modeling-Options? (0/1=no/yes)\n')
         f.write(str(0) + '\n')
+
+        if self.dlg.rbtnSolverMobile.isChecked():
+            sediMod.bankExport()
+            f.write(sediMod.bankText)
+
         f = self.boundaryOutput(f)
+        f.write('// Number of In-Stream Flow Obstructions:\n')
+        f.write(str(0) + '\n')
         f = self.onOutputFormat(f)
         f.write('// Headers of Output Variables specified by the User: EMPTY li\
 ne means default is used\n')
