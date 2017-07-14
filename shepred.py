@@ -3,6 +3,7 @@
 import os
 import os.path
 import re
+from qgis.core import QGis
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
 from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
@@ -108,6 +109,7 @@ class shepred:
             param.update({'projFolder': ''})
             projFolder = ''
 
+
         dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
                                 'Pressure_Unit.png')
         pic = QPixmap(dirToPic)
@@ -178,6 +180,17 @@ class shepred:
         self.dlg.rbtnSolverMobile.toggled.connect(self.mobileEnabled)
         self.dlg.label_40.setText(u'')
 
+    def getObsLayer(self):
+        self.dlg.obsPointsLayerCombo.clear()
+
+        layerItems = list()
+        layerItems.append(u'')
+        layers = self.iface.legendInterface().layers()
+        for layer in layers:
+            if layer.geometryType() == QGis.Point:
+                layerItems.append(layer.name())
+        self.dlg.obsPointsLayerCombo.addItems(layerItems)
+
     def mobileEnabled(self):
         self.dlg.solverTabWidget.setTabEnabled(1, True)
         Mod = sedimentModule(self.dlg)
@@ -236,6 +249,8 @@ class shepred:
         self.dlg.rbtnSpecialMomentumless.stateChanged.connect(self.addSource)
         self.dlg.rbtnSpecialInfiltration.stateChanged.connect(self.addInfil)
         self.dlg.rbtnSpecialNone.stateChanged.connect(self.setNoSpecials)
+
+        self.getObsLayer()
 
         result = self.dlg.exec_()
         if result:
@@ -401,6 +416,35 @@ of T1 T2 ...  EMPTY means the end\n')
                                                    presetType=".*"))
         self.dlg.mannTable.setCellWidget(0, 1, button)
 
+    def exportObsPoints(self, f):
+        layerName = self.dlg.obsPointsLayerCombo.currentText()
+        if layerName:
+            obsPointsLayer = ''
+            layers = self.iface.legendInterface().layers()
+            for layer in layers:
+                if layerName == layer.name():
+                    obsPointsLayer = layer
+            if obsPointsLayer:
+                if obsPointsLayer.featureCount() > 99:
+                    onCritical(128)
+
+            if obsPointsLayer:
+                f.write(str(obsPointsLayer.featureCount()) + '\n')
+                f.write('// Monitor Point Coordinates: x1 y1 x2 y2 ...\n')
+                line = ''
+                for feature in obsPointsLayer.getFeatures():
+                    x = feature.geometry().asPoint()[0]
+                    y = feature.geometry().asPoint()[1]
+                    line += (str(x) + ' ' + str(y) + ' ')
+                line = line[:-1] + '\n'
+                f.write(line)
+            else:
+                f.write('0\n')
+        else:
+            f.write('0\n')
+
+        return f
+
     def export(self):
         fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
         saveFolder = self.dlg.saveFolderEdit.text()
@@ -419,7 +463,7 @@ of T1 T2 ...  EMPTY means the end\n')
         f.write('// Module/Solver Selected (FLOW MORP MOB TEM TC)\n')
         f.write(self.chooseSolver()+'\n')
         f.write('// Monitor-Point-Info: NPOINT\n')
-        f.write(str(0)+'\n')
+        f = self.exportObsPoints(f)
         if not useMobile:
             f.write('// Steady-or-Unsteady (STEADY/UNS)\n')
             f.write(self.chooseSteady()+'\n')
