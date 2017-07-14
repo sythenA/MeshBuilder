@@ -15,13 +15,8 @@ class sedimentModule:
         self.dlg.sediSizeClass.textChanged.connect(self.setGradTable)
         self.dlg.sedimentTab.setCurrentIndex(0)
 
-        self.dlg.rdoWilEqn.toggled.connect(self.setCapToWil)
-        self.dlg.rdoMPMEqn.toggled.connect(self.setTableToMPM)
-        self.dlg.rdoParkEqn.toggled.connect(self.setTableToParker)
-        self.dlg.rdoEHEqn.toggled.connect(self.cleanEqDependentTable)
-        self.dlg.rdoYan79Eqn.toggled.connect(self.cleanEqDependentTable)
-        self.dlg.rdoYan73Eqn.toggled.connect(self.cleanEqDependentTable)
-        self.dlg.rdoWuEqn.toggled.connect(self.setTableToWu)
+        self.dlg.capacityEqnCombo.currentIndexChanged.connect(
+            self.setCapEqnTable)
 
         self.dlg.checkCohesiveUsed.stateChanged.connect(self.useCohesive)
         self.dlg.cohFallVelCombo.currentIndexChanged.connect(
@@ -32,6 +27,7 @@ class sedimentModule:
             lambda: fileBrowser(self.dlg, caption, self.dlg.projFolder,
                                 self.dlg.bedDistriEdit, '(*.2dm *.msh)'))
         self.bedSet = bedSettingModule(self.dlg)
+        self.quasiSedi = False
         self.dlg.sediModelingCombo.currentIndexChanged.connect(
             self.sedimentModelingSetting)
 
@@ -112,70 +108,74 @@ concentration and falling velocity relation.')
         except(ValueError):
             self.dlg.sediPropTable.clear()
 
-    def setCapToWil(self):
+    def setCapEqnTable(self):
         self.dlg.eqDependentTable.clear()
         self.dlg.eqDependentTable.setRowCount(0)
         self.dlg.eqDependentTable.setColumnCount(0)
 
-        self.dlg.eqDependentTable.setRowCount(1)
-        self.dlg.eqDependentTable.setColumnCount(3)
-        header = ['T1', 'T2', 'D_SAND']
-        self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
+        idx = self.dlg.capacityEqnCombo.currentIndex()
+        if idx == 3 or idx == 11:
+            self.dlg.eqDependentTable.setRowCount(1)
+            self.dlg.eqDependentTable.setColumnCount(3)
+            header = ['T1', 'T2', 'D_SAND (mm)']
+            self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
 
-        for i in range(0, self.dlg.eqDependentTable.rowCount()):
-            for j in range(0, self.dlg.eqDependentTable.columnCount()):
-                self.dlg.eqDependentTable.setItem(i, j, QTableWidgetItem(u''))
+            for i in range(0, self.dlg.eqDependentTable.rowCount()):
+                for j in range(0, self.dlg.eqDependentTable.columnCount()):
+                    self.dlg.eqDependentTable.setItem(
+                        i, j, QTableWidgetItem(u''))
 
-        self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.021'))
-        self.dlg.eqDependentTable.setItem(0, 1, QTableWidgetItem(u'0.038'))
-        self.dlg.eqDependentTable.setItem(0, 2, QTableWidgetItem(u'1.0'))
+            if idx == 3:
+                self.dlg.eqDependentTable.setItem(0, 0,
+                                                  QTableWidgetItem(u'0.021'))
+                self.dlg.eqDependentTable.setItem(0, 1,
+                                                  QTableWidgetItem(u'0.038'))
+                self.dlg.eqDependentTable.setItem(0, 2,
+                                                  QTableWidgetItem(u'1.0'))
+            else:
+                self.dlg.eqDependentTable.setItem(0, 0,
+                                                  QTableWidgetItem(u'0.021'))
+                self.dlg.eqDependentTable.setItem(0, 1,
+                                                  QTableWidgetItem(u'0.0365'))
+                self.dlg.eqDependentTable.setItem(0, 2,
+                                                  QTableWidgetItem(u'2.0'))
+        elif idx in [1, 7, 8]:
+            self.dlg.eqDependentTable.setRowCount(1)
+            self.dlg.eqDependentTable.setColumnCount(1)
+            header = ['HF']
+            self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
 
-    def setTableToMPM(self):
-        self.dlg.eqDependentTable.clear()
-        self.dlg.eqDependentTable.setRowCount(0)
-        self.dlg.eqDependentTable.setColumnCount(0)
+            for i in range(0, self.dlg.eqDependentTable.rowCount()):
+                for j in range(0, self.dlg.eqDependentTable.columnCount()):
+                    self.dlg.eqDependentTable.setItem(i, j,
+                                                      QTableWidgetItem(u''))
+            self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.0'))
 
-        self.dlg.eqDependentTable.setRowCount(1)
-        self.dlg.eqDependentTable.setColumnCount(1)
-        header = ['HF']
-        self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
+        elif idx == 2 or idx == 9:
+            self.dlg.eqDependentTable.setRowCount(1)
+            self.dlg.eqDependentTable.setColumnCount(2)
+            header = ['THETA', 'HF']
+            self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
 
-        for i in range(0, self.dlg.eqDependentTable.rowCount()):
-            for j in range(0, self.dlg.eqDependentTable.columnCount()):
-                self.dlg.eqDependentTable.setItem(i, j, QTableWidgetItem(u''))
-        self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.0'))
+            for i in range(0, self.dlg.eqDependentTable.rowCount()):
+                for j in range(0, self.dlg.eqDependentTable.columnCount()):
+                    self.dlg.eqDependentTable.setItem(i, j,
+                                                      QTableWidgetItem(u''))
 
-    def setTableToParker(self):
-        self.dlg.eqDependentTable.clear()
-        self.dlg.eqDependentTable.setRowCount(0)
-        self.dlg.eqDependentTable.setColumnCount(0)
+            self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.04'))
+            self.dlg.eqDependentTable.setItem(0, 1, QTableWidgetItem(u'0.65'))
 
-        self.dlg.eqDependentTable.setRowCount(1)
-        self.dlg.eqDependentTable.setColumnCount(2)
-        header = ['THETA', 'HF']
-        self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
+        elif idx == 4:
+            self.dlg.eqDependentTable.setRowCount(1)
+            self.dlg.eqDependentTable.setColumnCount(1)
+            header = ['THETA_CRI']
+            self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
 
-        for i in range(0, self.dlg.eqDependentTable.rowCount()):
-            for j in range(0, self.dlg.eqDependentTable.columnCount()):
-                self.dlg.eqDependentTable.setItem(i, j, QTableWidgetItem(u''))
-
-        self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.04'))
-        self.dlg.eqDependentTable.setItem(0, 1, QTableWidgetItem(u'0.65'))
-
-    def setTableToWu(self):
-        self.dlg.eqDependentTable.clear()
-        self.dlg.eqDependentTable.setRowCount(0)
-        self.dlg.eqDependentTable.setColumnCount(0)
-
-        self.dlg.eqDependentTable.setRowCount(1)
-        self.dlg.eqDependentTable.setColumnCount(1)
-        header = ['THETA_CRI']
-        self.dlg.eqDependentTable.setHorizontalHeaderLabels(header)
-
-        for i in range(0, self.dlg.eqDependentTable.rowCount()):
-            for j in range(0, self.dlg.eqDependentTable.columnCount()):
-                self.dlg.eqDependentTable.setItem(i, j, QTableWidgetItem(u''))
-        self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.03'))
+            for i in range(0, self.dlg.eqDependentTable.rowCount()):
+                for j in range(0, self.dlg.eqDependentTable.columnCount()):
+                    self.dlg.eqDependentTable.setItem(i, j,
+                                                      QTableWidgetItem(u''))
+            self.dlg.eqDependentTable.setItem(0, 0, QTableWidgetItem(u'0.03'))
 
     def useCohesive(self):
         if self.dlg.checkCohesiveUsed.checkState() == Qt.Checked:
@@ -233,37 +233,64 @@ Mode for each Size Class? (YES or NO)\n'
         self.sediGradText = gradString + line
 
     def sediCapacity(self):
+        idx = self.dlg.capacityEqnCombo.currentIndex()
         table = self.dlg.eqDependentTable
         capacityString = '// Sediment Transport Capacity Equation (EH MPM PARK \
 WILC WU YANG73 YANG79 TRI BAG KUO AW RIJN USER GAR WRI MIX\n'
-        if self.dlg.rdoEHEqn.isChecked():
+        if idx == 0:
             capacityString += 'EH\n'
-        elif self.dlg.rdoMPMEqn.isChecked():
+        elif idx == 1:
             capacityString += 'MPM\n'
             capacityString += '// Capacity Equation Hiding Factor (0 to 0.9)\n'
             capacityString = capacityString + table.item(0, 0).text() + '\n'
-        elif self.dlg.rdoParkEqn.isChecked():
+        elif idx == 2:
             capacityString += 'PARKER\n'
             capacityString += '// Capacity Equation Coefficients for Parker \
 and/or Seminara (Theta_Critial Hiding Factor)\n'
             capacityString = (capacityString + table.item(0, 0).text() + ' ' +
                               table.item(0, 1).text() + '\n')
-        elif self.dlg.rdoYan79Eqn.isChecked():
+        elif idx == 6:
             capacityString += 'YANG79\n'
-        elif self.dlg.rdoYan73Eqn.isChecked():
+        elif idx == 5:
             capacityString += 'YANG73\n'
-        elif self.dlg.rdoWilEqn.isChecked():
+        elif idx == 3:
             capacityString += 'WILCOCK\n'
             capacityString += '// Wicock Capacity Equation Coefficients: T1 T2 \
 d_sand; Theta=T1+(T2-T1)*Exp(-20F_s)\n'
             capacityString += (table.item(0, 0).text() + ' ')
             capacityString += (table.item(0, 1).text() + ' ')
             capacityString += (table.item(0, 2).text() + '\n')
-        elif self.dlg.rdoWuEqn.isChecked():
+        elif idx == 4:
             capacityString += 'WU\n'
             capacityString += '// Wu Capacity Equation Critical Shields Number\
 (0.01 to 0.07)\n'
             capacityString += (table.item(0, 0).text() + '\n')
+        elif idx == 7:
+            capacityString += 'AW\n'
+            capacityString += '// Capacity Equation Hiding Factor (0 to 0.9)\n'
+            capacityString += (table.item(0, 0).text() + '\n')
+        elif idx == 8:
+            capacityString += 'RIJN\n'
+            capacityString += '// Capacity Equation Hiding Factor (0 to 0.9)\n'
+            capacityString += (table.item(0, 0).text() + '\n')
+        elif idx == 9:
+            capacityString += 'SEMI\n'
+            capacityString += '// Capacity Equation Hiding Factor (0 to 0.9)\n'
+            capacityString += '// Capacity Equation Coefficients for Parker \
+and/or Seminara (Theta_Critial Hiding Factor)\n'
+            capacityString += (table.item(0, 0).text() + ' ' +
+                               table.item(0, 1).text() + '\n')
+        elif idx == 10:
+            capacityString += 'BAGNOLD\n'
+        elif idx == 11:
+            capacityString += 'TRINITY\n'
+            capacityString += '//Trinity Capacity Equation Coefficients: T1 T2 \
+d_sand; Theta=T1+(T2-T1)*Exp(-20F_s)\n'
+            capacityString += (table.item(0, 0).text() + ' ')
+            capacityString += (table.item(0, 1).text() + ' ')
+            capacityString += (table.item(0, 2).text() + '\n')
+        elif idx == 12:
+            capacityString += 'KUO\n'
 
         capacityString += '// Water Temperature (Celsius):\n'
         if self.dlg.watTempEdit.text():

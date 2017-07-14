@@ -688,7 +688,8 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
     def onTubulenceModel(self, f):
         f.write('// Turbulence-Model-Selection(PARA or KE)\n')
 
-        group = [self.dlg.rbtnTurbPARA, self.dlg.rbtnTurbKE]
+        group = [self.dlg.rbtnTurbPARA, self.dlg.rbtnTurbKE,
+                 self.dlg.rbtnTurbRNG]
         for btn in group:
             if btn.isChecked():
                 selected = btn.text()
@@ -702,6 +703,8 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
                 onCritical(106)
         elif selected == 'KE':
             f.write('KE\n')
+        elif selected == 'RNG':
+            f.write('RNG\n')
 
         return f
 
@@ -728,7 +731,8 @@ WSE [TK] [ED] [T]\n')
                 line = ""
                 for j in range(0, 3):
                     line = line + table.item(i, j).text() + " "
-                if self.dlg.rbtnTurbKE.isChecked():
+                if (self.dlg.rbtnTurbKE.isChecked() or
+                        self.dlg.rbtnTurbRNG.isChecked()):
                     if table.item(i, 3).text():
                         line = line + table.item(i, 3).text() + " "
                     else:
