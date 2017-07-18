@@ -48,6 +48,7 @@ from collections import Counter
 from copy import copy
 from operator import itemgetter
 from loadPara import loadParaView
+from mesh2DViewer import mesh2DView
 import os
 import pickle
 # Initialize Qt resources from file resources.py
@@ -85,6 +86,7 @@ class meshBuilder:
 
         self.dlg = meshBuilderDialog()
         self.shepred = shepred.shepred(iface)
+        self.mesh2D = mesh2DView(iface)
 
         # Declare instance attributes
         self.actions = []
@@ -358,6 +360,11 @@ class meshBuilder:
                             text=self.tr(u'srhpre UI'),
                             callback=self.shepred.run,
                             parent=self.iface.mainWindow())
+        self.mesh2DViewerAction = self.add_action(
+                            icon_path,
+                            text=self.tr(u'2dm File Viewer'),
+                            callback=self.mesh2D.run,
+                            parent=self.iface.mainWindow())
         self.flipAction = self.add_action(
                             icon_path,
                             text=self.tr(u'Flip Line'),
@@ -365,7 +372,7 @@ class meshBuilder:
                             parent=self.iface.mainWindow())
         self.paraViewAction = self.add_action(
                                 paraview_icon,
-                                text=self.tr('ParaView'),
+                                text=self.tr(u'ParaView'),
                                 callback=loadParaView,
                                 parent=self.iface.mainWindow())
 
@@ -2060,12 +2067,11 @@ def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
     meshName.replace('.msh', '')
     group = QgsProject.instance().layerTreeRoot().addGroup(meshName)
 
-    layers = list()
     for path in layerPath.values():
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        layers.append(layer)
         QgsMapLayerRegistry.instance().addMapLayer(layer, False)
         group.addLayer(layer)
+        layer.reload()
 
 
 def physicCode(physName, physicsRef):

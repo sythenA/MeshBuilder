@@ -544,7 +544,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabFlowSetting">
       <attribute name="title">
@@ -1131,7 +1131,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
@@ -2359,11 +2359,6 @@
          <height>191</height>
         </rect>
        </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
       </widget>
       <widget class="QCheckBox" name="rockErosionCheck">
        <property name="geometry">
