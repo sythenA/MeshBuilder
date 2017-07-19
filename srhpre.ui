@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>srhpreUI</class>
  <widget class="QDialog" name="srhpreUI">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -69,7 +72,7 @@
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QCheckBox" name="checkBox_3">
+      <widget class="QCheckBox" name="rbtnSediInput">
        <property name="text">
         <string>Sediment Dropping Into River</string>
        </property>
@@ -1726,11 +1729,6 @@
        <item>
         <property name="text">
          <string>Kuo (1984-1988) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>新增項目</string>
         </property>
        </item>
       </widget>

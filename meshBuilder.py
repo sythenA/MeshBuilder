@@ -443,6 +443,7 @@ class meshBuilder:
         self.setTableToDistri()
         size = self.dlg.maximumSize()
         self.dlg.resize(size)
+        self.currentProcess = 10
 
     def step1_1(self):
 
@@ -674,7 +675,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                                         u'符合邊界',
                                                         u'區域分類',
                                                         u'輸出名',
-                                                        u'四邊形網格',
+                                                        u'合併三角網格',
                                                         u'結構化網格'])
         counter = 0
         for feature in layer.getFeatures():
@@ -701,13 +702,13 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                          u'符合邊界',
                                          u'區域分類',
                                          u'輸出名',
-                                         u'四邊形網格',
+                                         u'合併三角網格',
                                          u'結構化網格'])
         self.tableAttrNameDict = {u'網格間距': 0,
                                   u'符合邊界': 1,
                                   u'區域分類': 2,
                                   u'輸出名': 3,
-                                  u'四邊形網格': 4,
+                                  u'合併三角網格': 4,
                                   u'結構化網格': 5}
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
@@ -1556,6 +1557,9 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
             iface.messageBar().pushMessage('Data in table wrote into line layer\
  attribute table, procced to mesh generation.', level=QgsMessageBar.INFO)
 
+        elif process == 10:
+            self.writeTableToLayer()
+
     def step2(self, source):
         # polygon layer
         try:
@@ -1838,12 +1842,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.dlg.outputSegmentsBtn.clicked.connect(
             lambda: self.switchAttr('Segments'))
 
-        result = self.dlg.exec_()
+        self.dlg.show()
         # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
 
     def selectXyz(self):
         chooseXyzCaption = u'請選擇.xyz或.asc格式之高程檔案'
@@ -2327,6 +2327,7 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
 
     f.write("$EndElements")
     f.close()
+    iface.messageBar().pushMessage('Mesh output done.')
 
 
 def dictToList(physDict):
@@ -2517,3 +2518,4 @@ def newDistriRegionOutput(saveFile, regionOrder, meshHeader, mshLayer):
         f.write(lineString)
 
     f.write('$EndElements\n')
+    iface.messageBar().pushMessage('Mesh output done.')

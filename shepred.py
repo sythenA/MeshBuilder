@@ -109,7 +109,6 @@ class shepred:
             param.update({'projFolder': ''})
             projFolder = ''
 
-
         dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
                                 'Pressure_Unit.png')
         pic = QPixmap(dirToPic)
@@ -129,6 +128,8 @@ class shepred:
         self.dlg.solverTabWidget.setCurrentIndex(0)
         self.dlg.tabWidget.setCurrentIndex(0)
 
+        self.dlg.bedLayerTree.clear()
+        self.dlg.rbtnSediInput.setEnabled(False)
         self.dlg.callSrhpreBtn.setEnabled(False)
         self.dlg.callSRH2DBtn.setEnabled(False)
         onComment(self.dlg.mannLabel, 1006)
@@ -175,6 +176,7 @@ class shepred:
         self.dlg.tabSpecialOps.setTabEnabled(0, False)
         self.dlg.tabSpecialOps.setTabEnabled(1, False)
         self.dlg.tabSpecialOps.setTabEnabled(2, False)
+        self.dlg.rbtnSolverFlow.toggled.connect(self.flowChoosed)
 
         self.dlg.solverTabWidget.setTabEnabled(1, False)
         self.dlg.rbtnSolverMobile.toggled.connect(self.mobileEnabled)
@@ -191,10 +193,15 @@ class shepred:
                 layerItems.append(layer.name())
         self.dlg.obsPointsLayerCombo.addItems(layerItems)
 
+    def flowChoosed(self):
+        self.dlg.solverTabWidget.setTabEnabled(1, False)
+        self.dlg.rbtnSediInput.setEnabled(False)
+
     def mobileEnabled(self):
         self.dlg.solverTabWidget.setTabEnabled(1, True)
         Mod = sedimentModule(self.dlg)
         self.sediMod = Mod
+        self.dlg.rbtnSediInput.setEnabled(True)
 
     def fillMannTable(self):
         if self.dlg.rbtnManningConstant.isChecked():
@@ -252,9 +259,7 @@ class shepred:
 
         self.getObsLayer()
 
-        result = self.dlg.exec_()
-        if result:
-            pass
+        self.dlg.show()
 
     def initAuto(self):
         if self.dlg.rbtnSimUnsteady.isChecked():
