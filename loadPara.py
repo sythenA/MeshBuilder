@@ -12,6 +12,6 @@ def loadParaView():
         pathKey = _winreg.EnumKey(k, 0)
         pathName = _winreg.QueryValue(k, pathKey)
 
-        subprocess.call([os.path.join(pathName, 'bin\\paraview.exe')])
+        subprocess.call([os.path.join(pathName, 'bin', 'paraview.exe')])
     except:
         onCritical(123)

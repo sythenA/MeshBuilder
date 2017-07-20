@@ -72,39 +72,40 @@ class bedLayer:
 
     def setPreset(self):
         if self.preset:
-            try:
-                string = re.split(';', self.preset)
-                line0 = string[0].split()
-                depth = line0[0]
-                unit = line0[1].upper()
-                self.dlg.layerPropTable.item(1, 0).setText(depth)
-                if unit == 'SI':
-                    self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(0)
-                else:
-                    self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(1)
+            string = re.split(';', self.preset)
+            line0 = string[0].split()
+            depth = line0[0]
+            unit = line0[1].upper()
+            self.dlg.layerPropTable.item(1, 0).setText(depth)
+            if unit == 'SI':
+                self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(0)
+            else:
+                self.dlg.layerPropTable.cellWidget(1, 1).setCurrentIndex(1)
 
-                line1 = string[1].split()
-                method = line1[0].upper()
-                if method == 'FRACTION':
-                    self.dlg.recTypeCombo.setCurrentIndex(0)
-                    for i in range(1, len(line1)):
-                        j = i-1
-                        self.dlg.layerPropTable.item(3, j).setText(line1[i])
-                elif method == 'CUMULATIVE':
-                    self.dlg.recTypeCombo.setCurrentIndex(1)
-                    j = 0
-                    for i in range(1, len(line1), 2):
-                        self.dlg.layerPropTable.item(3, j).setText(line1[i])
-                        j += 1
-                    t = 0
-                    for k in range(2, len(line1), 2):
-                        self.dlg.layerPropTable.item(5, t).setText(line1[k])
-                        t += 1
-                else:
-                    self.dlg.layerPropTable.cellWidget(2, 1).setCurrentIndex(
-                        int(line1[1])-1)
-            except:
-                pass
+            line1 = string[1].split()
+            method = line1[0].upper()
+            if method == 'FRACTION':
+                self.dlg.recTypeCombo.setCurrentIndex(0)
+                for i in range(1, len(line1)):
+                    j = i-1
+                    self.dlg.layerPropTable.item(3, j).setText(line1[i])
+            elif method == 'CUMULATIVE':
+                self.dlg.recTypeCombo.setCurrentIndex(1)
+                n = len(line1)
+                if n-1 > 14:
+                    while 2*self.dlg.layerPropTable.columnCount() < n-1:
+                        self.addColumn()
+                j = 0
+                for i in range(1, len(line1), 2):
+                    self.dlg.layerPropTable.item(3, j).setText(line1[i])
+                    j += 1
+                t = 0
+                for k in range(2, len(line1), 2):
+                    self.dlg.layerPropTable.item(5, t).setText(line1[k])
+                    t += 1
+            else:
+                self.dlg.layerPropTable.cellWidget(2, 1).setCurrentIndex(
+                    int(line1[1])-1)
 
     def resultString(self):
         table = self.dlg.layerPropTable
@@ -134,8 +135,10 @@ class bedLayer:
         table = self.dlg.layerPropTable
         idx = table.columnCount()
         table.insertColumn(idx)
-        table.setItem(0, idx, QTableWidgetItem('D'+str(idx+1)))
-        table.setItem(2, idx, QTableWidgetItem('P'+str(idx+1)))
+        table.setItem(2, idx, QTableWidgetItem('D'+str(idx+1)))
+        table.setItem(4, idx, QTableWidgetItem('P'+str(idx+1)))
+        table.setItem(3, idx, QTableWidgetItem(''))
+        table.setItem(5, idx, QTableWidgetItem(''))
 
     def killColumn(self):
         idx = self.dlg.layerPropTable.columnCount()

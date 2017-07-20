@@ -439,6 +439,7 @@ class meshBuilder:
         mshLayer = self.iface.addVectorLayer(layerFile,
                                              QFileInfo(layerFile).baseName(),
                                              'ogr')
+        mshLayer.reload()
         self.mshLayer = mshLayer
         self.setTableToDistri()
         size = self.dlg.maximumSize()

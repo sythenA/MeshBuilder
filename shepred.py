@@ -22,12 +22,16 @@ def read2dmMesh(meshLines):
     NScount = 0
     for line in meshLines:
         w = line.split()
-        if w[0] in ['E3T', 'E4Q', 'E6T', 'E8Q', 'E9Q']:
-            if not int(w[-1]) in region:
-                region.append(int(w[-1]))
-        elif w[0] == 'NS':
-            if int(w[-1]) < 0:
-                NScount = NScount + 1
+        try:
+            if w[0] in ['E3T', 'E4Q', 'E6T', 'E8Q', 'E9Q']:
+                if not int(w[-1]) in region:
+                    region.append(int(w[-1]))
+            elif w[0] == 'NS':
+                if int(w[-1]) < 0:
+                    NScount = NScount + 1
+        except:
+            pass
+    region.sort()
     return region, NScount
 
 
@@ -128,7 +132,6 @@ class shepred:
         self.dlg.solverTabWidget.setCurrentIndex(0)
         self.dlg.tabWidget.setCurrentIndex(0)
 
-        self.dlg.bedLayerTree.clear()
         self.dlg.rbtnSediInput.setEnabled(False)
         self.dlg.callSrhpreBtn.setEnabled(False)
         self.dlg.callSRH2DBtn.setEnabled(False)
@@ -335,7 +338,10 @@ class shepred:
         f.write('// Intermediate Result Output Control: INTERVAL(hour) OR List \
 of T1 T2 ...  EMPTY means the end\n')
         if self.dlg.fixIntvBtn.isChecked():
-            f.write('1\n')
+            if self.dlg.outIntvEdit.text():
+                f.write(self.dlg.outIntvEdit.text() + '\n')
+            else:
+                f.write('1\n')
         elif self.dlg.asigOutBtn.isChecked():
             table = self.dlg.OutIntvTable
             column = table.columnCount()
@@ -548,21 +554,11 @@ ne means default is used\n')
 
     def boundaryOutput(self, f):
         def checkStage(text):
-            if text:
-                try:
-                    float(text)
-                except:
-                    onCritical(120)
-            else:
+            if not text:
                 onCritical(118)
 
         def checkFlowRate(text):
-            if text:
-                try:
-                    float(text)
-                except:
-                    onCritical(121)
-            else:
+            if not text:
                 onCritical(119)
 
         table = self.dlg.boundaryTable
@@ -574,7 +570,7 @@ ne means default is used\n')
                 f.write('INLET-Q\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 checkFlowRate(table.item(i, 2).text())
-                line = str(float(table.item(i, 2).text())) + " "
+                line = str(table.item(i, 2).text()) + " "
                 #  Sediment input(If Mobile is used)
                 if self.dlg.rbtnSolverMobile.isChecked():
                     capacityCombo = self.dlg.sediBoundaryTable.cellWidget(i, 2)
@@ -596,14 +592,14 @@ ne means default is used\n')
                 f.write('EXIT-H\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 checkStage(table.item(i, 3).text())
-                line = str(float(table.item(i, 3).text())) + " "
+                line = str(table.item(i, 3).text()) + " "
                 line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-Q':
                 f.write('EXIT-Q\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 checkFlowRate(table.item(i, 2).text())
-                line = str(float(table.item(i, 2).text())) + " "
+                line = str(table.item(i, 2).text()) + " "
                 line = line + table.cellWidget(i, 4).currentText()
                 if table.cellWidget(i, 5).currentIndex() != 0:
                     line = (line + " " + table.cellWidget(i, 5).currentText() +
@@ -616,8 +612,8 @@ ne means default is used\n')
                 f.write('// Boundary Values (Q W QS TEM H_rough etc)\n')
                 checkFlowRate(table.item(i, 2).text())
                 checkStage(table.item(i, 3).text())
-                line = str(float(table.item(i, 2).text())) + " "
-                line = line + str(float(table.item(i, 3).text()))
+                line = str(table.item(i, 2).text()) + " "
+                line = line + str(table.item(i, 3).text())
                 line = line + table.cellWidget(i, 4).currentText() + '\n'
                 f.write(line)
             elif table.cellWidget(i, 1).currentText() == 'EXIT-EX':
@@ -792,6 +788,8 @@ WSE [TK] [ED] [T]\n')
                         line = line + str(0) + " "
                 line = line[:-1] + '\n'
                 f.write(line)
+        elif self.dlg.rbtnICRst.isChecked():
+            f.write(self.dlg.rstFileEdit.text() + '\n')
 
         f.write('// Mesh-Unit (FOOT METER INCH MM MILE KM GSCALE)\n')
         f.write(self.onMeshUnit()+'\n')

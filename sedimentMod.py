@@ -483,7 +483,13 @@ class bedSettingModule:
         elif (self.dlg.lineEditMeshFileName.text() and
                 not self.dlg.lineMeshFilePath.text()):
             main2dmPath = self.dlg.lineEditMeshFileName.text()
-            boundsRef, physRef = shepred.read2dmMesh(main2dmPath)
+            f = open(main2dmPath, 'r')
+            data = f.readlines()
+            f.close()
+            _physRef, boundsRef = shepred.read2dmMesh(data)
+            physRef = dict()
+            for i in range(0, len(_physRef)):
+                physRef.update({i+1: str(_physRef[i])})
         else:
             boundsRef = list()
             physRef = list()
