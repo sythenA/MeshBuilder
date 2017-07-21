@@ -159,7 +159,7 @@ class bedLayer:
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
             table.setItem(0, 2, QTableWidgetItem(
-                'Density of\nClay\n(optional)'))
+                'Density of\n Clay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))
@@ -176,7 +176,7 @@ class bedLayer:
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
             table.setItem(0, 2, QTableWidgetItem(
-                'Density of\nClay\n(optional)'))
+                'Density of\n Clay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))
@@ -199,7 +199,7 @@ class bedLayer:
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
             table.setItem(0, 2, QTableWidgetItem(
-                'Density of\nClay\n(optional)'))
+                'Density of\n Clay\n(optional)'))
             table.setItem(1, 0, QTableWidgetItem(u''))
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))

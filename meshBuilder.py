@@ -1704,7 +1704,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.dlg.Finished = True
 
     def loadGeneratedMesh(self):
-        refId = QgsCoordinateReferenceSystem.PostgisCrsId
+        refId = QgsCoordinateReferenceSystem.EpsgCrsId
         if not self.systemCRS:
             systemCRS = QgsCoordinateReferenceSystem(3826, refId)
         else:

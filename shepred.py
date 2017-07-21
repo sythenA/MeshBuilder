@@ -5,7 +5,6 @@ import os.path
 import re
 from qgis.core import QGis
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
-from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
 from PyQt4.QtGui import QFileDialog, QPixmap
 from shepredDialog import shepredDialog
@@ -108,10 +107,12 @@ class shepred:
             f.close()
             projFolder = param['projFolder'].replace('/', '\\')
             self.dlg.projFolder = projFolder
+            self.projFolder = projFolder
         except:
             param = dict()
             param.update({'projFolder': ''})
             projFolder = ''
+            self.projFolder = projFolder
 
         dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
                                 'Pressure_Unit.png')
@@ -154,12 +155,19 @@ class shepred:
         saveFolderCaption = u'請選擇儲存SIF檔案的資料夾'
         self.dlg.saveFolderBtn.pressed.connect(
             lambda: folderBrowser(self.dlg,
-                                  saveFolderCaption, Dir=projFolder,
+                                  saveFolderCaption, Dir=self.projFolder,
                                   lineEdit=self.dlg.saveFolderEdit))
+        caption = u'請選擇SRH2D中繼檔(_RST*.dat)'
+        self.dlg.addRstFileBtn.clicked.connect(
+            lambda: fileBrowser(self.dlg, caption, self.projFolder,
+                                lineEdit=self.dlg.rstFileEdit,
+                                presetType='*.dat'))
+
         self.dlg.readMeshBtn.pressed.connect(self.readMesh)
         self.dlg.rbtnManningConstant.pressed.connect(self.constantManning)
         self.dlg.rbtnManningMaterial.pressed.connect(self.mannMaterial)
         self.dlg.rbtnManningDistributed.pressed.connect(self.distriMann)
+        self.dlg.saveFolderEdit.textChanged.connect(self.setProjFolder)
 
         self.dlg.exportBtn.clicked.connect(self.export)
         self.dlg.inputFileBtn.clicked.connect(self.setWidgetFileBrowser)
@@ -185,6 +193,9 @@ class shepred:
         self.dlg.rbtnSolverMobile.toggled.connect(self.mobileEnabled)
         self.dlg.label_40.setText(u'')
 
+    def setProjFolder(self):
+        self.projFolder = self.dlg.saveFolderEdit.text()
+
     def getObsLayer(self):
         self.dlg.obsPointsLayerCombo.clear()
 
@@ -192,8 +203,11 @@ class shepred:
         layerItems.append(u'')
         layers = self.iface.legendInterface().layers()
         for layer in layers:
-            if layer.geometryType() == QGis.Point:
-                layerItems.append(layer.name())
+            try:
+                if layer.geometryType() == QGis.Point:
+                    layerItems.append(layer.name())
+            except:
+                pass
         self.dlg.obsPointsLayerCombo.addItems(layerItems)
 
     def flowChoosed(self):
@@ -315,12 +329,6 @@ class shepred:
         self.dlg.rstFileEdit.setEnabled(True)
         self.dlg.addRstFileBtn.setEnabled(True)
         self.dlg.InitCondTable.setEnabled(False)
-
-        caption = u'請選擇SRH2D中繼檔(_RST*.dat)'
-        self.dlg.addRstFileBtn.clicked.connect(
-            lambda: fileBrowser(self.dlg, caption, os.path.expanduser("~"),
-                                lineEdit=self.dlg.rstFileEdit,
-                                presetType='*.dat'))
 
     def setIntvTable(self):
         table = self.dlg.OutIntvTable
@@ -920,7 +928,7 @@ WSE [TK] [ED] [T]\n')
 
         if column == 2 or column == 3:
             fileName = QFileDialog.getOpenFileName(self.dlg, caption,
-                                                   os.path.expanduser("~"))
+                                                   self.projFolder)
             table.setItem(row, column, QTableWidgetItem(fileName))
         else:
             pass
