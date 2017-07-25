@@ -1,9 +1,12 @@
+# -*- coding: big5 -*-
+
 from PyQt4.QtGui import QComboBox, QTableWidgetItem, QTreeWidgetItem
 from PyQt4.QtCore import Qt
 from qgis.utils import iface
 from commonDialog import fileBrowser, onCritical
 from bedLayerSet import bedLayer
 from quasiSediOption import quasiSedimentSetting
+from selectMeshDiag import meshSelector
 import re
 import shepred
 import os.path
@@ -22,10 +25,6 @@ class sedimentModule:
         self.dlg.cohFallVelCombo.currentIndexChanged.connect(
             self.checkCohFallVel)
         self.dlg.sameFileAsFlowBox.stateChanged.connect(self.useTwo2dmFile)
-        caption = 'Please choose a 2dm file or msh file'
-        self.dlg.selectBedDistriFileBtn.pressed.connect(
-            lambda: fileBrowser(self.dlg, caption, self.dlg.projFolder,
-                                self.dlg.bedDistriEdit, '(*.2dm *.msh)'))
         self.bedSet = bedSettingModule(self.dlg)
         self.quasiSedi = False
         self.dlg.sediModelingCombo.currentIndexChanged.connect(
@@ -33,13 +32,9 @@ class sedimentModule:
 
     def useTwo2dmFile(self):
         if self.dlg.sameFileAsFlowBox.checkState() == Qt.Unchecked:
-            self.dlg.bedDistriEdit.setEnabled(True)
-            self.dlg.selectBedDistriFileBtn.setEnabled(True)
-            self.dlg.bedDistri2dmConfirm.setEnabled(True)
+            self.dlg.setBed2dmBtn.setEnabled(True)
         else:
-            self.dlg.bedDistriEdit.setEnabled(False)
-            self.dlg.selectBedDistriFileBtn.setEnabled(False)
-            self.dlg.bedDistri2dmConfirm.setEnabled(False)
+            self.dlg.setBed2dmBtn.setEnabled(False)
 
     def sedimentModelingSetting(self):
         try:
@@ -73,6 +68,9 @@ class sedimentModule:
             self.dlg.label_40.setText(
                 'Please assign a file containing cohesive sediment \n\
 concentration and falling velocity relation.')
+            caption = u'請選擇指定顆粒落下速度與粒徑關係的檔案'
+            fileBrowser(self.dlg, caption, self.dlg.projFolder,
+                        self.dlg.label_40, '*.*')
 
     def cleanEqDependentTable(self):
         self.dlg.eqDependentTable.clear()
@@ -388,8 +386,8 @@ class bedSettingModule:
         self.dlg.rdoBedUniform.toggled.connect(self.setBedToUniform)
         self.dlg.rdoBedZonal.toggled.connect(self.setBedToZone)
         self.dlg.rockErosionCheck.stateChanged.connect(self.rockAllowed)
-        self.dlg.bedDistri2dmConfirm.pressed.connect(self.getBedPhysRegion)
         self.dlg.readMeshBtn.pressed.connect(self.getPhysRegionFromMain)
+        self.dlg.setBed2dmBtn.clicked.connect(self.getBedPhysRegion)
 
     def rockAllowed(self):
         if self.dlg.rockErosionCheck.checkState() == Qt.Checked:
@@ -498,26 +496,24 @@ class bedSettingModule:
         self.physRef = physRef
 
     def getBedPhysRegion(self):
-        if self.dlg.bedDistriEdit.text():
-            fileName = self.dlg.bedDistriEdit.text()
-            if not os.path.isfile(fileName):
-                onCritical(125)
-            elif fileName.endswith('.2dm'):
-                f = open(fileName)
-                meshLines = f.readlines()
-                physRef, boundsRef = shepred.read2dmMesh(meshLines)
-                physRef.sort()
-                _physRef = dict()
-                for i in range(0, len(physRef)):
-                    _physRef.update({i+1: str(physRef[i])})
-                self.boundsRef = boundsRef
-                self.physRef = _physRef
-            elif fileName.endswith('.msh'):
-                boundsRef, physRef = shepred.readMshMesh(fileName)
+        selector = meshSelector(iface, self.dlg.saveFolderEdit.text())
+        result = selector.run()
+        if result:
+            f = open(selector.mesh2dm)
+            meshLines = f.readlines()
+            physRef, boundsRef = shepred.read2dmMesh(meshLines)
+            physRef.sort()
+            _physRef = dict()
+            for i in range(0, len(physRef)):
+                _physRef.update({i+1: str(physRef[i])})
+            self.boundsRef = boundsRef
+            self.physRef = _physRef
+            self.dlg.label_45.setText(selector.mesh2dm)
+
+            if selector.meshMsh:
+                boundsRef, physRef = shepred.readMshMesh(selector.meshMsh)
                 self.boundsRef = boundsRef
                 self.physRef = physRef
-        else:
-            onCritical(126)
 
     def setBedToUniform(self):
         try:

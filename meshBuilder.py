@@ -112,6 +112,7 @@ class meshBuilder:
             lambda: folderBrowser(self.dlg,
                                   caption,
                                   lineEdit=self.dlg.lineEdit))
+        self.dlg.FileBrowseBtn.setToolTip(caption)
 
         self.dlg.lineEdit.textChanged.connect(
             lambda: self.dirEmpty(self.dlg.lineEdit.text(),
@@ -144,12 +145,15 @@ class meshBuilder:
                                                          Caption,
                                                          self.projFolder,
                                                          lineEdit=lineEdit))
+        wherePolyBtn.setToolTip(Caption)
+
         p_Caption = u"請選擇一個點圖層"
         wherePointBtn = self.dlg.wherePointBtn
         p_lineEdit = self.dlg.pointIndicator
         wherePointBtn.pressed.connect(lambda: fileBrowser(self.dlg, p_Caption,
                                                           self.projFolder,
                                                           lineEdit=p_lineEdit))
+        wherePointBtn.setToolTip(p_Caption)
         l_Caption = u"請選擇一個線圖層"
         whereLineBtn = self.dlg.whereLineBtn
         l_lineEdit = self.dlg.lineIndicator
@@ -157,6 +161,7 @@ class meshBuilder:
                                                          l_Caption,
                                                          self.projFolder,
                                                          lineEdit=l_lineEdit))
+        whereLineBtn.setToolTip(l_Caption)
         g_Caption = u'請選擇GMSH.exe的檔案位置'
         whereGMSH = self.dlg.whereGMSH
         gmshExeEdit = self.dlg.gmshExeEdit
@@ -169,6 +174,7 @@ class meshBuilder:
                                                       g_Caption, path,
                                                       lineEdit=gmshExeEdit,
                                                       presetType='.exe'))
+        whereGMSH.setToolTip(g_Caption)
         geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
         whereGeo = self.dlg.whereGeo
         geoEdit = self.dlg.geoEdit
@@ -177,6 +183,7 @@ class meshBuilder:
                                                          self.getProj(),
                                                          lineEdit=geoEdit,
                                                          presetType='.geo'))
+        whereGeo.setToolTip(geoCaption)
 
         mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
         mshEdit = self.dlg.mshEdit
@@ -185,6 +192,7 @@ class meshBuilder:
                                                          self.getProj(),
                                                          lineEdit=mshEdit,
                                                          presetType='.msh'))
+        whereMsh.setToolTip(mshCaption)
 
         loadMshCaption = u'請選擇一個.msh檔案'
         whereMshEdit = self.dlg.whereMshEdit
@@ -194,12 +202,14 @@ class meshBuilder:
                                                         self.getProj(),
                                                         lineEdit=whereMshEdit,
                                                         presetType='.msh'))
+        whereMshBtn.setToolTip(loadMshCaption)
         MshLayerCaption = u'請選擇建立讀入網格圖層的資料夾'
         whereMshLayerEdit = self.dlg.whereMshLayerEdit
         whereMshLayerBtn = self.dlg.whereMshLayerBtn
         whereMshLayerBtn.pressed.connect(
             lambda: folderBrowser(self.dlg, MshLayerCaption, self.getProj(),
                                   whereMshLayerEdit))
+        whereMshLayerBtn.setToolTip(MshLayerCaption)
 
         interpMshCaption = u'請選擇要內插高程的網格檔案'
         whereInterpEdit = self.dlg.whereInterpEdit
@@ -208,6 +218,7 @@ class meshBuilder:
             lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
                                     lineEdit=whereInterpEdit,
                                     presetType='.msh'))
+        whereInterpBtn.setToolTip(interpMshCaption)
 
         where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
         where2dmEdit = self.dlg.where2dmEdit
@@ -215,16 +226,19 @@ class meshBuilder:
         where2dmBtn.pressed.connect(
             lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
                                     lineEdit=where2dmEdit, presetType='.2dm'))
+        where2dmBtn.setToolTip(where2dmCaption)
         distriMshCaption = u'請選擇欲改變分區的 .msh 檔案'
         distriMshEdit = self.dlg.readDistriEdit
         self.dlg.readDistriBtn.pressed.connect(
             lambda: fileBrowser(self.dlg, distriMshCaption, self.getProj(),
                                 distriMshEdit, '(*.msh)'))
+        self.dlg.readDistriBtn.setToolTip(distriMshCaption)
         saveShpCaption = u'請選擇儲存暫存檔的位置'
         saveShpEdit = self.dlg.distriShpEdit
         self.dlg.distriShpSlct.pressed.connect(
             lambda: saveFileBrowser(self.dlg, saveShpCaption, self.getProj(),
                                     saveShpEdit, '(*.shp)'))
+        self.dlg.distriShpSlct.setToolTip(saveShpCaption)
         self.dlg.readMeshDist.pressed.connect(self.readMshDistri)
 
         xyzBtn = self.dlg.chooseXyzBtn
@@ -250,11 +264,13 @@ class meshBuilder:
             lambda: saveFileBrowser(self.dlg, distCaption, self.getProj(),
                                     self.dlg.newDistEdit, '(*.msh)'))
         self.dlg.newDistOutput.pressed.connect(self.outputToNewMeshRegions)
+        self.dlg.newDistWhere.setToolTip(distCaption)
 
         new2dmCaption = u'請選擇輸出新.2dm網格的位置'
         self.dlg.whereNew2dm.pressed.connect(
             lambda: saveFileBrowser(self.dlg, new2dmCaption, self.getProj(),
                                     self.dlg.new2dmEdit, '(*.2dm)'))
+        self.dlg.whereNew2dm.setToolTip(new2dmCaption)
         self.dlg.new2dmOutput.pressed.connect(
             lambda: self.changeTo2dm(self.dlg.newDistEdit.text(),
                                      self.dlg.new2dmEdit.text()))

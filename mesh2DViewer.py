@@ -51,14 +51,23 @@ class mesh2DView:
 
         self.dlg = mesh2DViewDiag()
 
+        pixMap = QtGui.QPixmap(os.path.join(self.plugin_dir,
+                                            'Georeference.svg'))
+        geoIcon = QtGui.QIcon(pixMap)
+        self.dlg.geoReferenceBtn.setIcon(geoIcon)
+        self.dlg.geoReferenceBtn.setIconSize(0.7*pixMap.rect().size())
+        self.dlg.geoReferenceBtn.setToolTip(u'設定參考座標系')
+
         caption1 = u'請選擇一個 mesh2D 檔案(.2dm)'
         self.dlg.mshFileSelectBtn.pressed.connect(
             lambda: fileBrowser(self.dlg, caption1, '', self.dlg.meshFileEdit,
                                 '(*.2dm)'))
+        self.dlg.mshFileSelectBtn.setToolTip(caption1)
         caption2 = u'請選擇建立 shp 檔案的資料夾'
         self.dlg.folderSelectBtn.pressed.connect(
             lambda: folderBrowser(self.dlg, caption2, '',
                                   self.dlg.folderLineEdit))
+        self.dlg.folderSelectBtn.setToolTip(caption2)
         self.dlg.geoReferenceBtn.clicked.connect(self.selectCrs)
 
     def run(self):
