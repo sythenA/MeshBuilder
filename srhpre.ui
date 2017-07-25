@@ -528,7 +528,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_FlowSetting">
     <attribute name="title">
@@ -547,7 +547,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabFlowSetting">
       <attribute name="title">
@@ -908,9 +908,9 @@
        <property name="geometry">
         <rect>
          <x>350</x>
-         <y>30</y>
+         <y>40</y>
          <width>241</width>
-         <height>71</height>
+         <height>61</height>
         </rect>
        </property>
        <property name="text">
@@ -1140,7 +1140,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
@@ -2165,9 +2165,9 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>114</y>
+         <y>84</y>
          <width>241</width>
-         <height>21</height>
+         <height>61</height>
         </rect>
        </property>
        <property name="text">

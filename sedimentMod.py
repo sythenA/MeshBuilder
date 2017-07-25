@@ -667,15 +667,16 @@ POINT)\n'
                 bedItem = tree.topLevelItem(i)
                 layerText += '// Number of Bed Layers\n'
                 layerText += (str(bedItem.childCount()) + '\n')
-                for j in range(0, bedItem.childCount()):
-                    string = bedItem.child(j).text(1)
-                    string = re.split(';', string)
-                    layerText += '// Thickness Unit(SI/EN) Den_Clay(Cohesive) \
-for eachlayer and zone\n'
-                    layerText += (string[0] + '\n')
-                    layerText += '// FRACTION V1 V2 ... Vsed_nclass for each \
-bed layer and bed zone\n'
-                    layerText += (string[1] + '\n')
+                if bedItem.childCount() > 0:
+                    for j in range(0, bedItem.childCount()):
+                        string = bedItem.child(j).text(1)
+                        string = re.split(';', string)
+                        layerText += '// Thickness Unit(SI/EN) Den_Clay\
+(Cohesive) for eachlayer and zone\n'
+                        layerText += (string[0] + '\n')
+                        layerText += '// FRACTION V1 V2 ... Vsed_nclass for \
+each bed layer and bed zone\n'
+                        layerText += (string[1] + '\n')
         else:
             layerText += '// File Name for Bed Gradation on Survey Points:\n'
             bedItem = tree.topLevelItem(0)

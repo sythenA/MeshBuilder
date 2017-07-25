@@ -7,6 +7,7 @@ from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from qgis.core import QgsProject, QgsFields, QgsField, QgsVectorFileWriter
 from qgis.core import QgsCoordinateReferenceSystem, QGis, QgsFeature
 from qgis.core import QgsGeometry, QgsMapLayerRegistry, QgsVectorLayer
+from qgis.gui import QgsGenericProjectionSelector
 from commonDialog import fileBrowser, folderBrowser
 from math import fabs
 
@@ -58,6 +59,7 @@ class mesh2DView:
         self.dlg.folderSelectBtn.pressed.connect(
             lambda: folderBrowser(self.dlg, caption2, '',
                                   self.dlg.folderLineEdit))
+        self.dlg.geoReferenceBtn.clicked.connect(self.selectCrs)
 
     def run(self):
         result = self.dlg.exec_()
@@ -65,9 +67,19 @@ class mesh2DView:
             self.read2dm()
             return result
 
+    def selectCrs(self):
+        crsDiag = QgsGenericProjectionSelector()
+        crsDiag.exec_()
+        crsId = crsDiag.selectedCrsId()
+        crsType = QgsCoordinateReferenceSystem.InternalCrsId
+        self.crs = QgsCoordinateReferenceSystem(crsId, crsType)
+
     def read2dm(self):
-        crs = QgsCoordinateReferenceSystem(
-            3826, QgsCoordinateReferenceSystem.EpsgCrsId)
+        try:
+            crs = self.crs
+        except(AttributeError):
+            crs = QgsCoordinateReferenceSystem(
+                3826, QgsCoordinateReferenceSystem.EpsgCrsId)
         meshFile = self.dlg.meshFileEdit.text()
         f = open(meshFile, 'r')
 
