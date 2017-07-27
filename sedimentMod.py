@@ -29,6 +29,7 @@ class sedimentModule:
         self.quasiSedi = False
         self.dlg.sediModelingCombo.currentIndexChanged.connect(
             self.sedimentModelingSetting)
+        self.dlg.sediStartingEdit.setText(self.dlg.lineEditTStart.text())
 
     def useTwo2dmFile(self):
         if self.dlg.sameFileAsFlowBox.checkState() == Qt.Unchecked:
@@ -383,6 +384,7 @@ class bedSettingModule:
         self.dlg = dlg
         self.dlg.bedLayerTree.clear()
         self.getPhysRegionFromMain()
+        self.setBedToUniform()
         self.dlg.rdoBedUniform.toggled.connect(self.setBedToUniform)
         self.dlg.rdoBedZonal.toggled.connect(self.setBedToZone)
         self.dlg.rockErosionCheck.stateChanged.connect(self.rockAllowed)
@@ -651,7 +653,7 @@ POINT)\n'
             if self.dlg.sameFileAsFlowBox.isChecked():
                 layerText += (self.dlg.lineEditMeshFileName.text() + '\n')
             else:
-                layerText += (self.dlg.bedDistriEdit.text() + '\n')
+                layerText += (self.dlg.label_45.text() + '\n')
             layerText += '// Number of Bed Property Zones\n'
             layerText += (str(regions) + '\n')
         else:

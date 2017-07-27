@@ -386,6 +386,7 @@ of T1 T2 ...  EMPTY means the end\n')
 
         self.dlg.mannTable.setItem(0, 0, QTableWidgetItem(str(1)))
         self.dlg.mannTable.setItem(1, 0, QTableWidgetItem('All Region'))
+        self.dlg.mannTable.setItem(2, 0, QTableWidgetItem(''))
 
     def mannMaterial(self):
         onComment(self.dlg.mannLabel, 1007)
@@ -515,6 +516,7 @@ T_SIMU [FLAG]\n')
             f.write(str(3)+'\n')
         elif type(mannInput) == float:
             f.write(str(1)+'\n')
+            f.write(str(mannInput) + '\n')
         elif type(mannInput) == list:
             f.write(str(2)+'\n')
             f.write('// Number of Material Types\n')
@@ -672,7 +674,7 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
 
     def getManningVal(self):
         if self.dlg.rbtnManningConstant.isChecked():
-            if self.dlg.mannTable.item(2, 0) is not None:
+            if self.dlg.mannTable.item(2, 0).text():
                 try:
                     mannValue = float(self.dlg.mannTable.item(2, 0).text())
                     return mannValue
@@ -715,19 +717,19 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
         tStep = self.dlg.lineEditTStep.text()
         totalTime = self.dlg.lineEditTTotal.text()
 
-        if isint(tStart):
-            tStart = float(tStart)
-        else:
+        try:
+            tStart = int(tStart)
+        except(ValueError):
             onCritical(106)
 
-        if isint(tStep):
+        try:
             tStep = float(tStep)
-        else:
+        except(ValueError):
             onCritical(106)
 
-        if isint(totalTime):
-            totalTime = float(totalTime)
-        else:
+        try:
+            totalTime = int(totalTime)
+        except(ValueError):
             onCritical(106)
 
         return (tStart, tStep, totalTime)
