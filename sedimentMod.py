@@ -1,12 +1,14 @@
 # -*- coding: big5 -*-
 
-from PyQt4.QtGui import QComboBox, QTableWidgetItem, QTreeWidgetItem
+from PyQt4.QtGui import QComboBox, QTableWidgetItem, QTreeWidgetItem, QCheckBox
 from PyQt4.QtCore import Qt
 from qgis.utils import iface
 from commonDialog import fileBrowser, onCritical
 from bedLayerSet import bedLayer
 from quasiSediOption import quasiSedimentSetting
 from selectMeshDiag import meshSelector
+from math import ceil
+from bankPropDiag import bankProp
 import re
 import shepred
 import os.path
@@ -371,13 +373,6 @@ slope_s slope_m\n'
         self.bedSet.bedLayersExport()
         self.bedLayerText = self.bedSet.layerText
 
-    def bankExport(self):
-        bankText = '// BANK Module: OPTION DT_Multiple; [0=NO; 1=User_Supplied;\
- 2=Linear_Retreat; 3=Failure Moving Mesh; 4=Failure Fixed Mesh; 5=Linear Fixed \
-Mesh; 6=AoR]\n'
-        bankText += '\n'
-        self.bankText = bankText
-
 
 class bedSettingModule:
     def __init__(self, dlg):
@@ -710,3 +705,317 @@ Tau_cri Ka Young Tensile\n'
                     layerText += '\n'
 
         self.layerText = layerText
+
+
+class bankErosionMod:
+    def __init__(self, iface, dialog):
+        self.iface = iface
+        self.dlg = dialog
+
+        self.dlg.remeshFileSelector.setEnabled(False)
+        self.dlg.remeshLabel.setEnabled(False)
+        self.bankDepositionMesh = ''
+
+        self.dlg.bankErosionChkBox.stateChanged.connect(self.activateModel)
+        self.dlg.solverTabWidget.currentChanged.connect(self.setBankTable)
+        caption = u'請選擇岸壁沖蝕後的網格檔案(.2dm)'
+        self.dlg.remeshFileSelector.clicked.connect(
+            lambda: fileBrowser(self.dlg, caption,
+                                self.dlg.saveFolderEdit.text(),
+                                self.dlg.remeshLabel, '(*.2dm)'))
+        self.dlg.erosionModTable.itemClicked.connect(self.callPopUp)
+        self.dlg.remeshZoneChk.stateChanged.connect(self.remeshFileChk)
+        self.dlg.bankModBox.currentIndexChanged.connect(self.depositionFile)
+
+    def depositionFile(self):
+        idx = self.dlg.bankModBox.currentIndex()
+        fileName = ''
+        if idx in [1, 2]:
+            caption = u'請選擇標示岸壁沖蝕後泥砂移動區域的網格檔(.2dm)(可略過)'
+            fileName = fileBrowser(self.dlg, caption,
+                                   self.dlg.saveFolderEdit.text(),
+                                   presetType='(*.2dm)')
+            self.dlg.erosionModTable.setEnabled(False)
+        else:
+            self.dlg.erosionModTable.setEnabled(True)
+
+        self.bankDepositionMesh = fileName
+
+    def remeshFileChk(self):
+        if self.dlg.remeshZoneChk.isChecked():
+            self.dlg.remeshFileSelector.setEnabled(True)
+            self.dlg.remeshLabel.setEnabled(True)
+        else:
+            self.dlg.remeshFileSelector.setEnabled(False)
+            self.dlg.remeshLabel.setEnabled(False)
+
+    def callPopUp(self):
+        c_Row = self.dlg.erosionModTable.currentRow()
+        c_Column = self.dlg.erosionModTable.currentColumn()
+
+        if c_Column == 2:
+            propWindow = bankProp(self.iface, self.dlg)
+            resultString = propWindow.run()
+            self.dlg.erosionModTable.item(c_Row, 2).setText(resultString)
+
+    def activateModel(self):
+        if self.dlg.bankErosionChkBox.isChecked():
+            self.dlg.bankErosionFrameWork.setEnabled(True)
+        else:
+            self.dlg.bankErosionFrameWork.setEnabled(False)
+
+    def setBankTable(self):
+        if self.dlg.solverTabWidget.currentIndex() == 1:
+            self.countBank()
+            if len(self.banks) % 2 != 0:
+                onCritical(130)
+        self.dlg.bankTimeStep.setText(self.dlg.lineEditTStep.text())
+
+        self.dlg.bankPairTable.setHorizontalHeaderLabels(['Toe', 'Top'])
+        self.dlg.bankPairTable.setColumnCount(2)
+        self.dlg.bankPairTable.setColumnWidth(0, 60)
+        self.dlg.bankPairTable.setColumnWidth(1, 60)
+
+        self.dlg.erosionModTable.setColumnCount(3)
+        self.dlg.erosionModTable.setColumnWidth(1, 120)
+        self.dlg.erosionModTable.setColumnWidth(2, 180)
+
+        if self.dlg.erosionModTable.rowCount() == 0:
+            try:
+                if len(self.banks) >= 2:
+                    self.dlg.bankPairTable.setRowCount(
+                        int(ceil(len(self.banks)/2.0)))
+                    self.dlg.erosionModTable.setRowCount(
+                        int(ceil(len(self.banks)/2.0)))
+                    for i in range(0, int(ceil(len(self.banks)/2.0))):
+                        comboToe = QComboBox()
+                        for j in range(0, len(self.banks)):
+                            comboToe.addItem(str(self.banks[j]))
+                        self.dlg.bankPairTable.setCellWidget(i, 0, comboToe)
+                        comboTop = QComboBox()
+                        for j in range(0, len(self.banks)):
+                            comboTop.addItem(str(self.banks[j]))
+                        self.dlg.bankPairTable.setCellWidget(i, 1, comboTop)
+                        self.dlg.erosionModTable.setItem(
+                            i, 0, QTableWidgetItem('Pair ' + str(i+1)))
+                        self.dlg.erosionModTable.setItem(
+                            i, 2, QTableWidgetItem('Click to set property'))
+                        cohChkBox = QCheckBox()
+                        cohChkBox.setText('Cohesive Bank')
+                        self.dlg.erosionModTable.setCellWidget(i, 1, cohChkBox)
+                else:
+                    self.dlg.bankPairTable.setRowCount(1)
+                    comboToe = QComboBox()
+                    for j in range(0, len(self.banks)):
+                        comboToe.addItem(str(self.banks[j]))
+                    self.dlg.bankPairTable.setCellWidget(0, 0, comboToe)
+                    comboTop = QComboBox()
+                    for j in range(0, len(self.banks)):
+                        comboTop.addItem(str(self.banks[j]))
+                    self.dlg.bankPairTable.setCellWidget(0, 1, comboTop)
+                    self.dlg.erosionModTable.setItem(
+                        0, 0, QTableWidgetItem('Pair 1'))
+                    self.dlg.erosionModTable.setItem(
+                        0, 2, QTableWidgetItem('Click to set property'))
+                    cohChkBox = QCheckBox()
+                    cohChkBox.setText('Cohesive Bank')
+                    self.dlg.erosionModTable.setCellWidget(0, 1, cohChkBox)
+            except:
+                pass
+        else:
+            rowRequired = int(ceil(len(self.banks)/2.0))
+            c_Row = self.dlg.erosionModTable.rowCount()
+            if rowRequired > c_Row:
+                for i in range(c_Row, rowRequired):
+                    comboToe = QComboBox()
+                    for j in range(0, len(self.banks)):
+                        comboToe.addItem(str(self.banks[j]))
+                    comboTop = QComboBox()
+                    for j in range(0, len(self.banks)):
+                        comboTop.addItem(str(self.banks[j]))
+
+                    self.dlg.bankPairTable.insertRow(i)
+                    self.dlg.bankPairTable.setCellWidget(i, 0, comboToe)
+                    self.dlg.bankPairTable.setCellWidget(i, 1, comboTop)
+
+                    self.dlg.erosionModTable.insertRow(i)
+                    self.dlg.erosionModTable.setItem(
+                        i, 0, QTableWidgetItem(u'Pair ' + str(i+1)))
+                    self.dlg.erosionModTable.setItem(
+                        i, 2, QTableWidgetItem('Click to set property'))
+                    cohChkBox = QCheckBox()
+                    cohChkBox.setText('Cohesive Bank')
+                    self.dlg.erosionModTable.setCellWidget(i, 1, cohChkBox)
+            elif rowRequired < c_Row:
+                while c_Row > rowRequired:
+                    self.dlg.bankPairTable.removeRow(c_Row-1)
+                    self.dlg.erosionModTable.removeRow(c_Row-1)
+
+                    c_Row = self.dlg.erosionModTable.rowCount()
+
+    def countBank(self):
+        table = self.dlg.boundaryTable
+        Rows = table.rowCount()
+        banks = list()
+
+        for i in range(0, Rows):
+            box = table.cellWidget(i, 1)
+            try:
+                if box.currentText() == 'BANK':
+                    banks.append(i+1)
+            except:
+                pass
+        self.banks = banks
+
+    def bankModelofLineRetreat(self, string):
+        string = '// Bank Erosion Module: Pairing IDs of all Bank Zones \
+(Toe_ID Top_ID ...)\n'
+        string += self.dlg.bankPairTable.cellWidget(0, 0).currentText()
+        string += ' '
+        string += self.dlg.bankPairTable.cellWidget(0, 1).currentText()
+        string += '\n'
+
+        bankMethod = self.dlg.erosionModTable.item(0, 2).text()
+        string += '// Bank Erosion Property: Bank_Type(1=non_cohesive) \
+lateral_model(1_to_3)\n'
+        if not self.dlg.erosionModTable.cellWidget(0, 1).isChecked():
+            string += str(1)
+        else:
+            string += str(2)
+        try:
+            bankMethod = re.split(';', bankMethod)
+            string += ' '
+            string += bankMethod[0]
+            string += '\n'
+            if bankMethod[0] == '1':
+                string += '// Non-Cohesive Bank Property: L_to_V Ratio\n'
+            elif bankMethod[0] == '2':
+                string += '// Non-Cohesive Bank Property: Erodibility(m/s) \
+Tau_cri_L(Pa) Exp\n'
+            else:
+                string += '// Non-Cohesive Bank Property: Tau_cri_L(Pa) \
+Tau_cri_V(Pa) )\n'
+            string += bankMethod[1]
+            string += '\n'
+        except:
+            onCritical(131)
+        # Remesh time interval (Not yet complete, currently fix to 1)
+        string += '// Remesh Time Interval for Bank Reterat(in HOUR)\n'
+        string += '1\n'
+
+        string += '// 2DM File to define MESH Zone for Remesh? \
+(empty-line=NO)\n'
+        if self.dlg.remeshZoneChk.isChecked():
+            string += (self.dlg.remeshLabel.text() + '\n')
+        else:
+            string += '\n'
+
+        return string
+
+    def bankModelofFailureMovingMesh(self, string):
+        string += '// Bank Erosion Module: n_bank_segment = number of bank \
+segments\n'
+        string += (str(self.dlg.bankPairTable.rowCount()) + '\n')
+        string += '// Bank Erosion Module: Pairing IDs of all Bank Zones \
+(Toe_ID Top_ID ...)\n'
+
+        for i in range(0, self.dlg.bankPairTable.rowCount()):
+            string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            string += ' '
+            string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            string += ' '
+        string = string[:-1] + '\n'
+
+        string += '// 2DM File to define MESH Zone for Bank Depositon? YES, \
+below is the file name:\n'
+        string += (self.bankDepositionMesh + '\n')
+        string += '// 2DM File to define MESH Zone for Remesh? \
+(empty-line=NO)\n'
+        if self.dlg.remeshZoneChk.isChecked():
+            string += (self.dlg.remeshLabel.text() + '\n')
+        else:
+            string += '\n'
+        return string
+
+    def bankModelofFalureBasedFixedMesh(self, string):
+        string += '// Bank Erosion Module: n_bank_segment = number of bank \
+segments\n'
+        string += (str(self.dlg.bankPairTable.rowCount()) + '\n')
+        string += '// Bank Erosion Module: Pairing IDs of all Bank Zones \
+(Toe_ID Top_ID ...)\n'
+
+        for i in range(0, self.dlg.bankPairTable.rowCount()):
+            string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            string += ' '
+            string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            string += ' '
+        string = string[:-1] + '\n'
+
+        string += '// 2DM File to define MESH Zone for Bank Depositon? YES, \
+below is the file name:\n'
+        string += (self.bankDepositionMesh + '\n')
+
+        return string
+
+    def bankModelofLinearFixedMesh(self, string):
+        string += '// Bank Erosion Module: n_bank_segment = number of bank \
+segments\n'
+        string += (str(self.dlg.bankPairTable.rowCount()) + '\n')
+        string += '// Bank Erosion Module: Pairing IDs of all Bank Zones \
+(Toe_ID Top_ID ...)\n'
+        for i in range(0, self.dlg.bankPairTable.rowCount()):
+            string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            string += ' '
+            string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            string += ' '
+        string = string[:-1] + '\n'
+
+        for i in range(0, self.dlg.erosionModTable.rowCount()):
+            modString = self.dlg.erosionModTable.item(i, 2).text()
+            modString = modString.split()
+            for j in range(0, len(modString)-1):
+                string += (modString[j] + ' ')
+            string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            string += ' '
+            string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            string += ' '
+            string += (modString[-1] + '\n')
+
+        return string
+
+    def bankModelofAoR(self, string):
+        string += '// Bank Erosion Module: n_bank_segment = number of bank \
+segments\n'
+        string += (str(self.dlg.bankPairTable.rowCount()) + '\n')
+        string += '// Bank Erosion Module: Pairing IDs of all Bank Zones \
+(Toe_ID Top_ID ...)\n'
+        for i in range(0, self.dlg.bankPairTable.rowCount()):
+            string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            string += ' '
+            string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            string += ' '
+        string = string[:-1] + '\n'
+
+        string += '// Angle of Repose for each bank segment with Bank Type 6: \
+Ang_Dry Ang_Wet in degree\n'
+        for i in range(0, self.dlg.erosionModTable.rowCount()):
+            modString = self.dlg.erosionModTable.item(i, 2).text()
+            string += modString
+            string += '\n'
+
+        return string
+
+    def exportBank(self):
+        string = ''
+        if self.dlg.bankModBox.currentIndex() == 0:
+            string = self.bankModelofLineRetreat(string)
+        elif self.dlg.bankModBox.currentIndex() == 1:
+            string = self.bankModelofFailureMovingMesh(string)
+        elif self.dlg.bankModBox.currentIndex() == 2:
+            string = self.bankModelofFalureBasedFixedMesh(string)
+        elif self.dlg.bankModBox.currentIndex() == 3:
+            string = self.bankModelofLinearFixedMesh(string)
+        elif self.dlg.bankModBox.currentIndex() == 4:
+            string = self.bankModelofAoR(string)
+
+        return string

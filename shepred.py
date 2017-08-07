@@ -10,7 +10,7 @@ from PyQt4.QtGui import QFileDialog, QPixmap
 from shepredDialog import shepredDialog
 from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
-from sedimentMod import sedimentModule
+from sedimentMod import sedimentModule, bankErosionMod
 from shutil import copyfile
 import subprocess
 import pickle
@@ -192,6 +192,7 @@ class shepred:
         self.dlg.solverTabWidget.setTabEnabled(1, False)
         self.dlg.rbtnSolverMobile.toggled.connect(self.mobileEnabled)
         self.dlg.label_40.setText(u'')
+        self.bankEroMod = bankErosionMod(self.iface, self.dlg)
 
     def setProjFolder(self):
         self.projFolder = self.dlg.saveFolderEdit.text()
@@ -529,10 +530,34 @@ T_SIMU [FLAG]\n')
         f.write(str(0) + '\n')
 
         if self.dlg.rbtnSolverMobile.isChecked():
-            sediMod.bankExport()
-            f.write(sediMod.bankText)
+            f.write('// BANK Module: OPTION DT_Multiple; [0=NO; 1=User_Supplied\
+; 2=Linear_Retreat; 3=Failure Moving Mesh; 4=Failure Fixed Mesh; 5=Linear Fixed\
+ Mesh; 6=AoR]\n')
+            if self.dlg.bankErosionChkBox.isChecked():
+                f.write(str(self.dlg.bankModBox.currentIndex()+2) + ' ')
+                f.write(self.dlg.bankTimeStep.text() + '\n')
+            else:
+                f.write('\n')
 
         f = self.boundaryOutput(f)
+        if (self.dlg.rbtnSolverMobile.isChecked() and
+                self.dlg.bankErosionChkBox.isChecked()):
+            bankEroText = self.bankEroMod.exportBank()
+            f.write(bankEroText)
+
+        # If Wall roughness is set on walls
+        if self.wallRoughness:
+            for i in range(0, len(self.wallRoughness)):
+                f.write('// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch\
+-ID\n')
+                f.write(str(self.wallRoughness[i][0]+1) + '\n')
+                f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
+                f.write(str(self.wallRoughness[i][1]) + '\n')
+            f.write('\n')
+        else:
+            f.write('// Wall-Roughess-Height-Specification (empty-line=DONE)\n')
+            f.write('\n')
+
         f.write('// Number of In-Stream Flow Obstructions:\n')
         f.write(str(0) + '\n')
         f = self.onOutputFormat(f)
@@ -657,18 +682,10 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
                 f.write('SYMM\n')
             elif table.cellWidget(i, 1).currentText() == 'MONITOR':
                 f.write('MONITOR\n')
+            elif table.cellWidget(i, 1).currentText() == 'BANK':
+                f.write('BANK\n')
 
-        if wallRoughness:
-            for i in range(0, len(wallRoughness)):
-                f.write('// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch\
--ID\n')
-                f.write(str(wallRoughness[i][0]+1) + '\n')
-                f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
-                f.write(str(wallRoughness[i][1]) + '\n')
-            f.write('\n')
-        else:
-            f.write('// Wall-Roughess-Height-Specification (empty-line=DONE)\n')
-            f.write('\n')
+        self.wallRoughness = wallRoughness
 
         return f
 
@@ -810,7 +827,7 @@ WSE [TK] [ED] [T]\n')
         labels = [u'邊界名稱', u'性質', u'流量(Q)', u'水位(H)', u'單位制',
                   u'速度分佈', u'邊界層厚度', u'額外條件']
         boundaryTypes = ['INLET-Q', 'EXIT-H', 'EXIT-Q', 'INLET-SC', 'EXIT-EX',
-                         'EXIT-ND', 'WALL', 'SYMM', 'MONITOR']
+                         'EXIT-ND', 'WALL', 'SYMM', 'MONITOR', 'BANK']
         self.dlg.boundaryTable.clear()
         self.dlg.boundaryTable.setRowCount(self.NScount)
         self.dlg.boundaryTable.setColumnCount(8)
@@ -906,6 +923,11 @@ WSE [TK] [ED] [T]\n')
             sediWidget = table.cellWidget(i, 1)
             sediWidget.setCurrentIndex(idx)
             sediWidget.setEnabled(False)
+
+        widget = self.dlg.sender()
+        if (widget.currentText() == 'BANK' and not
+                self.dlg.rbtnSolverMobile.isChecked()):
+            onCritical(129)
 
         sediAllowed = [0, 2, 3]
         for i in range(0, table.rowCount()):
