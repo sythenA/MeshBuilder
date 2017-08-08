@@ -78,7 +78,8 @@ class pointFrame:
 
     def copyPoint(self):
         pointLayer = self.pointLayer
-        savePath = os.path.join(self.projFolder, 'MainPoint_frame.shp')
+        savePath = os.path.join(self.projFolder, 'MainLayers',
+                                'MainPoint_frame.shp')
         self.filePath = savePath
         fields = pointLayer.pendingFields()
         fields.append(QgsField('breakPoint', QVariant.Int))
@@ -114,7 +115,7 @@ class pointFrame:
 
     def openLayer(self):
         projFolder = self.projFolder
-        path = os.path.join(projFolder, 'MainPoint_frame.shp')
+        path = os.path.join(projFolder, 'MainLayers', 'MainPoint_frame.shp')
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
         self.frameLayer = layer
 
@@ -200,7 +201,8 @@ class lineFrame:
     def copyLines(self):
         lineLayer = self.lineLayer
         pointDict = self.pointDict
-        savePath = os.path.join(self.projFolder, 'MainLines_frame.shp')
+        savePath = os.path.join(self.projFolder,
+                                'MainLayers', 'MainLines_frame.shp')
         self.filePath = savePath
         fields = lineLayer.pendingFields()
         fields.append(QgsField('ForceBound', QVariant.Int))
@@ -244,7 +246,7 @@ class lineFrame:
 
     def openLayer(self):
         projFolder = self.projFolder
-        path = os.path.join(projFolder, 'MainLines_frame.shp')
+        path = os.path.join(projFolder, 'MainLayers', 'MainLines_frame.shp')
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
         self.frameLayer = layer
 

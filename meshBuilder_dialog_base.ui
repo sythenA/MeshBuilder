@@ -436,72 +436,26 @@
          <string>...</string>
         </property>
        </widget>
-       <widget class="QLineEdit" name="geoEdit">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>130</y>
-          <width>231</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="whereGeo">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>130</y>
-          <width>41</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="mshEdit">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>220</y>
-          <width>231</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="whereMsh">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>220</y>
-          <width>41</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
        <widget class="QPushButton" name="gmshExeBtn">
         <property name="geometry">
          <rect>
-          <x>40</x>
-          <y>300</y>
+          <x>350</x>
+          <y>53</y>
           <width>111</width>
-          <height>41</height>
+          <height>40</height>
          </rect>
         </property>
         <property name="text">
-         <string>執行GMSH</string>
+         <string>產出網格</string>
         </property>
        </widget>
        <widget class="QTextBrowser" name="textBrowser">
         <property name="geometry">
          <rect>
           <x>40</x>
-          <y>350</y>
+          <y>100</y>
           <width>421</width>
-          <height>171</height>
+          <height>221</height>
          </rect>
         </property>
        </widget>
@@ -536,77 +490,128 @@
          <string>指定通往 GMSH.exe 的檔案路徑</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_11">
+       <widget class="QFrame" name="frame_2">
         <property name="geometry">
          <rect>
           <x>40</x>
-          <y>100</y>
-          <width>231</width>
-          <height>31</height>
+          <y>330</y>
+          <width>421</width>
+          <height>81</height>
          </rect>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-         </font>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
         </property>
-        <property name="text">
-         <string>指定 .geo 檔案的輸出路徑</string>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
+        <widget class="QLabel" name="label_18">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>10</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>網格高程內插</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="interpExecBtn">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>30</y>
+           <width>81</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>高程內插</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="chooseXyzBtn">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>71</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>選擇.xyz</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_xyz">
+         <property name="geometry">
+          <rect>
+           <x>100</x>
+           <y>43</y>
+           <width>191</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>請選擇區域之高程檔案(.xyz)</string>
+         </property>
+        </widget>
        </widget>
-       <widget class="QLabel" name="label_12">
+       <widget class="QFrame" name="frame_3">
         <property name="geometry">
          <rect>
           <x>40</x>
-          <y>165</y>
-          <width>261</width>
-          <height>21</height>
+          <y>420</y>
+          <width>421</width>
+          <height>71</height>
          </rect>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
         </property>
-        <property name="text">
-         <string>在指定的檔案路徑輸出 GMSH .geo檔案</string>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
-       </widget>
-       <widget class="QLabel" name="label_13">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>190</y>
-          <width>231</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>指定 .msh 檔案的輸出路徑</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_14">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>250</y>
-          <width>261</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>在指定的檔案路徑輸出 .msh 網格檔</string>
-        </property>
+        <widget class="QLabel" name="label_20">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>6</y>
+           <width>141</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>轉為Mesh2D網格</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="to2dmExecBtn">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>20</y>
+           <width>81</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>轉換</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_21">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>281</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>將.msh格式的網格轉為.2dm格式</string>
+         </property>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab">
@@ -786,191 +791,6 @@
          </property>
          <property name="text">
           <string>重新輸出</string>
-         </property>
-        </widget>
-       </widget>
-       <widget class="QFrame" name="frame_2">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>90</y>
-          <width>421</width>
-          <height>111</height>
-         </rect>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <widget class="QLabel" name="label_18">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>10</y>
-           <width>91</width>
-           <height>16</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>網格高程內插</string>
-         </property>
-        </widget>
-        <widget class="QLineEdit" name="whereInterpEdit">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>70</y>
-           <width>231</width>
-           <height>31</height>
-          </rect>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="whereInterpBtn">
-         <property name="geometry">
-          <rect>
-           <x>260</x>
-           <y>70</y>
-           <width>41</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label_19">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>42</y>
-           <width>271</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>請指定內插後網格檔案的名稱及輸出位置</string>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="interpExecBtn">
-         <property name="geometry">
-          <rect>
-           <x>340</x>
-           <y>60</y>
-           <width>61</width>
-           <height>41</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>執行</string>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="chooseXyzBtn">
-         <property name="geometry">
-          <rect>
-           <x>140</x>
-           <y>10</y>
-           <width>71</width>
-           <height>28</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>選擇.xyz</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label_xyz">
-         <property name="geometry">
-          <rect>
-           <x>220</x>
-           <y>13</y>
-           <width>191</width>
-           <height>21</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>請選擇區域之高程檔案(.xyz)</string>
-         </property>
-        </widget>
-       </widget>
-       <widget class="QFrame" name="frame_3">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>410</y>
-          <width>421</width>
-          <height>101</height>
-         </rect>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <widget class="QLabel" name="label_20">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>6</y>
-           <width>141</width>
-           <height>21</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>轉為 .2dm 格式</string>
-         </property>
-        </widget>
-        <widget class="QLineEdit" name="where2dmEdit">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>60</y>
-           <width>231</width>
-           <height>31</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="where2dmBtn">
-         <property name="geometry">
-          <rect>
-           <x>260</x>
-           <y>60</y>
-           <width>41</width>
-           <height>32</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-        <widget class="QPushButton" name="to2dmExecBtn">
-         <property name="geometry">
-          <rect>
-           <x>340</x>
-           <y>50</y>
-           <width>61</width>
-           <height>41</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>執行</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label_21">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>40</y>
-           <width>281</width>
-           <height>16</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>請指定 .2dm 檔案的名稱及輸出位置</string>
          </property>
         </widget>
        </widget>

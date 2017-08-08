@@ -380,8 +380,8 @@ class bedSettingModule:
         self.dlg.bedLayerTree.clear()
         self.getPhysRegionFromMain()
         self.setBedToUniform()
-        self.dlg.rdoBedUniform.toggled.connect(self.setBedToUniform)
-        self.dlg.rdoBedZonal.toggled.connect(self.setBedToZone)
+        self.dlg.rdoBedUniform.clicked.connect(self.setBedToUniform)
+        self.dlg.rdoBedZonal.clicked.connect(self.setBedToZone)
         self.dlg.rockErosionCheck.stateChanged.connect(self.rockAllowed)
         self.dlg.readMeshBtn.pressed.connect(self.getPhysRegionFromMain)
         self.dlg.setBed2dmBtn.clicked.connect(self.getBedPhysRegion)
@@ -514,6 +514,14 @@ class bedSettingModule:
 
     def setBedToUniform(self):
         try:
+            self.dlg.layerInZoneEdit.textChanged.disconnect()
+            self.dlg.layerInZoneEdit.textChanged.connect(self.setBedLayerInZone)
+        except:
+            self.dlg.layerInZoneEdit.textChanged.connect(self.setBedLayerInZone)
+        self.dlg.zoneBedSelector.clear()
+        self.dlg.zoneBedSelector.addItem('1')
+        self.dlg.bedLayerTree.clear()
+        try:
             self.dlg.bedLayerTree.itemClicked.disconnect()
         except:
             pass
@@ -537,6 +545,7 @@ class bedSettingModule:
 
     def setBedToZone(self):
         try:
+            self.dlg.layerInZoneEdit.textChanged.disconnect()
             self.dlg.bedLayerTree.itemClicked.disconnect()
             self.dlg.zoneBedSelector.clear()
         except:

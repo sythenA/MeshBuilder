@@ -118,6 +118,18 @@ class meshBuilder:
             lambda: self.dirEmpty(self.dlg.lineEdit.text(),
                                   self.dlg.lineEdit, self.dlg.lineEdit.text()))
 
+        QgsMapLayerRegistry.instance().legendLayersAdded.connect(self.step1)
+
+        self.dlg.tabWidget.currentChanged.connect(self.resizeDialog)
+        self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
+        self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
+        self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
+
+        self.dlg.outputMeshPointsBtn.clicked.connect(
+            lambda: self.switchAttr('Nodes'))
+        self.dlg.outputSegmentsBtn.clicked.connect(
+            lambda: self.switchAttr('Segments'))
+
         self.dlg.tabWidget.setCurrentIndex(0)
         # Set step2, step3 tab temporary unaccessible
         self.dlg.tabWidget.setTabEnabled(1, False)
@@ -175,24 +187,6 @@ class meshBuilder:
                                                       lineEdit=gmshExeEdit,
                                                       presetType='.exe'))
         whereGMSH.setToolTip(g_Caption)
-        geoCaption = u'請選擇產生.geo檔案的檔名及資料夾'
-        whereGeo = self.dlg.whereGeo
-        geoEdit = self.dlg.geoEdit
-        whereGeo.pressed.connect(lambda: saveFileBrowser(self.dlg,
-                                                         geoCaption,
-                                                         self.getProj(),
-                                                         lineEdit=geoEdit,
-                                                         presetType='.geo'))
-        whereGeo.setToolTip(geoCaption)
-
-        mshCaption = u'請選擇輸出網格檔案的資料夾及檔案路徑'
-        mshEdit = self.dlg.mshEdit
-        whereMsh = self.dlg.whereMsh
-        whereMsh.pressed.connect(lambda: saveFileBrowser(self.dlg, mshCaption,
-                                                         self.getProj(),
-                                                         lineEdit=mshEdit,
-                                                         presetType='.msh'))
-        whereMsh.setToolTip(mshCaption)
 
         loadMshCaption = u'請選擇一個.msh檔案'
         whereMshEdit = self.dlg.whereMshEdit
@@ -211,22 +205,6 @@ class meshBuilder:
                                   whereMshLayerEdit))
         whereMshLayerBtn.setToolTip(MshLayerCaption)
 
-        interpMshCaption = u'請選擇要內插高程的網格檔案'
-        whereInterpEdit = self.dlg.whereInterpEdit
-        whereInterpBtn = self.dlg.whereInterpBtn
-        whereInterpBtn.pressed.connect(
-            lambda: saveFileBrowser(self.dlg, interpMshCaption, self.getProj(),
-                                    lineEdit=whereInterpEdit,
-                                    presetType='.msh'))
-        whereInterpBtn.setToolTip(interpMshCaption)
-
-        where2dmCaption = u'請選擇 .msh 檔案轉 .2dm 檔案的輸出位置'
-        where2dmEdit = self.dlg.where2dmEdit
-        where2dmBtn = self.dlg.where2dmBtn
-        where2dmBtn.pressed.connect(
-            lambda: saveFileBrowser(self.dlg, where2dmCaption, self.getProj(),
-                                    lineEdit=where2dmEdit, presetType='.2dm'))
-        where2dmBtn.setToolTip(where2dmCaption)
         distriMshCaption = u'請選擇欲改變分區的 .msh 檔案'
         distriMshEdit = self.dlg.readDistriEdit
         self.dlg.readDistriBtn.pressed.connect(
@@ -253,9 +231,8 @@ class meshBuilder:
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
         self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
-        self.dlg.to2dmExecBtn.clicked.connect(
-            lambda: self.changeTo2dm(self.dlg.whereMshEdit.text(),
-                                     self.dlg.where2dmEdit.text()))
+
+        self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
         self.dlg.backButton.pressed.connect(self.backSwitch)
         self.dlg.backButton.setEnabled(False)
 
@@ -410,7 +387,11 @@ class meshBuilder:
                 try:
                     os.remove(os.path.join(projFolder, name))
                 except:
-                    subprocess.Popen(['del', os.path.join(projFolder, name)])
+                    try:
+                        subprocess.Popen(['del', os.path.join(projFolder,
+                                                              name)])
+                    except:
+                        pass
 
         if os.path.isdir(os.path.join(projFolder, 'MainLayers')):
             try:
@@ -505,7 +486,7 @@ class meshBuilder:
                 innerLayersList.append(layer)
 
         if MainName:
-            innerLayers = innerLayersExport(projFolder, newMainLayer)
+            innerLayers = innerLayersExport(projFolder, self.mainLayer)
             innerLayers.innerLayers = innerLayersList
             innerLayers.copyLayers()
         else:
@@ -518,16 +499,6 @@ class meshBuilder:
         self.step2(source)
 
     def step1(self):
-        def chkSwitch():
-            if not self.dlg.lineEdit.text():
-                onCritical(101)
-            elif not os.path.isdir(self.dlg.lineEdit.text()):
-                onCritical(102)
-            else:
-                self.__parameter__['projFolder'] = self.dlg.lineEdit.text()
-                self.step1_1()
-            self.dlg.__parameter__ = self.__parameter__
-
         layers = self.iface.legendInterface().layers()
         self.dlg.comboBox.clear()
 
@@ -549,7 +520,21 @@ class meshBuilder:
             item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
             item.setCheckState(Qt.Unchecked)
 
-        self.dlg.nextBtn1.pressed.connect(chkSwitch)
+        try:
+            self.dlg.nextBtn1.pressed.disconnect()
+            self.dlg.nextBtn1.pressed.connect(self.chkSwitch)
+        except:
+            self.dlg.nextBtn1.pressed.connect(self.chkSwitch)
+
+    def chkSwitch(self):
+        if not self.dlg.lineEdit.text():
+            onCritical(101)
+        elif not os.path.isdir(self.dlg.lineEdit.text()):
+            onCritical(102)
+        else:
+            self.__parameter__['projFolder'] = self.dlg.lineEdit.text()
+            self.step1_1()
+        self.dlg.__parameter__ = self.__parameter__
 
     def mainPointLayerComplete(self):
         self.lineFrameObj.readPoint(self.pointFrame)
@@ -1489,7 +1474,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             folderFiles = os.listdir(self.projFolder)
             for fileName in folderFiles:
                 if 'MainLines_frame' in fileName:
-                    os.remove(os.path.join(self.projFolder, fileName))
+                    os.remove(os.path.join(self.projFolder, 'MainLayers',
+                                           fileName))
             self.step2_2()
         elif process == 3:
             layerList = QgsMapLayerRegistry.instance().mapLayersByName(
@@ -1510,8 +1496,10 @@ into layer attributes.', level=QgsMessageBar.INFO)
             QgsMapLayerRegistry.instance().removeMapLayers(idList)
             del self.pointLayer
             self.switchAttr(Type='poly')
-            subprocess.call(['rm', self.projFolder, 'MainLines_frame.*'])
-            subprocess.call(['rm', self.projFolder, 'MainPoint_frame.*'])
+            subprocess.call(['rm', self.projFolder, 'MainLayers',
+                             'MainLines_frame.*'])
+            subprocess.call(['rm', self.projFolder, 'MainLayers',
+                             'MainPoint_frame.*'])
             self.step2_1()
             self.dlg.setCompleteBtn.setText(u'圖層設定完成')
             self.dlg.lineIndicator.clear()
@@ -1526,11 +1514,13 @@ into layer attributes.', level=QgsMessageBar.INFO)
             del self.pointLayer
             self.switchAttr(Type='poly')
             # subprocess.call(['rm', self.projFolder, 'MainPoint_frame.*'])
-            folderFiles = os.listdir(self.projFolder)
+            folderFiles = os.listdir(os.path.join(self.projFolder,
+                                                  'MainLayers'))
             for fileName in folderFiles:
                 if 'MainPoint_frame' in fileName:
                     try:
-                        os.remove(os.path.join(self.projFolder, fileName))
+                        os.remove(os.path.join(self.projFolder, 'MainLayers',
+                                               fileName))
                     except:
                         pass
 
@@ -1615,7 +1605,8 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         vl = registry.mapLayersByName(self.pointLayer.name())
         iface.setActiveLayer(vl[0])
 
-        path = os.path.join(self.projFolder, 'MainPoint_frame.shp')
+        path = os.path.join(self.projFolder, 'MainLayers',
+                            'MainPoint_frame.shp')
 
         self.attrTable(self.pointLayer, Type='point')
         self.dlg.pointIndicator.setText(path)
@@ -1639,7 +1630,8 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
         iface.setActiveLayer(vl[0])
-        path = os.path.join(self.projFolder, 'MainLines_frame.shp')
+        path = os.path.join(self.projFolder, 'MainLayers',
+                            'MainLines_frame.shp')
 
         self.attrTable(self.lineLayer, Type='line')
         self.dlg.lineIndicator.setText(path)
@@ -1699,8 +1691,13 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         GMSH = self.dlg.gmshExeEdit.text().replace(' ', '\ ')
         self.__parameter__['GMSH'] = GMSH
         self.dlg.__parameter__ = self.__parameter__
-        geoPath = self.dlg.geoEdit.text()
-        mshPath = self.dlg.mshEdit.text()
+        proj_Name = os.path.basename(self.projFolder)
+        geoPath = os.path.join(self.projFolder, proj_Name+'.geo')
+        mshPath = os.path.join(self.projFolder, 'MainLayers',
+                               proj_Name+'_gen.msh')
+
+        if not os.path.isdir(os.path.join(self.projFolder, 'MainLayers')):
+            os.mkdir(os.path.join(self.projFolder, 'MainLayers'))
 
         loopDict = lineFrame.lineToLoop(self.lineFrameObj, self.mainLayer)
         genGeo(self.projFolder, self.mainLayer, self.pointLayer,
@@ -1764,39 +1761,44 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             destFolder = os.path.expanduser("~")
         return destFolder
 
-    def changeTo2dm(self, inputFile, outputFile):
+    def changeTo2dm(self):
+        projName = os.path.basename(self.projFolder)
+        meshFile = os.path.join(self.projFolder, projName + '.msh')
 
         homeFolder = os.path.dirname(__file__)
         os.chdir(homeFolder)
 
-        path2dm = self.dlg.where2dmEdit.text()
+        path2dm = os.path.join(self.projFolder, projName + '.2dm')
 
         ibcName = os.path.basename(path2dm).replace('.2dm', '.ibc')
         dirname = os.path.dirname(path2dm)
         ibcPath = os.path.join(dirname, ibcName)
         if os.path.isfile(ibcPath):
-            command = ("GMSH2SRH.exe" + ' "' + inputFile + '" ' + outputFile +
+            command = ("GMSH2SRH.exe" + ' "' + meshFile + '" ' + path2dm +
                        ' "' + ibcPath + '"')
         else:
-            command = ("GMSH2SRH.exe" + ' "' + inputFile + '" ' + outputFile +
+            command = ("GMSH2SRH.exe" + ' "' + meshFile + '" ' + path2dm +
                        '"')
 
         os.system(command)
         iface.messageBar().pushMessage(".msh Transfomed to .2dm",
                                        level=QgsMessageBar.INFO)
+        self.dlg.label_21.setText(u'輸出為' + path2dm)
 
     def mshInterp(self):
         def writeMsgToLabel(P):
             while P.canReadLine():
                 line = u'執行中...' + str(P.readLine())[:-1]
-                self.dlg.label_19.setText(line)
+                self.dlg.label_xyz.setText(line)
 
         def onFinished():
-            self.dlg.label_19.setText(u'完成')
+            self.dlg.label_xyz.setText(u'完成')
             self.dlg.whereMshEdit.setText(Path)
 
-        Path = self.dlg.whereInterpEdit.text()
-        mshPath = self.dlg.whereMshEdit.text()
+        proj_Name = os.path.basename(self.projFolder)
+        Path = os.path.join(self.projFolder, proj_Name+'.msh')
+        mshPath = os.path.join(self.projFolder, 'MainLayers',
+                               proj_Name + '_gen.msh')
 
         homeFolder = os.path.dirname(__file__)
         os.chdir(homeFolder)
@@ -1831,7 +1833,6 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             pass
 
     def run(self):
-        QgsMapLayerRegistry.instance().legendLayersAdded.connect(self.step1)
 
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
@@ -1842,22 +1843,11 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.dlg.lineIndicator.clear()
 
         """Run method that performs all the real work"""
-        self.dlg.tabWidget.currentChanged.connect(self.resizeDialog)
 
         # show the dialog
-        self.dlg.show()
         self.dlg.resize(self.dlg.minimumSize())
         # Read current layer in mapLayerRegistry, begin the first step.
         self.step1()
-
-        self.dlg.tableWidget.cellClicked.connect(self.selectLayerFeature)
-        self.dlg.tableWidget.currentCellChanged.connect(self.cancelSelection)
-        self.dlg.attrSelectBox.currentIndexChanged.connect(self.fillBoxFill)
-
-        self.dlg.outputMeshPointsBtn.clicked.connect(
-            lambda: self.switchAttr('Nodes'))
-        self.dlg.outputSegmentsBtn.clicked.connect(
-            lambda: self.switchAttr('Segments'))
 
         self.dlg.show()
         # See if OK was pressed
