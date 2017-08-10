@@ -129,6 +129,8 @@ class meshBuilder:
             lambda: self.switchAttr('Nodes'))
         self.dlg.outputSegmentsBtn.clicked.connect(
             lambda: self.switchAttr('Segments'))
+        self.dlg.outputDistri.clicked.connect(
+            lambda: self.switchAttr('Zones'))
 
         self.dlg.tabWidget.setCurrentIndex(0)
         # Set step2, step3 tab temporary unaccessible
@@ -136,7 +138,6 @@ class meshBuilder:
         self.dlg.tabWidget.setTabEnabled(2, False)
         self.dlg.outputMeshPointsBtn.setEnabled(False)
         self.dlg.outputSegmentsBtn.setEnabled(False)
-        self.dlg.meshOutputBtn.setEnabled(False)
 
         self.dlg.batchFillBtn.clicked.connect(self.batchFill)
         self.dlg.writeLayerBtn.clicked.connect(self.writeTableToLayer)
@@ -229,7 +230,6 @@ class meshBuilder:
         self.dlg.lineConfirm.clicked.connect(
             lambda: self.readLayerChk(self.dlg.lineIndicator, 3))
         self.dlg.loadMshBtn.clicked.connect(self.loadGeneratedMesh)
-        self.dlg.meshOutputBtn.clicked.connect(self.outputMsh)
         self.dlg.interpExecBtn.clicked.connect(self.mshInterp)
 
         self.dlg.to2dmExecBtn.clicked.connect(self.changeTo2dm)
@@ -240,17 +240,11 @@ class meshBuilder:
         self.dlg.newDistWhere.pressed.connect(
             lambda: saveFileBrowser(self.dlg, distCaption, self.getProj(),
                                     self.dlg.newDistEdit, '(*.msh)'))
-        self.dlg.newDistOutput.pressed.connect(self.outputToNewMeshRegions)
+        self.dlg.newDistOutput.pressed.connect(self.outputMsh)
         self.dlg.newDistWhere.setToolTip(distCaption)
 
-        new2dmCaption = u'請選擇輸出新.2dm網格的位置'
-        self.dlg.whereNew2dm.pressed.connect(
-            lambda: saveFileBrowser(self.dlg, new2dmCaption, self.getProj(),
-                                    self.dlg.new2dmEdit, '(*.2dm)'))
-        self.dlg.whereNew2dm.setToolTip(new2dmCaption)
-        self.dlg.new2dmOutput.pressed.connect(
-            lambda: self.changeTo2dm(self.dlg.newDistEdit.text(),
-                                     self.dlg.new2dmEdit.text()))
+        self.dlg.new2dmOutput.pressed.connect(self.changeTo2dm)
+        self.dlg.outputDistri.setEnabled(False)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -420,6 +414,20 @@ class meshBuilder:
                     pass
         else:
             os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+
+        if os.path.isdir(os.path.join(projFolder, 'MeshShp')):
+            try:
+                files = rmtree(os.path.join(projFolder, 'MeshShp'))
+                os.mkdir(os.path.join(projFolder, 'MeshShp'))
+            except:
+                try:
+                    subprocess.Popen(['RD', os.path.join(projFolder,
+                                                         'MeshShp')])
+                    os.mkdir(os.path.join(projFolder, 'MeshShp'))
+                except:
+                    pass
+        else:
+            os.mkdir(os.path.join(projFolder, 'MeshShp'))
 
     def readMshDistri(self):
         nodeRef, Boundaries, elementRec, regionOrder = readMshDistri(
@@ -639,12 +647,6 @@ class meshBuilder:
         self.iface.messageBar().pushMessage('Data in meshBuilder table wrote \
 into layer attributes.', level=QgsMessageBar.INFO)
         layer.reload()
-
-    def outputToNewMeshRegions(self):
-        newDistriRegionOutput(self.dlg.newDistEdit.text(),
-                              self.regionOrder,
-                              self.mshHeader,
-                              self.mshLayer)
 
     def setTableToPoly(self, layer):
         def setTableItem(i, j, Object, Type='Object', prefix=0):
@@ -1231,7 +1233,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(0, 1))
 
-    def setTableToDistri(self):
+    def setTableToZone(self, zoneLayer):
 
         def setTableItem(i, j, Object, Type='Object'):
             if type(Object) != QPyNullVariant and Type == 'Object':
@@ -1265,33 +1267,34 @@ into layer attributes.', level=QgsMessageBar.INFO)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
 
-        mshLayer = self.mshLayer
-        regionOrder = self.regionOrder
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(mshLayer.name())
+        vl = registry.mapLayersByName("Zones")
         iface.setActiveLayer(vl[0])
+
+        regionOrder = self.regionOrder
+        iface.messageBar().pushMessage(str(regionOrder))
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
 
-        self.dlg.tableWidget.setRowCount(mshLayer.featureCount())
+        self.dlg.tableWidget.setRowCount(zoneLayer.featureCount())
         self.dlg.tableWidget.setColumnCount(3)
 
         self.dlg.tableWidget.setHorizontalHeaderLabels([u'id', u'區域分類',
                                                         u'輸出序'])
 
         counter = 0
-        for feature in mshLayer.getFeatures():
+        for feature in zoneLayer.getFeatures():
             setTableItem(counter, 0, str(feature['id']), Type='Fixed')
-            setTableItem(counter, 1, feature['Distri'])
+            setTableItem(counter, 1, feature['Zone'])
             setTableItem(counter, 2, '', Type='ComboBox2')
             counter += 1
 
         fieldDict = {0: 'id',
-                     1: 'Distri'}
+                     1: 'Zone'}
 
         self.fieldDict = fieldDict
-        self.currentLayer = mshLayer
+        self.currentLayer = zoneLayer
         self.dlg.attrSelectBox.addItems([u'區域分類'])
         self.tableAttrNameDict = {u'區域分類': 1}
         #  Connect QGIS active layer to table, if selection is made in QGIS
@@ -1356,6 +1359,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             self.setTableToNodes(self.nodeLayer)
         elif Type == 'Segments':
             self.setTableToSegments(self.segLayer)
+        elif Type == 'Zones':
+            self.setTableToZone(self.zoneLayer)
 
     def fillBoxFill(self):
         comboxNames = [u'符合邊界',
@@ -1659,9 +1664,10 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         self.dlg.tabWidget.setCurrentIndex(2)
 
     def outputMsh(self):
-        OutDir = self.dlg.whereMshLayerEdit.text()
-        meshFile = self.dlg.whereMshEdit.text()
-        meshOutput(OutDir, meshFile, self.nodeLayer, self.segLayer)
+        self.writeTableToLayer()
+        meshFile = self.dlg.newDistEdit.text()
+        meshOutput(meshFile, self.nodeLayer, self.segLayer,
+                   self.zoneLayer, self.regionOrder)
         message = u'New mesh data wrote to ' + meshFile
         iface.messageBar().pushMessage(message, level=QgsMessageBar.INFO)
 
@@ -1723,11 +1729,30 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         else:
             systemCRS = self.systemCRS
         meshFile = self.dlg.whereMshEdit.text()
-        outDir = self.dlg.whereMshLayerEdit.text()
+        shpFolder = os.path.splitext(os.path.basename(meshFile))[0]
+
+        try:
+            self.projFolder
+        except(AttributeError):
+            self.projFolder = self.dlg.whereMshLayerEdit.text()
+
+        if not os.path.isdir(os.path.join(self.projFolder, 'MeshShp')):
+            os.mkdir(os.path.join(self.projFolder, 'MeshShp'))
+
+        if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
+            try:
+                rmtree(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+                os.mkdir(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+            except:
+                pass
+        else:
+            os.mkdir(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+
+        outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
 
         if os.path.isfile(meshFile):
-            self.boundaryOrder = loadMesh(meshFile, systemCRS, outDir,
-                                          self.dlg)
+            self.boundaryOrder, self.regionOrder = loadMesh(
+                meshFile, systemCRS, outDir, self.dlg)
         else:
             onCritical(122)
 
@@ -1746,6 +1771,10 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
             SegmentLayer = Instance.mapLayersByName("Segments")[0]
             self.segLayer = SegmentLayer
+
+            zoneLayer = Instance.mapLayersByName("Zones")[0]
+            self.zoneLayer = zoneLayer
+
             self.dlg.meshOutputBtn.setEnabled(True)
 
         except:
@@ -1762,28 +1791,27 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         return destFolder
 
     def changeTo2dm(self):
-        projName = os.path.basename(self.projFolder)
-        meshFile = os.path.join(self.projFolder, projName + '.msh')
-
-        homeFolder = os.path.dirname(__file__)
-        os.chdir(homeFolder)
-
-        path2dm = os.path.join(self.projFolder, projName + '.2dm')
+        meshFile = self.dlg.newDistEdit.text()
+        folder = os.path.dirname(meshFile)
+        fileName = os.path.basename(meshFile).replace('.msh', '.2dm')
+        path2dm = os.path.join(folder, fileName)
 
         ibcName = os.path.basename(path2dm).replace('.2dm', '.ibc')
         dirname = os.path.dirname(path2dm)
         ibcPath = os.path.join(dirname, ibcName)
+        mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            command = ("GMSH2SRH.exe" + ' "' + meshFile + '" ' + path2dm +
-                       ' "' + ibcPath + '"')
+            command = ("GMSH2SRH.exe" + ' "' + meshFile + '" ' +
+                       path2dm + ' "' + ibcPath + '"')
         else:
-            command = ("GMSH2SRH.exe" + ' "' + meshFile + '" ' + path2dm +
-                       '"')
-
-        os.system(command)
+            command = ("GMSH2SRH.exe" + ' ' + meshFile + ' ' +
+                       path2dm)
+        iface.messageBar().pushMessage(command)
+        subprocess.call([os.path.join(mainDir, "GMSH2SRH.exe"), meshFile,
+                         path2dm])
         iface.messageBar().pushMessage(".msh Transfomed to .2dm",
                                        level=QgsMessageBar.INFO)
-        self.dlg.label_21.setText(u'輸出為' + path2dm)
+        self.dlg.label_26.setText(u'輸出為' + path2dm)
 
     def mshInterp(self):
         def writeMsgToLabel(P):
@@ -1917,8 +1945,16 @@ def loadMesh(filename, crs, outDir, dlg):
     SegPath = os.path.join(outDir, "Segments.shp")
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
+    ZoneFields = QgsFields()
+    ZoneFields.append(QgsField('id', QVariant.Int))
+    ZoneFields.append(QgsField('Zone', QVariant.String))
+
+    zonePath = os.path.join(outDir, 'Zones.shp')
+    ZoneWriter = QgsVectorFileWriter(zonePath, "utf-8", ZoneFields,
+                                     QGis.WKBPolygon, crs, "ESRI Shapefile")
     counter = 0
     boundaryOrder = list()
+    regionOrder = list()
     for l in mesh:
         w = l.split()
 
@@ -1947,6 +1983,7 @@ def loadMesh(filename, crs, outDir, dlg):
                 boundaryOrder.append(name)
             elif dim >= 2:
                 layerType = QGis.WKBPolygon
+                regionOrder.append(name)
             writer = QgsVectorFileWriter(path, "UTF-8", fields, layerType,
                                          crs, "ESRI Shapefile")
             writer.path = path
@@ -2002,6 +2039,14 @@ def loadMesh(filename, crs, outDir, dlg):
                 geoString = geoString[:-1] + "))"
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
 
+                zoneFeature = QgsFeature()
+                zoneFeature.setFields(ZoneFields)
+                zoneFeature.setGeometry(QgsGeometry().fromWkt(geoString))
+                zoneFeature.setAttributes(
+                    [int(fid), physicalNames[int(tagArgs[0])][1]])
+
+                ZoneWriter.addFeature(zoneFeature)
+
                 for i in range(1, len(ElementNodes)):
                     try:
                         SegList[(int(ElementNodes[i-1]), int(ElementNodes[i]))]
@@ -2040,23 +2085,28 @@ def loadMesh(filename, crs, outDir, dlg):
     del NodeWriter
 
     layerPath.update({maxTag+1: nodePath})
-    NodeLayer = QgsVectorLayer(nodePath, QFileInfo(nodePath).baseName(), 'ogr')
 
-    id_tag = 0
+    id_tag = 1
     for key in SegList.keys():
         lineString = SegList[key][0]
         boundName = SegList[key][1]
+        if boundName:
+            seq = boundaryOrder.index(boundName)+1
+        else:
+            seq = None
         feature = QgsFeature()
         feature.setGeometry(QgsGeometry().fromWkt(lineString))
-        feature.setAttributes([id_tag, boundName])
+        feature.setAttributes([id_tag, boundName, seq])
         SegWriter.addFeature(feature)
-    del SegWriter
+        id_tag += 1
 
-    SegLayer = QgsVectorLayer(SegPath, QFileInfo(SegPath).baseName(), 'ogr')
+    del SegWriter
+    del ZoneWriter
 
     layerPath.update({maxTag+2: SegPath})
+    layerPath.update({maxTag+3: zonePath})
     dlg.meshLoadProgress.setValue(100)
-    loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer)
+    loadMeshLayers(layerPath, meshName)
 
     size = dlg.maximumSize()
     dlg.resize(size)
@@ -2066,11 +2116,12 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.setCompleteBtn.setDisabled(True)
     dlg.outputMeshPointsBtn.setEnabled(True)
     dlg.outputSegmentsBtn.setEnabled(True)
+    dlg.outputDistri.setEnabled(True)
 
-    return boundaryOrder
+    return boundaryOrder, regionOrder
 
 
-def loadMeshLayers(layerPath, meshName, NodeLayer, SegLayer):
+def loadMeshLayers(layerPath, meshName):
     meshName.replace('.msh', '')
     group = QgsProject.instance().layerTreeRoot().addGroup(meshName)
 
@@ -2244,17 +2295,7 @@ def arangeMesh(OutDir, gridNames, physicsRef, nodeRef):
     return meshLines
 
 
-def getGridNames(OutDir, NodeLayer, SegLayer):
-    gridNames = list()
-    fileNames = os.listdir(OutDir)
-    for name in fileNames:
-        if ".shp" in name:
-            name = os.path.join(OutDir, name)
-            layer = QgsVectorLayer(name, QFileInfo(name).baseName(), 'ogr')
-            if layer.geometryType() == QGis.Polygon:
-                gridNames.append(QFileInfo(name).baseName())
-            del layer
-
+def getGridNames(NodeLayer, SegLayer, ZoneLayer):
     pointPhysics = list()
     for feature in NodeLayer.getFeatures():
         if feature['Physical'] != None:
@@ -2267,14 +2308,20 @@ def getGridNames(OutDir, NodeLayer, SegLayer):
             linePhysics.append((feature['Physical'], feature['seq']))
     linePhysics = set(linePhysics)
 
-    return pointPhysics, linePhysics, gridNames
+    zonePhysics = list()
+    for feature in ZoneLayer.getFeatures():
+        if feature['Zone'] != None:
+            zonePhysics.append(feature['Zone'])
+    zonePhysics = set(zonePhysics)
+
+    return pointPhysics, linePhysics, zonePhysics
 
 
-def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
+def meshOutput(meshFile, NodeLayer, SegLayer, ZoneLayer, regionOrder):
     physicsRef = dict()
     nodeRef = lineFrame.pointRefDict()
-    pointPhysics, linePhysics, gridNames = getGridNames(OutDir, NodeLayer,
-                                                        SegLayer)
+    pointPhysics, linePhysics, zonePhysics = getGridNames(
+        NodeLayer, SegLayer, ZoneLayer)
     linePhysics = list(linePhysics)
     linePhysics = sorted(linePhysics, key=itemgetter(1))
     counter = 1
@@ -2286,8 +2333,8 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
         for physic in linePhysics:
             physicsRef.update({counter: [physic[0], 1]})
             counter = counter + 1
-    if gridNames:
-        for physic in gridNames:
+    if zonePhysics:
+        for physic in zonePhysics:
             physicsRef.update({counter: [physic, 2]})
             counter = counter + 1
 
@@ -2316,25 +2363,40 @@ def meshOutput(OutDir, meshFile, NodeLayer, SegLayer):
     physicalNodes = arangeNodeLines(NodeLayer, physicsRef)
     physicalNodes.sort()
     physicalSegs = arangeSegLines(SegLayer, physicsRef, nodeRef)
-    meshes = arangeMesh(OutDir, gridNames, physicsRef, nodeRef)
-    meshes.sort()
 
     f.write("$Elements\n")
-    f.write(str(len(physicalNodes)+len(physicalSegs)+len(meshes)) + "\n")
+    f.write(str(len(physicalNodes) + len(physicalSegs) +
+                ZoneLayer.featureCount()) + "\n")
     elementCount = 1
+    # Output of Nodes
     for line in physicalNodes:
         f.write(str(elementCount) + " " + line)
         elementCount = elementCount + 1
+
+    # Output of Boundaries
     for line in physicalSegs:
         f.write(str(elementCount) + " " + line)
         elementCount = elementCount + 1
-    for line in meshes:
+
+    #  Output of mesh
+    for feature in ZoneLayer.getFeatures():
+        distri = feature['Zone']
+        geo = feature.geometry().asPolygon()
+        geo[0].pop(-1)
+        ref = physicCode(distri, physicsRef)
+        line = (str(len(geo[0])-1) + " 2 " + str(ref) + " 0 ")
+
+        for point in geo[0]:
+            fid = nodeRef[point]
+            line = line + str(fid) + " "
+        line = line[:-1] + "\n"
+
         f.write(str(elementCount) + " " + line)
         elementCount = elementCount + 1
 
     f.write("$EndElements")
     f.close()
-    iface.messageBar().pushMessage('Mesh output done.')
+    iface.messageBar().pushMessage(meshFile+' Mesh output done.')
 
 
 def dictToList(physDict):
@@ -2508,7 +2570,7 @@ def newDistriRegionOutput(saveFile, regionOrder, meshHeader, mshLayer):
     meshRegions = list()
     for feature in mshLayer.getFeatures():
         mesh_id = int(feature['id'])
-        distri = feature['Distri']
+        distri = feature['Zone']
         regionNum = len(boundaries) + regionOrder.index(distri) + 1
         meshString = getMeshString(mesh_id)
         meshRegions.append([mesh_id, meshString[1], '2', regionNum,
