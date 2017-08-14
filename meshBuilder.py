@@ -241,6 +241,11 @@ class meshBuilder:
         self.dlg.new2dmOutput.pressed.connect(self.changeTo2dm)
         self.dlg.outputDistri.setEnabled(False)
 
+        self.dlg.mshPreViewBtn.clicked.connect(self.mshpreview)
+        self.dlg.mshPreviewBar.setValue(0)
+        self.dlg.mshPreViewBtn.setEnabled(False)
+        self.dlg.to2dmExecBtn.setEnabled(False)
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -388,12 +393,13 @@ class meshBuilder:
         if os.path.isdir(os.path.join(projFolder, 'MainLayers')):
             try:
                 files = rmtree(os.path.join(projFolder, 'MainLayers'))
-                os.mkdir(os.path.join(projFolder, 'MainLayers'))
+                os.system('mkdir ' + os.path.join(projFolder, 'MainLayers'))
             except:
                 try:
                     subprocess.Popen(['RD', os.path.join(projFolder,
                                                          'MainLayers')])
-                    os.mkdir(os.path.join(projFolder, 'MainLayers'))
+                    os.system('mkdir ' + os.path.join(projFolder, 'MainLayers'))
+                    # os.mkdir(os.path.join(projFolder, 'MainLayers'))
                 except:
                     pass
         else:
@@ -402,12 +408,15 @@ class meshBuilder:
         if os.path.isdir(os.path.join(projFolder, 'InnerLayers')):
             try:
                 files = rmtree(os.path.join(projFolder, 'InnerLayers'))
-                os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+                os.system('mkdir ' + os.path.join(projFolder, 'InnerLayers'))
+                # os.mkdir(os.path.join(projFolder, 'InnerLayers'))
             except:
                 try:
                     subprocess.Popen(['RD', os.path.join(projFolder,
                                                          'InnerLayers')])
-                    os.mkdir(os.path.join(projFolder, 'InnerLayers'))
+                    os.system('mkdir ' + os.path.join(projFolder,
+                                                      'InnerLayers'))
+                    # os.mkdir(os.path.join(projFolder, 'InnerLayers'))
                 except:
                     pass
         else:
@@ -415,17 +424,31 @@ class meshBuilder:
 
         if os.path.isdir(os.path.join(projFolder, 'MeshShp')):
             try:
-                files = rmtree(os.path.join(projFolder, 'MeshShp'))
-                os.mkdir(os.path.join(projFolder, 'MeshShp'))
+                rmtree(os.path.join(projFolder, 'MeshShp'))
+                os.system('mkdir ' + os.path.join(projFolder, 'MeshShp'))
+                # os.mkdir(os.path.join(projFolder, 'MeshShp'))
             except:
                 try:
                     subprocess.Popen(['RD', os.path.join(projFolder,
                                                          'MeshShp')])
-                    os.mkdir(os.path.join(projFolder, 'MeshShp'))
+                    os.system('mkdir ' + os.path.join(projFolder, 'MeshShp'))
+                    # os.mkdir(os.path.join(projFolder, 'MeshShp'))
                 except:
                     pass
         else:
             os.mkdir(os.path.join(projFolder, 'MeshShp'))
+
+    def mshpreview(self):
+        proj_Name = os.path.basename(self.projFolder)
+        Path = os.path.join(self.projFolder, proj_Name+'.msh')
+        outDir = os.path.join(self.projFolder, 'MeshShp', 'preview')
+        if not os.path.isdir(outDir):
+            os.mkdir(outDir)
+        else:
+            rmtree(outDir)
+            os.mkdir(outDir)
+
+        mshPreview(Path, self.systemCRS, outDir, self.dlg)
 
     def step1_1(self):
         projFolder = str(self.dlg.lineEdit.text())
@@ -1827,6 +1850,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         def onFinished():
             self.dlg.label_xyz.setText(u'งนฆจ')
             self.dlg.whereMshEdit.setText(Path)
+            self.dlg.mshPreViewBtn.setEnabled(True)
+            self.dlg.to2dmExecBtn.setEnabled(True)
 
         proj_Name = os.path.basename(self.projFolder)
         Path = os.path.join(self.projFolder, proj_Name+'.msh')
@@ -2447,3 +2472,116 @@ def countPhysics(lineLayer):
             _NumberedPhysics.append(name)
 
     return _NumberedPhysics
+
+
+def mshPreview(filename, crs, outDir, dlg):
+    meshfile = open(filename, 'r')
+    meshName = filename.split('/')[-1]
+    mesh = meshfile.readlines()
+    meshfile.close()
+
+    vertices = dict()
+    physicalNames = dict()
+    layerPath = dict()
+    physicalWriter = dict()
+    NodeFeature = dict()
+    mode = 0
+    endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
+
+    fields = QgsFields()
+    fields.append(QgsField("id", QVariant.Int))
+
+    counter = 0
+    for l in mesh:
+        w = l.split()
+
+        if not w:
+            pass
+        elif w[0] == "$PhysicalNames":
+            mode = 1
+        elif w[0] == "$Nodes":
+            mode = 2
+        elif w[0] == "$Elements":
+            mode = 3
+        elif w[0] in endStatements:
+            continue
+
+        if mode == 1 and len(w) > 1:
+            dim, tag, name = int(w[0]), int(w[1]), w[2]
+            name = name[1:-1]
+            physicalNames.update({tag: [int(dim), name]})
+            path = os.path.join(outDir, name + ".shp")
+
+            # Create QGIS layers
+            if dim == 0:
+                layerType = QGis.WKBPoint
+            elif dim == 1:
+                layerType = QGis.WKBLineString
+            elif dim >= 2:
+                layerType = QGis.WKBPolygon
+            writer = QgsVectorFileWriter(path, "UTF-8", fields, layerType,
+                                         crs, "ESRI Shapefile")
+            writer.path = path
+            physicalWriter.update({tag: writer})
+            layerPath.update({3+tag: path})
+
+        elif mode == 2 and len(w) > 1:
+            nid, x, y, z = w[0], w[1], w[2], w[3]
+            vertices.update({int(nid): (float(x), float(y), float(z))})
+            feature = QgsFeature()
+            WktString = "POINT (" + x + " " + y + ")"
+            NodeFeature.update({int(nid): [WktString, float(z), None]})
+        elif mode == 3 and len(w) > 1:
+            fid = int(w[0])
+            geoType = int(w[1])
+            tagsNum = int(w[2])
+            tagArgs = w[3:3+tagsNum]
+            NodesNum = mshTypeRef[geoType]
+            ElementNodes = w[3+tagsNum:3+tagsNum+NodesNum]
+
+            writer = physicalWriter[int(tagArgs[0])]
+            feature = QgsFeature()
+            if NodesNum == 1:
+                point = NodeFeature[int(ElementNodes[0])][0]
+                feature.setGeometry(QgsGeometry().fromWkt(point))
+                nodeName = physicalNames[int(tagArgs[0])][1]
+                NodeFeature[int(ElementNodes[0])][2] = nodeName
+            elif NodesNum == 2:
+                x1, y1, z1 = vertices[int(ElementNodes[0])]
+                x2, y2, z2 = vertices[int(ElementNodes[1])]
+                geoString = "LINESTRING ("
+                geoString = geoString + str(x1) + " " + str(y1) + ","
+                geoString = geoString + str(x2) + " " + str(y2)
+                geoString = geoString + ")"
+                feature.setGeometry(QgsGeometry().fromWkt(geoString))
+            elif NodesNum > 2:
+                geoString = "POLYGON (("
+                ElementNodes.append(ElementNodes[0])
+                for pid in ElementNodes:
+                    x, y, z = vertices[int(pid)]
+                    geoString = geoString + str(x) + " " + str(y) + ","
+                geoString = geoString[:-1] + "))"
+                feature.setGeometry(QgsGeometry().fromWkt(geoString))
+
+            feature.setAttributes([int(fid)])
+            writer.addFeature(feature)
+        elif mode == 0:
+            continue
+        elif len(w) == 1:
+            continue
+        counter = counter + 1
+        dlg.mshPreviewBar.setValue(int(float(counter)/len(mesh)*100))
+
+    for writer in physicalWriter.values():
+        del writer
+
+    for key in NodeFeature.keys():
+        feature = QgsFeature()
+        geoString = NodeFeature[key][0]
+        Z = NodeFeature[key][1]
+        phys = NodeFeature[key][2]
+        feature.setGeometry(QgsGeometry().fromWkt(geoString))
+        feature.setAttributes([key, Z, phys])
+
+    dlg.mshPreviewBar.setValue(100)
+    loadMeshLayers(layerPath, meshName)
