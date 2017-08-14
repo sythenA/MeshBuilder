@@ -31,8 +31,7 @@ def createNewAttrs(fields):
     return newAttr
 
 
-def copyMainLayer(layer, folder):
-    CRS = layer.dataProvider().crs()
+def copyMainLayer(layer, CRS, folder):
     fields = layer.pendingFields()
 
     layerPath = layer.dataProvider().dataSourceUri().split('|')[0]

@@ -234,8 +234,10 @@ class shepred:
         folderPath = self.dlg.saveFolderEdit.text()
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srhpre.bat')
-        dstPath = os.path.join(folderPath, 'srhpre.bat')
-        os.chdir(folderPath)
+        if not os.path.isdir(os.path.join(folderPath, 'sim')):
+            os.mkdir(os.path.join(folderPath, 'sim'))
+        dstPath = os.path.join(folderPath, 'sim', 'srhpre.bat')
+        os.chdir(os.path.join(folderPath, 'sim'))
         copyfile(srcPath, dstPath)
         subprocess.Popen([dstPath])
 
@@ -243,8 +245,10 @@ class shepred:
         folderPath = self.dlg.saveFolderEdit.text()
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srh2d.bat')
-        dstPath = os.path.join(folderPath, 'srh2d.bat')
-        os.chdir(folderPath)
+        if not os.path.isdir(os.path.join(folderPath, 'sim')):
+            os.mkdir(os.path.join(folderPath, 'sim'))
+        dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
+        os.chdir(os.path.join(folderPath, 'sim'))
         copyfile(srcPath, dstPath)
         subprocess.Popen([dstPath])
 
@@ -468,7 +472,9 @@ of T1 T2 ...  EMPTY means the end\n')
 
     def export(self):
         fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
-        saveFolder = self.dlg.saveFolderEdit.text()
+        saveFolder = os.path.join(self.dlg.saveFolderEdit.text(), 'sim')
+        if not os.path.isdir(saveFolder):
+            os.mkdir(saveFolder)
         fullPath = os.path.join(saveFolder, fileName)
         useMobile = False
 
@@ -737,17 +743,17 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
         try:
             tStart = int(tStart)
         except(ValueError):
-            onCritical(106)
+            onCritical(132)
 
         try:
             tStep = float(tStep)
         except(ValueError):
-            onCritical(106)
+            onCritical(132)
 
         try:
             totalTime = int(totalTime)
         except(ValueError):
-            onCritical(106)
+            onCritical(132)
 
         return (tStart, tStep, totalTime)
 
@@ -769,9 +775,11 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
         if selected == 'PARA':
             f.write('PARA\n')
             f.write('// A_TURB for the PARA Model (0.05 to 1.0)\n')
-            if isfloat(self.dlg.turbParaInput.text()):
-                f.write(self.dlg.turbParaInput.text()+'\n')
-            else:
+            try:
+                float(self.dlg.turbParaInput.text())
+                if isfloat(float(self.dlg.turbParaInput.text())):
+                    f.write(self.dlg.turbParaInput.text()+'\n')
+            except(ValueError):
                 onCritical(106)
         elif selected == 'KE':
             f.write('KE\n')
