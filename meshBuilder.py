@@ -49,6 +49,7 @@ from copy import copy
 from operator import itemgetter
 from loadPara import loadParaView
 from mesh2DViewer import mesh2DView
+from zoneOrdDiag import zoneSeqIterator
 import os
 import pickle
 # Initialize Qt resources from file resources.py
@@ -133,6 +134,10 @@ class meshBuilder:
         self.dlg.geoReferenceBtn.setIconSize(0.7*pixMap.rect().size())
         self.dlg.geoReferenceBtn.setToolTip(u'設定參考座標系')
         self.dlg.geoReferenceBtn.clicked.connect(self.selectCrs)
+
+        self.dlg.geoRefBtnInPg4.setIcon(geoIcon)
+        self.dlg.geoRefBtnInPg4.setIconSize(0.7*pixMap.rect().size())
+        self.dlg.geoRefBtnInPg4.setToolTip(u'設定參考座標系')
 
         self.dlg.outputMeshPointsBtn.clicked.connect(
             lambda: self.switchAttr('Nodes'))
@@ -245,6 +250,7 @@ class meshBuilder:
         self.dlg.mshPreviewBar.setValue(0)
         self.dlg.mshPreViewBtn.setEnabled(False)
         self.dlg.to2dmExecBtn.setEnabled(False)
+        self.dlg.geoRefBtnInPg4.clicked.connect(self.selectCrs)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -959,42 +965,23 @@ into layer attributes.', level=QgsMessageBar.INFO)
             pass
         self.boundaryOrder = boundaryOrder
 
-    def regionOrderChanged(self, nameCol, comCol, push=True):
+    def regionOrderChanged(self):
         regionOrder = self.regionOrder
-
-        c_row = self.dlg.tableWidget.currentRow()
         c_column = self.dlg.tableWidget.currentColumn()
 
         table = self.dlg.tableWidget
-        try:
-            newSeq = table.cellWidget(c_row, c_column).currentIndex()
-            physName = table.item(c_row, nameCol).text()
 
-            # Replace the boundary order in boundaries list to the new position.
-            oldSeq = regionOrder.index(physName)
-            regionOrder.pop(oldSeq)
-            regionOrder.insert(newSeq, physName)
-            if push:
-                msg = ''
-                for i in range(0, len(regionOrder)):
-                    msg = msg + ", " + regionOrder[i]
-                msg = msg[1:-1]
-                iface.messageBar().pushMessage(msg)
-
-            for i in range(0, table.rowCount()):
-                if table.item(i, nameCol):
-                    name = table.item(i, nameCol).text()
-                    try:
-                        idx = regionOrder.index(name)
-                        table.cellWidget(i, comCol).setCurrentIndex(idx)
-                    except:
-                        pass
-                elif table.item(i, nameCol).text() == physName:
-                    idx = regionOrder.index(physName)
-                    table.cellWidget(i, comCol).setCurrentIndex(idx)
-        except:
+        if c_column == 2:
+            iterator = zoneSeqIterator(self.iface, regionOrder, self.dlg)
+            res = iterator.run()
+            if res == 1:
+                self.regionOrder = iterator.zoneOrd
+                for i in range(0, table.rowCount()):
+                    physName = table.item(i, 1).text()
+                    idx = self.regionOrder.index(physName)
+                    table.item(i, 2).setText(str(idx+1))
+        else:
             pass
-        self.regionOrder = regionOrder
 
     def arrangeLineTable(self, nameCol, comCol):
         boundaryOrder = self.boundaryOrder
@@ -1188,9 +1175,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 widget.setCurrentIndex(idx)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
                 cell = self.dlg.tableWidget.cellWidget(i, j)
-                cell.currentIndexChanged.connect(lambda:
-                                                 self.linePhysSeqChanged(0, 1,
-                                                                         False))
+                cell.currentIndexChanged.connect(
+                    lambda: self.linePhysSeqChanged(0, 1, False))
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -1292,7 +1278,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
         for feature in zoneLayer.getFeatures():
             setTableItem(counter, 0, str(feature['id']), Type='Fixed')
             setTableItem(counter, 1, feature['Zone'])
-            setTableItem(counter, 2, '', Type='ComboBox2')
+
+            regionOrder = self.regionOrder
+            setTableItem(counter, 2, str(regionOrder.index(feature['Zone'])+1))
             counter += 1
 
         fieldDict = {0: 'id',
@@ -1308,6 +1296,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer.selectionChanged.connect(self.selectFromQgis)
 
         self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
+        self.dlg.tableWidget.itemClicked.connect(self.regionOrderChanged)
 
     def checkLayerRegions(self):
         table = self.dlg.tableWidget
@@ -1327,17 +1316,11 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.regionOrder = regionOrder
 
         for i in range(0, table.rowCount()):
-            comboWidget = table.cellWidget(i, 2)
-
-            if comboWidget.count() < len(regionOrder):
-                for j in range(comboWidget.count(), len(regionOrder)):
-                    comboWidget.addItem(str(j+1))
-            elif comboWidget.count() > len(regionOrder):
-                comboWidget.setMaxCount(len(regionOrder))
+            ordItem = table.item(i, 2)
 
             name = table.item(i, 1).text()
             idx = regionOrder.index(name)
-            comboWidget.setCurrentIndex(idx)
+            ordItem.setText(str(idx+1))
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -1749,16 +1732,19 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             self.projFolder = self.dlg.whereMshLayerEdit.text()
 
         if not os.path.isdir(os.path.join(self.projFolder, 'MeshShp')):
-            os.mkdir(os.path.join(self.projFolder, 'MeshShp'))
+            subprocess.call(['mkdir', os.path.join(self.projFolder, 'MeshShp')])
 
         if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
             try:
                 rmtree(os.path.join(self.projFolder, 'MeshShp', shpFolder))
-                os.mkdir(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+                subprocess.call(['mkdir', os.path.join(self.projFolder,
+                                                       'MeshShp',
+                                                       shpFolder)])
             except:
                 pass
         else:
-            os.mkdir(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+            subprocess.call(['mkdir', os.path.join(self.projFolder, 'MeshShp',
+                                                   shpFolder)])
 
         outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
 
@@ -2099,8 +2085,14 @@ def loadMesh(filename, crs, outDir, dlg):
         counter = counter + 1
         dlg.meshLoadProgress.setValue(int(float(counter)/len(mesh)*100))
 
+    currProcess = int(float(counter)/len(mesh)*100)
+    imComplete = 100 - int(float(counter)/len(mesh)*100)
+
     for writer in physicalWriter.values():
         del writer
+
+    TotalLength = len(NodeFeature.keys()) + len(SegList.keys())
+    counter = 0
 
     for key in NodeFeature.keys():
         feature = QgsFeature()
@@ -2110,6 +2102,9 @@ def loadMesh(filename, crs, outDir, dlg):
         feature.setGeometry(QgsGeometry().fromWkt(geoString))
         feature.setAttributes([key, Z, phys])
         NodeWriter.addFeature(feature)
+        counter += 1
+        dlg.meshLoadProgress.setValue(
+            currProcess + int(counter/TotalLength*imComplete))
 
     del NodeWriter
 
@@ -2128,6 +2123,10 @@ def loadMesh(filename, crs, outDir, dlg):
         feature.setAttributes([id_tag, boundName, seq])
         SegWriter.addFeature(feature)
         id_tag += 1
+
+        counter += 1
+        dlg.meshLoadProgress.setValue(
+            currProcess + int(counter/TotalLength*imComplete))
 
     del SegWriter
     del ZoneWriter
