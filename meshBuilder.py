@@ -28,12 +28,13 @@ from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPixmap
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry, QgsVectorFileWriter
 from qgis.core import QgsGeometry, QgsFeature, QGis, QgsFields, QgsField
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsPoint
-from qgis.core import QgsMessageLog
+from qgis.core import QgsMessageLog, QgsSymbolV2, QgsRuleBasedRendererV2
 from qgis.gui import QgsMessageBar, QgsGenericProjectionSelector
 from qgis.utils import iface
 from lineFlip import flip
 from commonDialog import fileBrowser, folderBrowser, saveFileBrowser
 from commonDialog import onCritical, onWarning
+from random import randint
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
 import shepred
@@ -928,6 +929,57 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(1, 2))
 
+    def zoneLayerStyle(self):
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName("Zones")
+        layer = vl[0]
+        style_rules = list()
+
+        for zone in self.regionOrder:
+            color_code = randColor()
+            style_rules.append((zone, '"Zone"='+"'"+zone+"'", color_code))
+        symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+        renderer = QgsRuleBasedRendererV2(symbol)
+        root_rule = renderer.rootRule()
+
+        for label, expression, color_name in style_rules:
+            rule = root_rule.children()[0].clone()
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            rule.symbol().setColor(QColor(color_name))
+            root_rule.appendChild(rule)
+
+        root_rule.removeChildAt(0)
+        layer.setRendererV2(renderer)
+        layer.triggerRepaint()
+
+    def segLayerStyle(self):
+        registry = QgsMapLayerRegistry.instance()
+        vl = registry.mapLayersByName("Segments")
+        layer = vl[0]
+        style_rules = list()
+
+        for border in self.boundaryOrder:
+            color_code = randColor()
+            style_rules.append((border, '"Physical"=' + "'" + border + "'",
+                                color_code))
+        color_code = randColor()
+        style_rules.append(('Segements', '"Physical" is NULL', color_code))
+        symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+        renderer = QgsRuleBasedRendererV2(symbol)
+        root_rule = renderer.rootRule()
+
+        for label, expression, color_name in style_rules:
+            rule = root_rule.children()[0].clone()
+            rule.setLabel(label)
+            rule.setFilterExpression(expression)
+            rule.symbol().setColor(QColor(color_name))
+            root_rule.appendChild(rule)
+
+        root_rule.removeChildAt(0)
+        layer.setRendererV2(renderer)
+        layer.triggerRepaint()
+
     def linePhysSeqChanged(self, nameCol, comCol, push=True):
         boundaryOrder = self.boundaryOrder
 
@@ -1047,6 +1099,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 if table.cellWidget(i, comCol):
                     table.removeCellWidget(i, comCol)
         self.boundaryOrder = boundaryOrder
+        self.segLayerStyle()
 
     def setRefLength(self):
         table = self.dlg.tableWidget
@@ -1223,6 +1276,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(0, 1))
+        self.segLayerStyle()
 
     def setTableToZone(self, zoneLayer):
 
@@ -1295,6 +1349,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer = iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
+        self.zoneLayerStyle()
         self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
         self.dlg.tableWidget.itemClicked.connect(self.regionOrderChanged)
 
@@ -1321,6 +1376,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             name = table.item(i, 1).text()
             idx = regionOrder.index(name)
             ordItem.setText(str(idx+1))
+
+        self.zoneLayerStyle()
 
     def attrTable(self, layer, Type='poly'):
         self.dlg.tableWidget.setRowCount(layer.featureCount())
@@ -1769,9 +1826,11 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
             SegmentLayer = Instance.mapLayersByName("Segments")[0]
             self.segLayer = SegmentLayer
+            self.segLayerStyle()
 
             zoneLayer = Instance.mapLayersByName("Zones")[0]
             self.zoneLayer = zoneLayer
+            self.zoneLayerStyle()
 
             self.dlg.meshOutputBtn.setEnabled(True)
 
@@ -1940,7 +1999,6 @@ def loadMesh(filename, crs, outDir, dlg):
     vertices = dict()
     physicalNames = dict()
     layerPath = dict()
-    physicalWriter = dict()
     NodeFeature = dict()
     mode = 0
     endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
@@ -1989,22 +2047,12 @@ def loadMesh(filename, crs, outDir, dlg):
             dim, tag, name = int(w[0]), int(w[1]), w[2]
             name = name[1:-1]
             physicalNames.update({tag: [int(dim), name]})
-            path = os.path.join(outDir, name + ".shp")
 
             # Create QGIS layers
-            if dim == 0:
-                layerType = QGis.WKBPoint
-            elif dim == 1:
-                layerType = QGis.WKBLineString
+            if dim == 1:
                 boundaryOrder.append(name)
             elif dim >= 2:
-                layerType = QGis.WKBPolygon
                 regionOrder.append(name)
-            writer = QgsVectorFileWriter(path, "UTF-8", fields, layerType,
-                                         crs, "ESRI Shapefile")
-            writer.path = path
-            physicalWriter.update({tag: writer})
-            layerPath.update({3+tag: path})
 
         elif mode == 2 and len(w) > 1:
             nid, x, y, z = w[0], w[1], w[2], w[3]
@@ -2020,7 +2068,6 @@ def loadMesh(filename, crs, outDir, dlg):
             NodesNum = mshTypeRef[geoType]
             ElementNodes = w[3+tagsNum:3+tagsNum+NodesNum]
 
-            writer = physicalWriter[int(tagArgs[0])]
             feature = QgsFeature()
             if NodesNum == 1:
                 point = NodeFeature[int(ElementNodes[0])][0]
@@ -2077,7 +2124,6 @@ def loadMesh(filename, crs, outDir, dlg):
                                         [WktString, None]})
 
             feature.setAttributes([int(fid)])
-            writer.addFeature(feature)
         elif mode == 0:
             continue
         elif len(w) == 1:
@@ -2087,9 +2133,6 @@ def loadMesh(filename, crs, outDir, dlg):
 
     currProcess = int(float(counter)/len(mesh)*100)
     imComplete = 100 - int(float(counter)/len(mesh)*100)
-
-    for writer in physicalWriter.values():
-        del writer
 
     TotalLength = len(NodeFeature.keys()) + len(SegList.keys())
     counter = 0
@@ -2584,3 +2627,8 @@ def mshPreview(filename, crs, outDir, dlg):
 
     dlg.mshPreviewBar.setValue(100)
     loadMeshLayers(layerPath, meshName)
+
+
+def randColor():
+    color = (randint(0, 255), randint(0, 255), randint(0, 255))
+    return '#' + ''.join(map(chr, color)).encode('hex')

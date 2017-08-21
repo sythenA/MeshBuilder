@@ -30,7 +30,7 @@ tags=
 
 homepage=
 category=Plugins
-icon=icon.png
+icon=SRH-2D-01.png
 # experimental flag
 experimental=False
 
