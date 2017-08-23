@@ -1279,7 +1279,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.segLayerStyle()
 
     def setTableToZone(self, zoneLayer):
-
         def setTableItem(i, j, Object, Type='Object'):
             if type(Object) != QPyNullVariant and Type == 'Object':
                 Object = str(Object)
@@ -1392,6 +1391,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
     def switchAttr(self, Type):
         try:
             self.dlg.tableWidget.itemChanged.disconnect()
+            self.dlg.tableWidget.itemClicked.disconnect()
         except:
             pass
         if Type == 'poly':
