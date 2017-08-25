@@ -21,6 +21,18 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
+import pip
+
+
+def installPlt():
+    pip.main(['install', 'matplotlib'])
+
+pltInstalled = False
+for dist in pip.get_installed_distributions():
+    if 'matplotlib' in str(dist):
+        pltInstalled = True
+if not pltInstalled:
+    installPlt()
 
 
 # noinspection PyPep8Naming
