@@ -81,9 +81,12 @@ concentration and falling velocity relation.')
         self.dlg.eqDependentTable.setColumnCount(0)
 
     def setClimit(self):
-        if self.dlg.sediPropTable.item(0, 1).text():
-            self.dlg.cohDiaLimEdit.setText(
-                self.dlg.sediPropTable.item(0, 1).text())
+        try:
+            if self.dlg.sediPropTable.item(0, 1).text():
+                self.dlg.cohDiaLimEdit.setText(
+                    self.dlg.sediPropTable.item(0, 1).text())
+        except:
+            pass
 
     def setGradTable(self):
         try:
@@ -492,6 +495,19 @@ class bedSettingModule:
         self.boundsRef = boundsRef
         self.physRef = physRef
 
+    def getGradClass(self):
+        try:
+            table = self.dlg.sediPropTable
+            rows = table.rowCount()
+            gradClass = list()
+            for i in range(0, rows):
+                minD = float(table.item(i, 0).text())
+                maxD = float(table.item(i, 1).text())
+                gradClass.append([minD, maxD])
+            return gradClass
+        except:
+            return []
+
     def getBedPhysRegion(self):
         selector = meshSelector(iface, self.dlg.saveFolderEdit.text())
         result = selector.run()
@@ -632,10 +648,14 @@ class bedSettingModule:
                 rockType = int(self.dlg.typesOfRockEdit.text())
             except(ValueError):
                 rockType = 0
-            layerDialog = bedLayer(iface, self.dlg.sediSizeClass.text(),
-                                   caption, rockUsed=useRock,
-                                   rockTypes=rockType,
-                                   presetString=presetString)
+            gradClass = self.getGradClass()
+            if gradClass:
+                layerDialog = bedLayer(iface, gradClass,
+                                       caption, rockUsed=useRock,
+                                       rockTypes=rockType,
+                                       presetString=presetString)
+            else:
+                onCritical(127)
             try:
                 layerPhys, recString = layerDialog.run()
                 item.setText(1, (layerPhys + "; " + recString))
@@ -740,7 +760,7 @@ class bankErosionMod:
         idx = self.dlg.bankModBox.currentIndex()
         fileName = ''
         if idx in [1, 2]:
-            caption = u'請選擇標示岸壁沖蝕後泥砂移動區域的網格檔(.2dm)(可略過)'
+            caption = u'請選擇標示岸壁沖蝕後泥砂沉積區域的網格檔(.2dm)(可略過)'
             fileName = fileBrowser(self.dlg, caption,
                                    self.dlg.saveFolderEdit.text(),
                                    presetType='(*.2dm)')

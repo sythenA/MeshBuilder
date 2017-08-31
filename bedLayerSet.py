@@ -2,8 +2,9 @@
 import os.path
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
-from commonDialog import onCritical
 from bedLayerDiag import bedLayerDialog
+import matplotlib.pyplot as plt
+import copy
 import re
 
 
@@ -30,10 +31,8 @@ class bedLayer:
         self.dlg = bedLayerDialog()
         self.dlg.label.setText(caption)
 
-        try:
-            self.grads = int(gradNum)
-        except(ValueError):
-            onCritical(127)
+        self.grads = len(gradNum)
+        self.gradsPartical = gradNum
 
         self.rockType = rockTypes
         items1 = ['Fraction', 'Cumulative']
@@ -48,14 +47,62 @@ class bedLayer:
         self.setTable()
         self.setPreset()
         self.dlg.recTypeCombo.currentIndexChanged.connect(self.setTable)
-        self.dlg.addColumnBtn.pressed.connect(self.addColumn)
-        self.dlg.removeColumnBtn.pressed.connect(self.killColumn)
+        self.dlg.addColumnBtn.clicked.connect(self.addColumn)
+        self.dlg.removeColumnBtn.clicked.connect(self.killColumn)
+        self.dlg.chartBtn.clicked.connect(self.drawBedGrad)
 
     def run(self):
         result = self.dlg.exec_()
 
         if result:
             return self.resultString()
+
+    def drawBedGrad(self):
+        table = self.dlg.layerPropTable
+        columns = table.columnCount()
+        if self.dlg.recTypeCombo.currentIndex() == 0:
+            particals = self.gradsPartical
+            fraction = list()
+
+            grad = list()
+            grad.append(particals[0][0])
+            for i in range(0, len(particals)):
+                grad.append(particals[i][1])
+
+            fraction.append(0.0)
+            for j in range(0, columns):
+                fraction.append(float(table.item(3, j).text()))
+            cum_fraction = copy.copy(fraction)
+            for i in range(1, len(cum_fraction)):
+                cum_fraction[i] = sum(fraction[0:i+1])
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(grad, cum_fraction, 'b', lw=1.5)
+            ax.set_xlabel('D (mm)')
+            ax.set_ylabel('%')
+
+            plt.show()
+            plt.pause(1e-9)
+            fig.canvas.manager.window.activateWindow()
+            fig.canvas.manager.window.raise_()
+
+        elif self.dlg.recTypeCombo.currentIndex() == 1:
+            D = list()
+            P = list()
+            for j in range(0, columns):
+                D.append(float(table.item(3, j).text()))
+                P.append(float(table.item(5, j).text()))
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(D, P, 'r', lw=1.5)
+            ax.set_xlabel('D (mm)')
+            ax.set_ylabel('%')
+
+            plt.show()
+            plt.pause(1e-9)
+            fig.canvas.manager.window.activateWindow()
+            fig.canvas.manager.window.raise_()
 
     def stringParser(self):
         if self.preset:
@@ -170,6 +217,7 @@ class bedLayer:
             for j in range(0, self.grads):
                 table.setItem(2, j, QTableWidgetItem('V'+str(j+1)))
                 table.setItem(3, j, QTableWidgetItem(u''))
+            self.dlg.chartBtn.setEnabled(True)
         elif self.dlg.recTypeCombo.currentIndex() == 1:
             self.dlg.addColumnBtn.setEnabled(True)
             self.dlg.removeColumnBtn.setEnabled(True)
@@ -189,6 +237,7 @@ class bedLayer:
                 table.setItem(3, j, QTableWidgetItem(u''))
                 table.setItem(4, j, QTableWidgetItem('P'+str(j+1)))
                 table.setItem(5, j, QTableWidgetItem(u''))
+            self.dlg.chartBtn.setEnabled(True)
         elif self.dlg.recTypeCombo.currentIndex() == 2:
             self.dlg.addColumnBtn.setEnabled(False)
             self.dlg.removeColumnBtn.setEnabled(False)
@@ -209,3 +258,4 @@ class bedLayer:
 
             table.setItem(2, 0, QTableWidgetItem('Type of Rocks'))
             table.setCellWidget(2, 1, rockTypeBox)
+            self.dlg.chartBtn.setEnabled(False)

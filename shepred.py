@@ -12,6 +12,7 @@ from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from sedimentMod import sedimentModule, bankErosionMod
 from shutil import copyfile
+import matplotlib.pyplot as plt
 import subprocess
 import pickle
 
@@ -903,8 +904,9 @@ WSE [TK] [ED] [T]\n')
             if obj.currentIndex() == 1:
                 item = table.item(c_Row, 3)
                 caption = 'Please choose a file of sediment inflow/outflow.'
-                fileBrowser(self.dlg, caption, self.dlg.projFolder, item,
-                            presetType='*.*')
+                fileName = fileBrowser(self.dlg, caption, self.dlg.projFolder,
+                                       item, presetType='*.*')
+                self.drawSediInput(fileName)
             else:
                 item = table.item(c_Row, 3)
                 item.setText(u'')
@@ -916,11 +918,57 @@ WSE [TK] [ED] [T]\n')
             if obj.currentIndex() == 1:
                 item = table.item(c_Row, 3)
                 caption = 'Please choose a file of sediment inflow/outflow.'
-                fileBrowser(self.dlg, caption, self.dlg.projFolder, item,
-                            presetType='*.*')
+                fileName = fileBrowser(self.dlg, caption, self.dlg.projFolder,
+                                       item, presetType='*.*')
+                self.drawSediInput(fileName)
             else:
                 item = table.item(c_Row, 3)
                 item.setText(u'')
+
+    def getGradClass(self):
+        try:
+            table = self.dlg.sediPropTable
+            rows = table.rowCount()
+            gradClass = list()
+            for i in range(0, rows):
+                minD = float(table.item(i, 0).text())
+                maxD = float(table.item(i, 1).text())
+                gradClass.append([minD, maxD])
+            return gradClass
+        except:
+            return []
+
+    def drawSediInput(self, fileName):
+        title = os.path.basename(fileName)
+        sediGrad = self.getGradClass()
+        if sediGrad:
+            f = open(fileName, 'r')
+            dat = f.readlines()
+            f.close()
+
+            T = list()
+            grads = list()
+            for i in range(0, len(sediGrad)):
+                grads.append(list())
+
+            for i in range(3, len(dat)):
+                T.append(dat[i].split()[0])
+                try:
+                    for j in range(1, len(dat[i].split())):
+                        grads[j-1].append(dat[i].split()[j])
+                except:
+                    onCritical(133)
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            for j in range(0, len(sediGrad)):
+                ax.plot(T, grads[j],
+                        label=str(sediGrad[j][0]) + '-' + str(sediGrad[j][1]))
+            ax.set_title(title)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
+                       fancybox=True)
+            plt.subplots_adjust(right=0.70)
+            plt.show()
 
     def setSediBoundaryEnableWidgets(self):
         boundaryTable = self.dlg.boundaryTable
@@ -950,6 +998,7 @@ WSE [TK] [ED] [T]\n')
         table = self.dlg.boundaryTable
         row = table.currentRow()
         column = table.currentColumn()
+        unit = table.cellWidget(row, 4).currentText()
         caption = ""
         if column == 2:
             caption = u'請選擇流量的時間序列檔案'
@@ -961,9 +1010,58 @@ WSE [TK] [ED] [T]\n')
         if column == 2 or column == 3:
             fileName = QFileDialog.getOpenFileName(self.dlg, caption,
                                                    self.projFolder)
+            if column == 2:
+                self.drawChartofBoundary(fileName, 'flowrate', unit)
+            elif column == 3:
+                self.drawChartofBoundary(fileName, 'stage', unit)
+
             table.setItem(row, column, QTableWidgetItem(fileName))
         else:
             pass
+
+    def drawChartofBoundary(self, fileName, chartType, unit):
+        if chartType == 'flowrate':
+            T = list()
+            Q = list()
+            f = open(fileName, 'r')
+            dat = f.readlines()
+            f.close()
+            title = os.path.basename(fileName)
+            for i in range(3, len(dat)):
+                T.append(dat[i].split()[0])
+                Q.append(dat[i].split()[1])
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(T, Q, 'b', lw='1.5')
+            ax.set_title(title)
+            if unit == 'SI':
+                ax.set_xlabel('hr')
+                ax.set_ylabel(r'Q($m^3/s$)')
+            else:
+                ax.set_xlabel('hr')
+                ax.set_ylabel('cfs')
+            plt.show()
+        elif chartType == 'stage':
+            T = list()
+            Y = list()
+            f = open(fileName, 'r')
+            dat = f.readlines()
+            f.close()
+            title = os.path.basename(fileName)
+            for i in range(3, len(dat)):
+                T.append(dat[i].split()[0])
+                Y.append(dat[i].split()[1])
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.plot(T, Y, 'r', lw='1.5')
+            ax.set_title(title)
+            if unit == 'SI':
+                ax.set_xlabel('hr')
+                ax.set_ylabel(r'Water Stage (m)')
+            else:
+                ax.set_xlabel('hr')
+                ax.set_ylabel('Water Stage (ft)')
+            plt.show()
 
     def onMeshUnit(self):
         group = [self.dlg.rbtnMUnitFOOT, self.dlg.rbtnMUnitGScale,

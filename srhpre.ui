@@ -29,6 +29,9 @@
    <string>srhpre UI</string>
   </property>
   <widget class="QGroupBox" name="groupBox_11">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -528,7 +531,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_FlowSetting">
     <attribute name="title">
@@ -547,7 +550,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabFlowSetting">
       <attribute name="title">
@@ -1140,7 +1143,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="sediPropertyTab">
       <attribute name="title">
