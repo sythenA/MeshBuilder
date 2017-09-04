@@ -898,15 +898,19 @@ WSE [TK] [ED] [T]\n')
 
     def setSedimentFlowFile(self, obj):
         table = self.dlg.sediBoundaryTable
+        boundTable = self.dlg.boundaryTable
         c_Row = table.currentRow()
+
+        unit = boundTable.cellWidget(c_Row, 4).text()
 
         if isinstance(obj, QComboBox):
             if obj.currentIndex() == 1:
                 item = table.item(c_Row, 3)
-                caption = 'Please choose a file of sediment inflow/outflow.'
+                caption = 'Please choose a file of sediment inflow or Rating \
+Curve.'
                 fileName = fileBrowser(self.dlg, caption, self.dlg.projFolder,
                                        item, presetType='*.*')
-                self.drawSediInput(fileName)
+                self.drawSediInput(fileName, unit)
             else:
                 item = table.item(c_Row, 3)
                 item.setText(u'')
@@ -917,10 +921,11 @@ WSE [TK] [ED] [T]\n')
             obj = table.cellWidget(c_Row, 2)
             if obj.currentIndex() == 1:
                 item = table.item(c_Row, 3)
-                caption = 'Please choose a file of sediment inflow/outflow.'
+                caption = 'Please choose a file of sediment inflow or Rating \
+Curve.'
                 fileName = fileBrowser(self.dlg, caption, self.dlg.projFolder,
                                        item, presetType='*.*')
-                self.drawSediInput(fileName)
+                self.drawSediInput(fileName, unit)
             else:
                 item = table.item(c_Row, 3)
                 item.setText(u'')
@@ -938,7 +943,8 @@ WSE [TK] [ED] [T]\n')
         except:
             return []
 
-    def drawSediInput(self, fileName):
+    def drawSediInput(self, fileName, unit):
+        gnuExe = os.path.join(self.plugin_dir, 'gnuplot', 'gnuplot')
         title = os.path.basename(fileName)
         sediGrad = self.getGradClass()
         if sediGrad:
@@ -959,16 +965,49 @@ WSE [TK] [ED] [T]\n')
                 except:
                     onCritical(133)
 
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
+            f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
+            inputName = os.path.join(self.projFolder, 'data.dat')
+
+            title = 'T '
             for j in range(0, len(sediGrad)):
-                ax.plot(T, grads[j],
-                        label=str(sediGrad[j][0]) + '-' + str(sediGrad[j][1]))
-            ax.set_title(title)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,
-                       fancybox=True)
-            plt.subplots_adjust(right=0.70)
-            plt.show()
+                label = str(sediGrad[j][0]) + '-' + str(sediGrad[j][1])
+                title += (label + ' ')
+            title = title[:-1] + '\n'
+            f.write(title)
+
+            for i in range(0, len(grads[0])):
+                line = str(T[i]) + ' '
+                for j in range(0, len(grads)):
+                    line += (str(grads[j][i]) + ' ')
+                line = line[:-1] + '\n'
+                f.write(line)
+            f.close()
+            f = open(os.path.join(self.projFolder, 'plot.dem'), 'w')
+            f.write('set title "' + os.path.basename(fileName) +
+                    '" noenhanced\n')
+            if unit == 'SI':
+                f.write('set ylabel "Sediment Input(m^3/s)"\n')
+                if 'RATING_CURVE' in dat[0]:
+                    f.write('set xlabel "Flowrate (m^3/s)"\n')
+                else:
+                    f.write('set xlabel "hr"\n')
+            else:
+                f.write('set ylabel "Sediment Input(ft^3/s)"\n')
+                if 'RATING_CURVE' in dat[0]:
+                    f.write('set xlabel "Flowrate (cfs)"\n')
+                else:
+                    f.write('set xlabel "hr"\n')
+            f.write('set key outside\n')
+
+            f.write('plot for [col=2:' + str(len(grads)+1) + '] "' +
+                    inputName.replace('\\', '/') + '" ' +
+                    'using 1:col with lines lw 1.5 ' +
+                    'title columnheader\n')
+            f.close()
+
+            subprocess.Popen([gnuExe,
+                              os.path.join(self.projFolder, 'plot.dem'),
+                              '--persist'], shell=False)
 
     def setSediBoundaryEnableWidgets(self):
         boundaryTable = self.dlg.boundaryTable
@@ -985,7 +1024,7 @@ WSE [TK] [ED] [T]\n')
                 self.dlg.rbtnSolverMobile.isChecked()):
             onCritical(129)
 
-        sediAllowed = [0, 2, 3]
+        sediAllowed = [0, 3]
         for i in range(0, table.rowCount()):
             comboWig = table.cellWidget(i, 1)
             sediWig = table.cellWidget(i, 2)
@@ -1020,6 +1059,7 @@ WSE [TK] [ED] [T]\n')
             pass
 
     def drawChartofBoundary(self, fileName, chartType, unit):
+        gnuExe = os.path.join(self.plugin_dir, 'gnuplot', 'gnuplot')
         if chartType == 'flowrate':
             T = list()
             Q = list()
@@ -1030,17 +1070,30 @@ WSE [TK] [ED] [T]\n')
             for i in range(3, len(dat)):
                 T.append(dat[i].split()[0])
                 Q.append(dat[i].split()[1])
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(T, Q, 'b', lw='1.5')
-            ax.set_title(title)
+
+            f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
+            filename = os.path.join(self.projFolder, 'data.dat')
+            for i in range(0, len(T)):
+                f.write(str(T[i]) + ' ' + str(Q[i]) + '\n')
+            f.close()
+
+            f = open(os.path.join(self.projFolder, 'plot.dem'), 'w')
+            f.write('set title "' + title + '" noenhanced\n')
+            label = os.path.splitext(title)[0]
+
             if unit == 'SI':
-                ax.set_xlabel('hr')
-                ax.set_ylabel(r'Q($m^3/s$)')
+                f.write('set ylabel "Flowrate (m^3/s)"\n')
+                f.write('set xlabel "hr"\n')
             else:
-                ax.set_xlabel('hr')
-                ax.set_ylabel('cfs')
-            plt.show()
+                f.write('set ylabel "Flowrate (cfs)"\n')
+                f.write('set xlabel "hr"\n')
+            f.write("set style line 1 lt 2 lw 1.5 lc rgb 'blue'\n")
+            f.write('plot ' + '"' + filename.replace('\\', '/') + '" ' +
+                    'with lines ls 1 title "' + label + '" noenhanced\n')
+            f.close()
+            subprocess.Popen([gnuExe,
+                              os.path.join(self.projFolder, 'plot.dem'),
+                              '--persist'], shell=False)
         elif chartType == 'stage':
             T = list()
             Y = list()
@@ -1051,17 +1104,31 @@ WSE [TK] [ED] [T]\n')
             for i in range(3, len(dat)):
                 T.append(dat[i].split()[0])
                 Y.append(dat[i].split()[1])
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(T, Y, 'r', lw='1.5')
-            ax.set_title(title)
+
+            f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
+            filename = os.path.join(self.projFolder, 'data.dat')
+            for i in range(0, len(T)):
+                f.write(str(T[i]) + ' ' + str(Y[i]) + '\n')
+            f.close()
+
+            f = open(os.path.join(self.projFolder, 'plot.dem'), 'w')
+            f.write('set title "' + title + '" noenhanced\n')
+            label = os.path.splitext(title)[0]
+
             if unit == 'SI':
-                ax.set_xlabel('hr')
-                ax.set_ylabel(r'Water Stage (m)')
+                f.write('set ylabel "Water Stage (m)"\n')
+                f.write('set xlabel "hr"\n')
             else:
-                ax.set_xlabel('hr')
-                ax.set_ylabel('Water Stage (ft)')
-            plt.show()
+                f.write('set ylabel "Water Stage (ft)"\n')
+                f.write('set xlabel "hr"\n')
+            f.write("set style line 1 lt 2 lw 1.5 lc rgb 'red'\n")
+            f.write('plot ' + '"' + filename.replace('\\', '/') + '" ' +
+                    'with lines ls 1 title "' +
+                    label + '" noenhanced\n')
+            f.close()
+            subprocess.Popen([gnuExe,
+                              os.path.join(self.projFolder, 'plot.dem'),
+                              '--persist'], shell=False)
 
     def onMeshUnit(self):
         group = [self.dlg.rbtnMUnitFOOT, self.dlg.rbtnMUnitGScale,

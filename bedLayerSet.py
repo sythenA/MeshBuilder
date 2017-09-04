@@ -3,7 +3,7 @@ import os.path
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication
 from PyQt4.QtGui import QTableWidgetItem, QComboBox
 from bedLayerDiag import bedLayerDialog
-import matplotlib.pyplot as plt
+import subprocess
 import copy
 import re
 
@@ -58,8 +58,12 @@ class bedLayer:
             return self.resultString()
 
     def drawBedGrad(self):
+        gnuExe = os.path.join(self.plugin_dir, 'gnuplot', 'gnuplot')
         table = self.dlg.layerPropTable
         columns = table.columnCount()
+        f = open(os.path.join(self.plugin_dir, 'data.dat'), 'w')
+        filename = os.path.join(self.plugin_dir, 'data.dat')
+
         if self.dlg.recTypeCombo.currentIndex() == 0:
             particals = self.gradsPartical
             fraction = list()
@@ -76,16 +80,23 @@ class bedLayer:
             for i in range(1, len(cum_fraction)):
                 cum_fraction[i] = sum(fraction[0:i+1])
 
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(grad, cum_fraction, 'b', lw=1.5)
-            ax.set_xlabel('D (mm)')
-            ax.set_ylabel('%')
+            for i in range(0, len(grad)):
+                f.write(str(grad[i]) + ' ' + str(cum_fraction[i]) + '\n')
+            f.close()
 
-            plt.show()
-            plt.pause(1e-9)
-            fig.canvas.manager.window.activateWindow()
-            fig.canvas.manager.window.raise_()
+            f = open(os.path.join(self.plugin_dir, 'plot.dem'), 'w')
+            f.write('set ylabel "%"\n')
+            f.write('set xlabel "D (mm)"\n')
+            f.write('set logscale x\n')
+            f.write('set style line 1 lt 2 lw 1.5 lc rgb "blue"\n')
+            f.write('set key off\n')
+            f.write('plot "' + filename.replace('\\', '/') +
+                    '" with lines ls 1')
+            f.close()
+
+            subprocess.Popen([gnuExe,
+                              os.path.join(self.plugin_dir, 'plot.dem'),
+                              '--persist'], shell=False)
 
         elif self.dlg.recTypeCombo.currentIndex() == 1:
             D = list()
@@ -93,16 +104,24 @@ class bedLayer:
             for j in range(0, columns):
                 D.append(float(table.item(3, j).text()))
                 P.append(float(table.item(5, j).text()))
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            ax.plot(D, P, 'r', lw=1.5)
-            ax.set_xlabel('D (mm)')
-            ax.set_ylabel('%')
 
-            plt.show()
-            plt.pause(1e-9)
-            fig.canvas.manager.window.activateWindow()
-            fig.canvas.manager.window.raise_()
+            for i in range(0, len(D)):
+                f.write(str(D[i]) + ' ' + str(P[i]) + '\n')
+            f.close()
+
+            f = open(os.path.join(self.plugin_dir, 'plot.dem'), 'w')
+            f.write('set ylabel "%"\n')
+            f.write('set xlabel "D (mm)"\n')
+            f.write('set logscale x\n')
+            f.write('set style line 1 lt 2 lw 1.5 lc rgb "red"\n')
+            f.write('set key off\n')
+            f.write('plot "' + filename.replace('\\', '/') +
+                    '" with lines ls 1\n')
+            f.close()
+
+            subprocess.Popen([gnuExe,
+                              os.path.join(self.plugin_dir, 'plot.dem'),
+                              '--persist'], shell=False)
 
     def stringParser(self):
         if self.preset:

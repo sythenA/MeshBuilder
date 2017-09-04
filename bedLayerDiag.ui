@@ -51,13 +51,6 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>TextLabel</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QComboBox" name="recTypeCombo">
      <property name="sizePolicy">
@@ -171,6 +164,13 @@
        <string>繪圖</string>
       </property>
      </widget>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
     </widget>
    </item>
   </layout>
