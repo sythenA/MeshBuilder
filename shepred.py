@@ -11,8 +11,7 @@ from shepredDialog import shepredDialog
 from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from sedimentMod import sedimentModule, bankErosionMod
-from shutil import copyfile
-import matplotlib.pyplot as plt
+from shutil import copy2
 import subprocess
 import pickle
 
@@ -140,15 +139,18 @@ class shepred:
         onComment(self.dlg.mannLabel, 1006)
         onComment(self.dlg.initLabel, 1000)
         meshFileCaption = u'請選擇輸入網格(.2dm格式)'
+
         self.dlg.pbtnFileSelector.clicked.connect(
             lambda: fileBrowser(self.dlg, meshFileCaption,
-                                param['projFolder'],
+                                self.projFolder,
                                 self.dlg.lineEditMeshFileName,
                                 presetType='.2dm'))
+
         meshFileCaption2 = u'請選擇輸入網格(.msh格式)'
+
         self.dlg.mshFileSelector.clicked.connect(
             lambda: fileBrowser(self.dlg, meshFileCaption2,
-                                param['projFolder'],
+                                self.projFolder,
                                 self.dlg.lineMeshFilePath,
                                 presetType='.msh'))
 
@@ -239,7 +241,7 @@ class shepred:
             os.mkdir(os.path.join(folderPath, 'sim'))
         dstPath = os.path.join(folderPath, 'sim', 'srhpre.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
-        copyfile(srcPath, dstPath)
+        copy2(srcPath, dstPath)
         subprocess.Popen([dstPath])
 
     def callSRH2D(self):
@@ -250,7 +252,7 @@ class shepred:
             os.mkdir(os.path.join(folderPath, 'sim'))
         dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
-        copyfile(srcPath, dstPath)
+        copy2(srcPath, dstPath)
         subprocess.Popen([dstPath])
 
     def addSource(self):
@@ -619,8 +621,12 @@ ne means default is used\n')
                     if capacityCombo.currentIndex() == 0:
                         line += (capacityCombo.currentText() + ' ')
                     else:
-                        line += (self.dlg.sediBoundaryTable.item(i, 3).text() +
-                                 ' ')
+                        sediFileName = self.dlg.sediBoundaryTable.item(i, 3
+                                                                       ).text()
+                        baseSediName = os.path.basename(sediFileName)
+                        copy2(sediFileName,
+                              os.path.join(self.projFolder, 'sim'))
+                        line += (baseSediName + ' ')
                 line = line + table.cellWidget(i, 4).currentText()
 
                 if table.cellWidget(i, 5).currentIndex() != 0:
@@ -901,7 +907,7 @@ WSE [TK] [ED] [T]\n')
         boundTable = self.dlg.boundaryTable
         c_Row = table.currentRow()
 
-        unit = boundTable.cellWidget(c_Row, 4).text()
+        unit = boundTable.cellWidget(c_Row, 4).currentText()
 
         if isinstance(obj, QComboBox):
             if obj.currentIndex() == 1:

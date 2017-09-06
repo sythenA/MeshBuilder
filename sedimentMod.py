@@ -391,45 +391,41 @@ class bedSettingModule:
 
     def rockAllowed(self):
         if self.dlg.rockErosionCheck.checkState() == Qt.Checked:
-            self.dlg.typesOfRockEdit.setEnabled(True)
             self.dlg.bedRockSetTable.setEnabled(True)
-            self.dlg.typesOfRockEdit.textChanged.connect(self.setRockProperties)
         else:
-            self.dlg.typesOfRockEdit.setEnabled(False)
+            self.dlg.bedRockSetTable.setEnabled(False)
 
     def setRockProperties(self):
-        self.dlg.bedRockSetTable.clear()
-        self.dlg.bedRockSetTable.setRowCount(0)
-        self.dlg.bedRockSetTable.setColumnCount(0)
-
-        rockTypes = int(self.dlg.typesOfRockEdit.text())
+        rockTypes = self.rockTypes
         table = self.dlg.bedRockSetTable
+        rows = self.dlg.bedRockSetTable.rowCount()
         table.setRowCount(2*rockTypes)
         table.setColumnCount(7)
 
-        for i in range(0, rockTypes):
-            proSelector = QComboBox()
-            proSelector.addItem('Reclamation')
-            proSelector.addItem('Stream-Power')
+        if rows < rockTypes*2:
+            for i in range(rows, rockTypes*2, 2):
+                proSelector = QComboBox()
+                proSelector.addItem('Reclamation')
+                proSelector.addItem('Stream-Power')
 
-            proSelector.currentIndexChanged.connect(
-                self.setRockPropertyType)
-            table.setCellWidget(i*2, 0, proSelector)
-            for j in range(1, 6):
-                table.setItem(i*2+1, j, QTableWidgetItem(u''))
+                proSelector.currentIndexChanged.connect(
+                    self.setRockPropertyType)
+                table.setCellWidget(i, 0, proSelector)
+                for j in range(1, 6):
+                    table.setItem(i+1, j, QTableWidgetItem(u''))
 
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 1, QTableWidgetItem('d_cover'))
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 2, QTableWidgetItem('K_h'))
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 3, QTableWidgetItem('TAU_cri'))
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 4, QTableWidgetItem('K_a'))
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 5, QTableWidgetItem('Young'))
-            self.dlg.bedRockSetTable.setItem(
-                i*2, 6, QTableWidgetItem('Tensile'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 1, QTableWidgetItem('d_cover'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 2, QTableWidgetItem('K_h'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 3, QTableWidgetItem('TAU_cri'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 4, QTableWidgetItem('K_a'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 5, QTableWidgetItem('Young'))
+                self.dlg.bedRockSetTable.setItem(
+                    i, 6, QTableWidgetItem('Tensile'))
 
     def setRockPropertyType(self):
         c_Row = self.dlg.bedRockSetTable.currentRow()
@@ -462,12 +458,15 @@ class bedSettingModule:
                 c_Row, 4, QTableWidgetItem('Beta'))
             self.dlg.bedRockSetTable.setItem(
                 c_Row, 5, QTableWidgetItem('kh'))
+            self.dlg.bedRockSetTable.setItem(
+                c_Row, 6, QTableWidgetItem(''))
             KhSelector = QComboBox()
             KhSelector.setEditable(True)
             KhSelector.addItem(u'')
             KhSelector.addItem('Use File')
             KhSelector.currentIndexChanged.connect(self.useKhFile)
             self.dlg.bedRockSetTable.setCellWidget(c_Row+1, 5, KhSelector)
+            self.dlg.bedRockSetTable.setItem(c_Row+1, 6, QTableWidgetItem(''))
 
     def useKhFile(self):
         caption = 'Please choose a file for distributed Kh Value.'
@@ -604,6 +603,7 @@ class bedSettingModule:
 
     def setBedLayerInZone(self):
         idx = self.dlg.zoneBedSelector.currentIndex()
+        self.rockTypeCount()
         totalLayers = int(self.dlg.layerInZoneEdit.text())
         currentRegion = self.dlg.bedLayerTree.topLevelItem(idx)
         currLayers = currentRegion.childCount()
@@ -662,6 +662,26 @@ class bedSettingModule:
                 self.nextLayerpreSet = layerPhys + "; " + recString
             except:
                 pass
+        self.rockTypeCount()
+
+    def rockTypeCount(self):
+        self.rockTypes = 0
+        Regions = self.dlg.bedLayerTree.topLevelItemCount()
+        for i in range(0, Regions):
+            item = self.dlg.bedLayerTree.topLevelItem(i)
+            layers = item.childCount()
+            try:
+                for j in range(0, layers):
+                    textString = item.child(j).text(1)
+                    if 'ROCK' in re.split(';', textString)[1]:
+                        self.rockTypes += 1
+                        textString = re.split(';', textString)[0]
+                        textString = (textString + '; ROCK ' +
+                                      str(self.rockTypes))
+                        item.child(j).setText(1, textString)
+            except:
+                pass
+        self.setRockProperties()
 
     def bedLayersExport(self):
         tree = self.dlg.bedLayerTree
@@ -711,7 +731,7 @@ Varying_Thickness, ZEROing_for_Gradation_and_Elevation) (YES or NO)\n'
 
         table = self.dlg.bedRockSetTable
         if self.dlg.rockErosionCheck.isChecked():
-            for i in range(0, int(self.dlg.typesOfRockEdit.text())):
+            for i in range(0, self.rockTypes):
                 layerText += '// Erodible Rock Model Used (REC or STREAM)\n'
                 if table.cellWidget(i*2, 0).currentIndex() == 0:
                     layerText += 'RECLAMATION\n'
