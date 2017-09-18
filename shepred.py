@@ -370,7 +370,6 @@ of T1 T2 ...  EMPTY means the end\n')
         return f
 
     def fixOutputIntv(self):
-        self.dlg.outIntvEdit.setEnabled(False)
         self.dlg.addIntvBtn.setEnabled(False)
         self.dlg.deleteIntvBtn.setEnabled(False)
         self.dlg.OutIntvTable.setEnabled(False)
@@ -1060,7 +1059,12 @@ Curve.'
             elif column == 3:
                 self.drawChartofBoundary(fileName, 'stage', unit)
 
-            table.setItem(row, column, QTableWidgetItem(fileName))
+            try:
+                copy2(fileName, os.path.join(self.projFolder, 'sim'))
+                table.setItem(row, column,
+                              QTableWidgetItem(os.path.basename(fileName)))
+            except:
+                table.setItem(row, column, QTableWidgetItem(fileName))
         else:
             pass
 
@@ -1108,8 +1112,11 @@ Curve.'
             f.close()
             title = os.path.basename(fileName)
             for i in range(3, len(dat)):
-                T.append(dat[i].split()[0])
-                Y.append(dat[i].split()[1])
+                try:
+                    T.append(dat[i].split()[0])
+                    Y.append(dat[i].split()[1])
+                except(IndexError):
+                    pass
 
             f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
             filename = os.path.join(self.projFolder, 'data.dat')

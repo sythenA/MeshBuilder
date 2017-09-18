@@ -9,7 +9,7 @@ import re
 
 
 class bedLayer:
-    def __init__(self, iface, gradNum, caption, rockUsed=False, rockTypes=0,
+    def __init__(self, iface, gradNum, caption, rockUsed=False,
                  presetString=''):
         self.iface = iface
         self.preset = presetString
@@ -34,7 +34,6 @@ class bedLayer:
         self.grads = len(gradNum)
         self.gradsPartical = gradNum
 
-        self.rockType = rockTypes
         items1 = ['Fraction', 'Cumulative']
         items2 = ['Fraction', 'Cumulative', 'Rock']
 
@@ -101,6 +100,8 @@ class bedLayer:
         elif self.dlg.recTypeCombo.currentIndex() == 1:
             D = list()
             P = list()
+            D.append(str(self.gradsPartical[0][0]))
+            P.append(str(0))
             for j in range(0, columns):
                 D.append(float(table.item(3, j).text()))
                 P.append(float(table.item(5, j).text()))
@@ -195,7 +196,7 @@ class bedLayer:
                 secondEle = secondEle + table.item(5, j).text() + " "
             secondEle = secondEle[:-1]
         elif self.dlg.recTypeCombo.currentIndex() == 2:
-            secondEle = table.cellWidget(2, 1).currentText()
+            secondEle = ''
 
         resultString = firstEle + ' ' + secondEle
         return physicString, resultString
@@ -262,10 +263,7 @@ class bedLayer:
             self.dlg.removeColumnBtn.setEnabled(False)
 
             table.setColumnCount(2)
-            table.setRowCount(3)
-            rockTypeBox = QComboBox()
-            for j in range(0, self.rockType):
-                rockTypeBox.addItem(str(j+1))
+            table.setRowCount(2)
 
             table.setItem(0, 0, QTableWidgetItem('Thickness'))
             table.setItem(0, 1, QTableWidgetItem('Unit'))
@@ -275,6 +273,4 @@ class bedLayer:
             table.setCellWidget(1, 1, UnitSelector)
             table.setItem(1, 2, QTableWidgetItem(u''))
 
-            table.setItem(2, 0, QTableWidgetItem('Type of Rocks'))
-            table.setCellWidget(2, 1, rockTypeBox)
             self.dlg.chartBtn.setEnabled(False)

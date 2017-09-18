@@ -1143,7 +1143,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="sediPropertyTab">
       <attribute name="title">
@@ -2359,32 +2359,6 @@
         <string>Use Bedrock Erosion</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_39">
-       <property name="geometry">
-        <rect>
-         <x>200</x>
-         <y>152</y>
-         <width>121</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Total Types of Rock</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="typesOfRockEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>320</x>
-         <y>144</y>
-         <width>41</width>
-         <height>31</height>
-        </rect>
-       </property>
-      </widget>
      </widget>
      <widget class="QWidget" name="rockSettingsTab">
       <attribute name="title">
@@ -2725,7 +2699,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_5">
       <attribute name="title">

@@ -644,15 +644,10 @@ class bedSettingModule:
             else:
                 useRock = False
 
-            try:
-                rockType = int(self.dlg.typesOfRockEdit.text())
-            except(ValueError):
-                rockType = 0
             gradClass = self.getGradClass()
             if gradClass:
                 layerDialog = bedLayer(iface, gradClass,
                                        caption, rockUsed=useRock,
-                                       rockTypes=rockType,
                                        presetString=presetString)
             else:
                 onCritical(127)
@@ -766,7 +761,7 @@ class bankErosionMod:
         self.bankDepositionMesh = ''
 
         self.dlg.bankErosionChkBox.stateChanged.connect(self.activateModel)
-        self.dlg.solverTabWidget.currentChanged.connect(self.setBankTable)
+        self.dlg.sedimentTab.currentChanged.connect(self.setBankTable)
         caption = u'請選擇岸壁沖蝕後的網格檔案(.2dm)'
         self.dlg.remeshFileSelector.clicked.connect(
             lambda: fileBrowser(self.dlg, caption,
@@ -820,7 +815,7 @@ class bankErosionMod:
                 onCritical(130)
         self.dlg.bankTimeStep.setText(self.dlg.lineEditTStep.text())
 
-        self.dlg.bankPairTable.setHorizontalHeaderLabels(['Toe', 'Top'])
+        self.dlg.bankPairTable.setHorizontalHeaderLabels([u'Toe', u'Top'])
         self.dlg.bankPairTable.setColumnCount(2)
         self.dlg.bankPairTable.setColumnWidth(0, 60)
         self.dlg.bankPairTable.setColumnWidth(1, 60)

@@ -104,7 +104,7 @@ class mesh2DView:
                     {int(line[1]): (float(line[2]), float(line[3]),
                                     float(line[4]))})
             elif line[0] in meshType.keys():
-                Regions.append(line[-1])
+                Regions.append(int(line[-1]))
             elif line[0] == 'NS':
                 for i in range(1, len(line)):
                     oneString.append(fabs(int(line[i])))
@@ -123,7 +123,7 @@ class mesh2DView:
         fields.append(QgsField("id", QVariant.Int))
         layerList = list()
         for i in range(0, len(Regions)):
-            layerName = 'Material' + Regions[i]
+            layerName = 'Material' + str(Regions[i])
             path = os.path.join(self.dlg.folderLineEdit.text(),
                                 layerName + '.shp')
             self.iface.messageBar().pushMessage(path)
