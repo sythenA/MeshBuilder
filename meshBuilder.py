@@ -42,6 +42,7 @@ import os.path
 import newPointLayer
 import lineFrame
 import subprocess
+import re
 from innerLayers import innerLayersExport
 from exportToGeo import genGeo
 from shutil import rmtree
@@ -1776,15 +1777,23 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
     def genShpFolder(self, shpFolder):
         if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
-            if shpFolder[-2] == '_':
+            folderSplit = re.split('_', shpFolder)
+            if len(folderSplit) == 1:
+                shpFolder = shpFolder + '_1'
+                shpFolder = self.genShpFolder(shpFolder)
+                return shpFolder
+            else:
                 try:
-                    shpFolder[-1] = str(int(shpFolder[-1])+1)
+                    _shpFolder = ''
+                    for i in range(0, len(folderSplit)-1):
+                        _shpFolder = _shpFolder + folderSplit[i]
+                    shpFolder = _shpFolder + '_' + str(int(folderSplit[-1])+1)
+                    shpFolder = self.genShpFolder(shpFolder)
+                    return shpFolder
                 except:
                     shpFolder = shpFolder + '_1'
-            else:
-                shpFolder = shpFolder + '_1'
-
-            return shpFolder
+                    shpFolder = self.genShpFolder(shpFolder)
+                    return shpFolder
         else:
             return shpFolder
 
@@ -1817,6 +1826,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             subprocess.call(['mkdir', os.path.join(self.projFolder, 'MeshShp',
                                                    shpFolder)])
 
+        iface.messageBar().pushMessage(os.path.join(self.projFolder, 'MeshShp',
+                                                    shpFolder))
         outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
 
         if os.path.isfile(meshFile):
