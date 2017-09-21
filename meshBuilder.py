@@ -393,8 +393,8 @@ class meshBuilder:
                     os.remove(os.path.join(projFolder, name))
                 except:
                     try:
-                        subprocess.Popen(['del', os.path.join(projFolder,
-                                                              name)])
+                        subprocess.call(['cmd', '/c', 'del',
+                                         os.path.join(projFolder, name)])
                     except:
                         pass
 
@@ -404,10 +404,10 @@ class meshBuilder:
                 os.system('mkdir ' + os.path.join(projFolder, 'MainLayers'))
             except:
                 try:
-                    subprocess.Popen(['RD', os.path.join(projFolder,
-                                                         'MainLayers')])
-                    os.system('mkdir ' + os.path.join(projFolder, 'MainLayers'))
-                    # os.mkdir(os.path.join(projFolder, 'MainLayers'))
+                    subprocess.call(['cmd', '/c', 'RD',
+                                     os.path.join(projFolder, 'MainLayers')])
+                    subprocess.call(['cmd', '/c', 'mkdir ',
+                                     os.path.join(projFolder, 'MainLayers')])
                 except:
                     pass
         else:
@@ -420,10 +420,10 @@ class meshBuilder:
                 # os.mkdir(os.path.join(projFolder, 'InnerLayers'))
             except:
                 try:
-                    subprocess.Popen(['RD', os.path.join(projFolder,
-                                                         'InnerLayers')])
-                    os.system('mkdir ' + os.path.join(projFolder,
-                                                      'InnerLayers'))
+                    subprocess.call(['cmd', '/c', 'RD',
+                                     os.path.join(projFolder, 'InnerLayers')])
+                    subprocess.call(['cmd', '/c', 'mkdir ',
+                                     os.path.join(projFolder, 'InnerLayers')])
                     # os.mkdir(os.path.join(projFolder, 'InnerLayers'))
                 except:
                     pass
@@ -437,9 +437,10 @@ class meshBuilder:
                 # os.mkdir(os.path.join(projFolder, 'MeshShp'))
             except:
                 try:
-                    subprocess.Popen(['RD', os.path.join(projFolder,
-                                                         'MeshShp')])
-                    os.system('mkdir ' + os.path.join(projFolder, 'MeshShp'))
+                    subprocess.call(['cmd', '/c', 'RD',
+                                     os.path.join(projFolder, 'MeshShp')])
+                    subprocess.call(['cmd', '/c', 'mkdir',
+                                     os.path.join(projFolder, 'MeshShp')])
                     # os.mkdir(os.path.join(projFolder, 'MeshShp'))
                 except:
                     pass
@@ -1547,9 +1548,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
             QgsMapLayerRegistry.instance().removeMapLayers(idList)
             del self.pointLayer
             self.switchAttr(Type='poly')
-            subprocess.call(['rm', self.projFolder, 'MainLayers',
+            subprocess.call(['cmd', '/c', 'rm', self.projFolder, 'MainLayers',
                              'MainLines_frame.*'])
-            subprocess.call(['rm', self.projFolder, 'MainLayers',
+            subprocess.call(['cmd', '/c', 'rm', self.projFolder, 'MainLayers',
                              'MainPoint_frame.*'])
             self.step2_1()
             self.dlg.setCompleteBtn.setText(u'圖層設定完成')
@@ -1564,7 +1565,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
             QgsMapLayerRegistry.instance().removeMapLayers(idList)
             del self.pointLayer
             self.switchAttr(Type='poly')
-            # subprocess.call(['rm', self.projFolder, 'MainPoint_frame.*'])
             folderFiles = os.listdir(os.path.join(self.projFolder,
                                                   'MainLayers'))
             for fileName in folderFiles:
@@ -1786,8 +1786,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
                 try:
                     _shpFolder = ''
                     for i in range(0, len(folderSplit)-1):
-                        _shpFolder = _shpFolder + folderSplit[i]
-                    shpFolder = _shpFolder + '_' + str(int(folderSplit[-1])+1)
+                        _shpFolder += (folderSplit[i] + '_')
+                    shpFolder = _shpFolder + str(int(folderSplit[-1])+1)
                     shpFolder = self.genShpFolder(shpFolder)
                     return shpFolder
                 except:
@@ -1812,22 +1812,22 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             self.projFolder = self.dlg.whereMshLayerEdit.text()
 
         if not os.path.isdir(os.path.join(self.projFolder, 'MeshShp')):
-            subprocess.call(['mkdir', os.path.join(self.projFolder, 'MeshShp')])
+            subprocess.call(['cmd', '/c', 'mkdir',
+                             os.path.join(self.projFolder, 'MeshShp')])
 
         if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
             try:
                 shpFolder = self.genShpFolder(shpFolder)
-                subprocess.call(['mkdir', os.path.join(self.projFolder,
-                                                       'MeshShp',
-                                                       shpFolder)])
+                subprocess.call(['cmd', '/c', 'mkdir',
+                                 os.path.join(self.projFolder, 'MeshShp',
+                                              shpFolder)])
             except:
-                pass
+                shpFolder = ''
         else:
-            subprocess.call(['mkdir', os.path.join(self.projFolder, 'MeshShp',
-                                                   shpFolder)])
+            subprocess.call(['cmd', '/c', 'mkdir',
+                             os.path.join(self.projFolder, 'MeshShp',
+                                          shpFolder)])
 
-        iface.messageBar().pushMessage(os.path.join(self.projFolder, 'MeshShp',
-                                                    shpFolder))
         outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
 
         if os.path.isfile(meshFile):
@@ -1884,11 +1884,11 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         ibcPath = os.path.join(dirname, ibcName)
         mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            subprocess.call([os.path.join(mainDir, "GMSH2SRH.exe"), mshPath,
-                            path2dm, ibcPath])
+            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+                             mshPath, path2dm, ibcPath])
         else:
-            subprocess.call([os.path.join(mainDir, "GMSH2SRH.exe"), mshPath,
-                            path2dm])
+            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+                             mshPath, path2dm])
         self.dlg.label_21.setText(u'輸出為' + path2dm)
 
     def changeTo2dm(self):
@@ -1902,11 +1902,11 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         ibcPath = os.path.join(dirname, ibcName)
         mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            subprocess.call([os.path.join(mainDir, "GMSH2SRH.exe"), meshFile,
-                            path2dm, ibcPath])
+            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+                             meshFile, path2dm, ibcPath])
         else:
-            subprocess.call([os.path.join(mainDir, "GMSH2SRH.exe"), meshFile,
-                            path2dm])
+            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+                             meshFile, path2dm])
         iface.messageBar().pushMessage(".msh Transfomed to .2dm",
                                        level=QgsMessageBar.INFO)
         self.dlg.label_26.setText(u'輸出為' + path2dm)
