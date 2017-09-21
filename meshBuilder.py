@@ -1774,6 +1774,20 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         crsType = QgsCoordinateReferenceSystem.InternalCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(crsId, crsType)
 
+    def genShpFolder(self, shpFolder):
+        if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
+            if shpFolder[-2] == '_':
+                try:
+                    shpFolder[-1] = str(int(shpFolder[-1])+1)
+                except:
+                    shpFolder = shpFolder + '_1'
+            else:
+                shpFolder = shpFolder + '_1'
+
+            return shpFolder
+        else:
+            return shpFolder
+
     def loadGeneratedMesh(self):
         refId = QgsCoordinateReferenceSystem.EpsgCrsId
         if not self.systemCRS:
@@ -1793,7 +1807,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
         if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
             try:
-                rmtree(os.path.join(self.projFolder, 'MeshShp', shpFolder))
+                shpFolder = self.genShpFolder(shpFolder)
                 subprocess.call(['mkdir', os.path.join(self.projFolder,
                                                        'MeshShp',
                                                        shpFolder)])
