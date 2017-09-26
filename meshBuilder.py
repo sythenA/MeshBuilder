@@ -404,7 +404,7 @@ class meshBuilder:
                 os.system('mkdir ' + os.path.join(projFolder, 'MainLayers'))
             except:
                 try:
-                    subprocess.call(['cmd', '/c', 'RD',
+                    subprocess.call(['cmd', '/c', 'RD', '/S', '/Q',
                                      os.path.join(projFolder, 'MainLayers')])
                     subprocess.call(['cmd', '/c', 'mkdir ',
                                      os.path.join(projFolder, 'MainLayers')])
@@ -420,7 +420,7 @@ class meshBuilder:
                 # os.mkdir(os.path.join(projFolder, 'InnerLayers'))
             except:
                 try:
-                    subprocess.call(['cmd', '/c', 'RD',
+                    subprocess.call(['cmd', '/c', 'RD', '/S', '/Q',
                                      os.path.join(projFolder, 'InnerLayers')])
                     subprocess.call(['cmd', '/c', 'mkdir ',
                                      os.path.join(projFolder, 'InnerLayers')])
@@ -437,7 +437,7 @@ class meshBuilder:
                 # os.mkdir(os.path.join(projFolder, 'MeshShp'))
             except:
                 try:
-                    subprocess.call(['cmd', '/c', 'RD',
+                    subprocess.call(['cmd', '/c', 'RD', '/S/', '/Q',
                                      os.path.join(projFolder, 'MeshShp')])
                     subprocess.call(['cmd', '/c', 'mkdir',
                                      os.path.join(projFolder, 'MeshShp')])
@@ -1438,8 +1438,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
     def readPolyLayer(self):
         path = self.dlg.polyIndicator.text()
-        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        iface.setActiveLayer(layer)
+        layer = self.iface.addVectorLayer(path, QFileInfo(path).baseName(),
+                                          'ogr')
+        self.iface.setActiveLayer(layer)
 
         self.dlg.polyConfirm.setEnabled(False)
         self.mainLayer = layer
@@ -1450,7 +1451,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
     def readPointLayer(self):
         path = self.dlg.pointIndicator.text()
-        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
+        layer = self.iface.addVectorLayer(path, QFileInfo(path).baseName(),
+                                          'ogr')
         iface.setActiveLayer(layer)
 
         self.dlg.pointConfirm.setEnabled(False)
@@ -1461,8 +1463,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
     def readLineLayer(self):
         path = self.dlg.lineIndicator.text()
-        layer = iface.addVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        iface.setActiveLayer(layer)
+        layer = self.iface.addVectorLayer(path, QFileInfo(path).baseName(),
+                                          'ogr')
+        self.iface.setActiveLayer(layer)
 
         self.dlg.lineConfirm.setEnabled(False)
         self.lineLayer = layer
@@ -1526,8 +1529,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
             folderFiles = os.listdir(self.projFolder)
             for fileName in folderFiles:
                 if 'MainLines_frame' in fileName:
-                    os.remove(os.path.join(self.projFolder, 'MainLayers',
-                                           fileName))
+                    subprocess.Popen(
+                        ['del', os.path.join(self.projFolder, 'MainLayers',
+                                             fileName)])
             self.step2_2()
         elif process == 3:
             layerList = QgsMapLayerRegistry.instance().mapLayersByName(
@@ -1570,8 +1574,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
             for fileName in folderFiles:
                 if 'MainPoint_frame' in fileName:
                     try:
-                        os.remove(os.path.join(self.projFolder, 'MainLayers',
-                                               fileName))
+                        subprocess.Popen(['del',
+                                          os.path.join(self.projFolder,
+                                                       'MainLayers', fileName)])
                     except:
                         pass
 
@@ -1953,8 +1958,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
     def dirEmpty(self, directory, lineEdit, lineEditText):
         try:
             files = os.listdir(directory)
-            files.remove("MainLayers")
-            files.remove("InnerLayers")
+            subprocess.Popen(['RD', '/S', '/Q', "mainLayers"])
+            subprocess.Popen(['RD', '/S', '/Q', "InnerLayers"])
             if files:
                 onWarning(300, lineEdit, lineEditText)
         except(WindowsError, ValueError):
@@ -1964,11 +1969,6 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
 
         refId = QgsCoordinateReferenceSystem.PostgisCrsId
         self.systemCRS = QgsCoordinateReferenceSystem(3826, refId)
-        self.dlg.lineEdit.clear()
-
-        self.dlg.polyIndicator.clear()
-        self.dlg.pointIndicator.clear()
-        self.dlg.lineIndicator.clear()
 
         """Run method that performs all the real work"""
 
@@ -2248,19 +2248,6 @@ def arangeNodeLines(NodeLayer, physicsRef):
     return physicalNodes
 
 
-def whereHead(physLines, twoEnds):
-    head = 0
-    tail = 0
-    for item in twoEnds:
-        for line in physLines:
-            if item in line:
-                if line[0] == item:
-                    head = item
-                elif line[-1] == item:
-                    tail = item
-    return (head, tail)
-
-
 def physSegArrange(physicalSeg, twoEnds):
     def findNext(node):
         for i in range(0, len(physicalSeg)):
@@ -2301,16 +2288,14 @@ def physSegArrange(physicalSeg, twoEnds):
             _ArrangedSegs.append(line)
             startNode = line[1]
         except(TypeError):
-            QgsMessageLog.instance().logMessage('Physical Boundary Break in Nod\
-e:' + str(startNode))
+            QgsMessageLog.instance().logMessage('Physical Boundary Break in sin\
+gular Node:' + str(startNode))
     _ArrangedSegs.append(physicalSeg.pop(0))
 
     return _ArrangedSegs
 
 
 def headAndTail(refList, physicalSeg):
-    # f = open(os.path.join(os.path.dirname(__file__), 'errorText.txt'), 'w')
-    # f.write(str(len(refList)) + "\n")
     ArrangedSeg = copy(physicalSeg)
     for key in refList.keys():
         if len(physicalSeg[key]) > 0:
@@ -2322,8 +2307,6 @@ def headAndTail(refList, physicalSeg):
                 if nodes[node] == 1:
                     terminals.append(node)
 
-            # (head, tail) = whereHead(physicalSeg[key], terminals)
-            # f.write(str(head) + " " + str(tail) + "\n")
             ArrangedSeg[key] = physSegArrange(physicalSeg[key], terminals)
         else:
             continue
@@ -2371,27 +2354,6 @@ def makeDict(c_phySeq):
     for i in range(0, len(c_phySeq)):
         newDict.update({c_phySeq[i]: i})
     return newDict
-
-
-def arangeMesh(OutDir, gridNames, physicsRef, nodeRef):
-    meshLines = list()
-    for name in gridNames:
-        ref = physicCode(name, physicsRef)
-        layername = os.path.join(OutDir, name + ".shp")
-        layer = QgsVectorLayer(layername, QFileInfo(layername).baseName(),
-                               'ogr')
-        for feature in layer.getFeatures():
-            geo = feature.geometry().asPolygon()
-            geo[0].pop(-1)
-            line = str(len(geo[0])-1) + " 2 " + str(ref) + " 0 "
-
-            for point in geo[0]:
-                fid = nodeRef[point]
-                line = line + str(fid) + " "
-            line = line[:-1] + "\n"
-            meshLines.append(line)
-
-    return meshLines
 
 
 def getGridNames(NodeLayer, SegLayer, ZoneLayer):

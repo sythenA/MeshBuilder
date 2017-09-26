@@ -992,13 +992,13 @@ Curve.'
                     '" noenhanced\n')
             if unit == 'SI':
                 f.write('set ylabel "Sediment Input(m^3/s)"\n')
-                if 'RATING_CURVE' in dat[0]:
+                if 'RATING_CURVE' in dat[0].upper():
                     f.write('set xlabel "Flowrate (m^3/s)"\n')
                 else:
                     f.write('set xlabel "hr"\n')
             else:
                 f.write('set ylabel "Sediment Input(ft^3/s)"\n')
-                if 'RATING_CURVE' in dat[0]:
+                if 'RATING_CURVE' in dat[0].upper():
                     f.write('set xlabel "Flowrate (cfs)"\n')
                 else:
                     f.write('set xlabel "hr"\n')
