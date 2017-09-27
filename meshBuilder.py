@@ -460,7 +460,7 @@ class meshBuilder:
         mshPreview(Path, self.systemCRS, outDir, self.dlg)
 
     def step1_1(self):
-        projFolder = str(self.dlg.lineEdit.text())
+        projFolder = self.dlg.lineEdit.text().encode('big5')
         self.projFolder = projFolder
         self.cleanProjFolder(projFolder)
 
@@ -554,7 +554,8 @@ class meshBuilder:
         elif not os.path.isdir(self.dlg.lineEdit.text()):
             onCritical(102)
         else:
-            self.__parameter__['projFolder'] = self.dlg.lineEdit.text()
+            folderStr = self.dlg.lineEdit.text().encode('big5')
+            self.__parameter__['projFolder'] = folderStr
             self.step1_1()
         self.dlg.__parameter__ = self.__parameter__
 

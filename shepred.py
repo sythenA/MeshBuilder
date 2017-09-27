@@ -1029,7 +1029,7 @@ Curve.'
                 self.dlg.rbtnSolverMobile.isChecked()):
             onCritical(129)
 
-        sediAllowed = [0, 3]
+        sediAllowed = [0]
         for i in range(0, table.rowCount()):
             comboWig = table.cellWidget(i, 1)
             sediWig = table.cellWidget(i, 2)

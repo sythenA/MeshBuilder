@@ -62,7 +62,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_step1">
        <attribute name="title">
@@ -812,7 +812,7 @@
           </font>
          </property>
          <property name="text">
-          <string>請指定建立新圖層的資料夾</string>
+          <string>請指定專案資料夾</string>
          </property>
         </widget>
         <widget class="QLineEdit" name="whereMshLayerEdit">
