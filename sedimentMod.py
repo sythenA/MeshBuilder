@@ -11,7 +11,8 @@ from math import ceil
 from bankPropDiag import bankProp
 import re
 import shepred
-import os.path
+import os
+import subprocess
 
 
 class sedimentModule:
@@ -72,7 +73,7 @@ class sedimentModule:
                 'Please assign a file containing cohesive sediment \n\
 concentration and falling velocity relation.')
             caption = u'請選擇指定顆粒落下速度與粒徑關係的檔案'
-            fileBrowser(self.dlg, caption, self.dlg.projFolder,
+            fileBrowser(self.dlg, caption, self.dlg.saveFolderEdit.text(),
                         self.dlg.label_40, '*.*')
 
     def cleanEqDependentTable(self):
@@ -303,7 +304,7 @@ d_sand; Theta=T1+(T2-T1)*Exp(-20F_s)\n'
             capacityString += ('25.0' + '\n')
         capacityString += '// Start Time in hours for the Sediment Solver\n'
         if self.dlg.sediStartingEdit.text():
-            capacityString += str(int(self.dlg.sediStartingEdit.text()))
+            capacityString += str(int(str(self.dlg.sediStartingEdit.text())))
             capacityString += '\n'
         else:
             capacityString += '\n'
@@ -386,7 +387,7 @@ class bedSettingModule:
         self.dlg.rdoBedUniform.clicked.connect(self.setBedToUniform)
         self.dlg.rdoBedZonal.clicked.connect(self.setBedToZone)
         self.dlg.rockErosionCheck.stateChanged.connect(self.rockAllowed)
-        self.dlg.readMeshBtn.pressed.connect(self.getPhysRegionFromMain)
+        self.dlg.readMeshBtn.clicked.connect(self.getPhysRegionFromMain)
         self.dlg.setBed2dmBtn.clicked.connect(self.getBedPhysRegion)
 
     def rockAllowed(self):
@@ -470,7 +471,7 @@ class bedSettingModule:
 
     def useKhFile(self):
         caption = 'Please choose a file for distributed Kh Value.'
-        fileBrowser(self.dlg, caption, self.dlg.projFolder,
+        fileBrowser(self.dlg, caption, self.dlg.saveFolderEdit.text(),
                     presetType='*.2dm')
 
     def getPhysRegionFromMain(self):
@@ -520,7 +521,12 @@ class bedSettingModule:
                 _physRef.update({i+1: str(physRef[i])})
             self.boundsRef = boundsRef
             self.physRef = _physRef
-            self.dlg.label_45.setText(selector.mesh2dm)
+            iface.messageBar().pushMessage(selector.mesh2dm)
+            subprocess.call(['cmd', '/c', 'copy', '/Y',
+                             selector.mesh2dm.replace('/', '\\'),
+                             os.path.join(self.dlg.saveFolderEdit.text(),
+                                          'sim')])
+            self.dlg.label_45.setText(os.path.basename(selector.mesh2dm))
 
             if selector.meshMsh:
                 boundsRef, physRef = shepred.readMshMesh(selector.meshMsh)
@@ -598,7 +604,7 @@ class bedSettingModule:
 
     def inputSelector(self):
         caption = 'Please choose a file for distributed bed layer input.'
-        fileBrowser(self.dlg, caption, self.dlg.projFolder,
+        fileBrowser(self.dlg, caption, self.dlg.saveFolderEdit.text(),
                     self.dlg.bedDistriEdit, presetType='*.*')
 
     def setBedLayerInZone(self):
@@ -690,7 +696,8 @@ POINT)\n'
             layerText += 'ZONAL\n'
             layerText += '// Bed Gradation Zone Input Method: 2DM File Name\n'
             if self.dlg.sameFileAsFlowBox.isChecked():
-                layerText += (self.dlg.lineEditMeshFileName.text() + '\n')
+                layerText += (
+                    os.path.basename(self.dlg.lineEditMeshFileName.text())+'\n')
             else:
                 layerText += (self.dlg.label_45.text() + '\n')
             layerText += '// Number of Bed Property Zones\n'
@@ -762,14 +769,19 @@ class bankErosionMod:
 
         self.dlg.bankErosionChkBox.stateChanged.connect(self.activateModel)
         self.dlg.sedimentTab.currentChanged.connect(self.setBankTable)
-        caption = u'請選擇岸壁沖蝕後的網格檔案(.2dm)'
-        self.dlg.remeshFileSelector.clicked.connect(
-            lambda: fileBrowser(self.dlg, caption,
-                                self.dlg.saveFolderEdit.text(),
-                                self.dlg.remeshLabel, '(*.2dm)'))
+        self.dlg.remeshFileSelector.clicked.connect(self.setRemeshZone)
         self.dlg.erosionModTable.itemClicked.connect(self.callPopUp)
         self.dlg.remeshZoneChk.stateChanged.connect(self.remeshFileChk)
         self.dlg.bankModBox.currentIndexChanged.connect(self.depositionFile)
+
+    def setRemeshZone(self):
+        caption = u'請選擇指定網格可變區域的網格檔案(.2dm)'
+        fileName = fileBrowser(self.dlg, caption,
+                               self.dlg.saveFolderEdit.text(),
+                               self.dlg.remeshLabel, '(*.2dm)')
+        subprocess.call(['cmd', '/c', 'copy', '/Y', fileName.replace('/', '\\'),
+                         os.path.join(self.dlg.saveFolderEdit.text(), 'sim')])
+        self.dlg.remeshLabel.setText(os.path.basename(fileName))
 
     def depositionFile(self):
         idx = self.dlg.bankModBox.currentIndex()
@@ -779,11 +791,15 @@ class bankErosionMod:
             fileName = fileBrowser(self.dlg, caption,
                                    self.dlg.saveFolderEdit.text(),
                                    presetType='(*.2dm)')
+            subprocess.call(['cmd', '/c', 'copy', '/Y',
+                             fileName.replace('/', '\\'),
+                             os.path.join(self.dlg.saveFolderEdit.text(),
+                                          'sim')])
             self.dlg.erosionModTable.setEnabled(False)
         else:
             self.dlg.erosionModTable.setEnabled(True)
 
-        self.bankDepositionMesh = fileName
+        self.bankDepositionMesh = os.path.basename(fileName)
 
     def remeshFileChk(self):
         if self.dlg.remeshZoneChk.isChecked():

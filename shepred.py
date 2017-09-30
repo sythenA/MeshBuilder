@@ -238,7 +238,7 @@ class shepred:
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srhpre.bat')
         if not os.path.isdir(os.path.join(folderPath, 'sim')):
-            os.mkdir(os.path.join(folderPath, 'sim'))
+            subprocess.Popen(['mkdir', os.path.join(folderPath, 'sim')])
         dstPath = os.path.join(folderPath, 'sim', 'srhpre.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
@@ -249,7 +249,7 @@ class shepred:
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srh2d.bat')
         if not os.path.isdir(os.path.join(folderPath, 'sim')):
-            os.mkdir(os.path.join(folderPath, 'sim'))
+            subprocess.Popen(['mkdir', os.path.join(folderPath, 'sim')])
         dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
@@ -476,7 +476,7 @@ of T1 T2 ...  EMPTY means the end\n')
         fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
         saveFolder = os.path.join(self.dlg.saveFolderEdit.text(), 'sim')
         if not os.path.isdir(saveFolder):
-            os.mkdir(saveFolder)
+            subprocess.Popen(['mkdir', saveFolder])
         fullPath = os.path.join(saveFolder, fileName)
         useMobile = False
 
@@ -513,7 +513,13 @@ T_SIMU [FLAG]\n')
 
         f = self.onInitial(f)
         f.write('// Mesh FILE_NAME and FORMAT(SMS...)\n')
-        f.write(self.dlg.lineEditMeshFileName.text()+' SMS \n')
+        meshFileName = os.path.basename(
+            self.dlg.lineEditMeshFileName.text().encode('big5'))
+        subprocess.call(
+            ['cmd', '/c', 'copy', '/Y',
+             self.dlg.lineEditMeshFileName.text().replace('/', '\\'),
+             os.path.join(self.projFolder, 'sim')])
+        f.write(meshFileName + ' SMS \n')
         #  Bed Properties (If use Mobile)
         if useMobile:
             f.write(sediMod.bedLayerText)
@@ -623,8 +629,8 @@ ne means default is used\n')
                         sediFileName = self.dlg.sediBoundaryTable.item(i, 3
                                                                        ).text()
                         baseSediName = os.path.basename(sediFileName)
-                        copy2(sediFileName,
-                              os.path.join(self.projFolder, 'sim'))
+                        subprocess.Popen(['/Y', sediFileName,
+                                          os.path.join(self.projFolder, 'sim')])
                         line += (baseSediName + ' ')
                 line = line + table.cellWidget(i, 4).currentText()
 
@@ -806,8 +812,8 @@ cally, BED_SLOPE, WSE_MIN at the exit\n')
         if self.dlg.rbtnICZonal.isChecked():
             f.write('// Constant Setup for Initial Condition: n_zone [2DM_filen\
 ame]\n')
-            line = (str(len(self.meshRegion)) + " " +
-                    self.dlg.lineEditMeshFileName.text() + '\n')
+            meshName = os.path.basename(self.dlg.lineEditMeshFileName.text())
+            line = (str(len(self.meshRegion)) + " " + meshName + '\n')
             f.write(line)
             table = self.dlg.InitCondTable
             row = table.rowCount()
@@ -830,7 +836,11 @@ WSE [TK] [ED] [T]\n')
                 line = line[:-1] + '\n'
                 f.write(line)
         elif self.dlg.rbtnICRst.isChecked():
-            f.write(self.dlg.rstFileEdit.text() + '\n')
+            rstName = os.path.basename(self.dlg.rstFileEdit.text())
+            subprocess.call(['cmd', '/c', 'copy', '/Y',
+                             self.dlg.rstFileEdit.text().replace('/', '\\'),
+                             os.path.join(self.projFolder, 'sim')])
+            f.write(rstName + '\n')
 
         f.write('// Mesh-Unit (FOOT METER INCH MM MILE KM GSCALE)\n')
         f.write(self.onMeshUnit()+'\n')
@@ -1060,7 +1070,8 @@ Curve.'
                 self.drawChartofBoundary(fileName, 'stage', unit)
 
             try:
-                copy2(fileName, os.path.join(self.projFolder, 'sim'))
+                subprocess.Popen(['copy', '/Y', fileName,
+                                  os.path.join(self.projFolder, 'sim')])
                 table.setItem(row, column,
                               QTableWidgetItem(os.path.basename(fileName)))
             except:
