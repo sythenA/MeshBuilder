@@ -52,6 +52,7 @@ from operator import itemgetter
 from loadPara import loadParaView
 from mesh2DViewer import mesh2DView
 from zoneOrdDiag import zoneSeqIterator
+from selectorDiag import loadSelector
 import os
 import pickle
 # Initialize Qt resources from file resources.py
@@ -1246,7 +1247,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         if len(self.boundaryOrder) == 0:
             meshFile = self.dlg.whereMshEdit.text()
-            self.boundaryOrder = loadMshBoundaries(meshFile)
+            self.boundaryOrder, self.regionOrder = loadMshBoundaries(meshFile)
             boundaryOrder = self.boundaryOrder
         else:
             boundaryOrder = self.boundaryOrder
@@ -1804,51 +1805,85 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             return shpFolder
 
     def loadGeneratedMesh(self):
-        refId = QgsCoordinateReferenceSystem.EpsgCrsId
-        if not self.systemCRS:
-            systemCRS = QgsCoordinateReferenceSystem(3826, refId)
-        else:
-            systemCRS = self.systemCRS
-        meshFile = self.dlg.whereMshEdit.text()
-        shpFolder = os.path.splitext(os.path.basename(meshFile))[0]
-
-        try:
-            self.projFolder
-        except(AttributeError):
-            self.projFolder = self.dlg.whereMshLayerEdit.text()
-
-        if not os.path.isdir(os.path.join(self.projFolder, 'MeshShp')):
-            subprocess.call(['cmd', '/c', 'mkdir',
-                             os.path.join(self.projFolder, 'MeshShp')])
-
-        if os.path.isdir(os.path.join(self.projFolder, 'MeshShp', shpFolder)):
-            try:
-                shpFolder = self.genShpFolder(shpFolder)
+        def genMesh(meshFile, shpFolder, systemCRS):
+            if not os.path.isdir(os.path.join(self.projFolder, 'MeshShp')):
                 subprocess.call(['cmd', '/c', 'mkdir',
-                                 os.path.join(self.projFolder, 'MeshShp',
-                                              shpFolder)])
+                                os.path.join(self.projFolder, 'MeshShp')])
+
+            if os.path.isdir(os.path.join(self.projFolder, 'MeshShp',
+                                          shpFolder)):
+                try:
+                    shpFolder = self.genShpFolder(shpFolder)
+                    subprocess.call(['cmd', '/c', 'mkdir',
+                                     os.path.join(self.projFolder, 'MeshShp',
+                                                  shpFolder)])
+                except:
+                    shpFolder = ''
+            else:
+                subprocess.call(['cmd', '/c', 'mkdir',
+                                os.path.join(self.projFolder, 'MeshShp',
+                                             shpFolder)])
+
+            outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
+
+            if os.path.isfile(meshFile):
+                self.boundaryOrder, self.regionOrder = loadMesh(
+                    meshFile, systemCRS, outDir, self.dlg)
+            else:
+                onCritical(122)
+
+            msg = ''
+            for i in range(0, len(self.boundaryOrder)):
+                msg = self.boundaryOrder[i] + ", "
+            msg = msg[:-2]
+            iface.messageBar().pushMessage(msg)
+
+            try:
+                Instance = QgsMapLayerRegistry.instance()
+                NodeLayer = Instance.mapLayersByName("Nodes")[0]
+                iface.setActiveLayer(NodeLayer)
+                self.setTableToNodes(NodeLayer)
+                self.nodeLayer = NodeLayer
+
+                SegmentLayer = Instance.mapLayersByName("Segments")[0]
+                self.segLayer = SegmentLayer
+                self.segLayerStyle()
+
+                zoneLayer = Instance.mapLayersByName("Zones")[0]
+                self.zoneLayer = zoneLayer
+                self.zoneLayerStyle()
+
             except:
-                shpFolder = ''
-        else:
-            subprocess.call(['cmd', '/c', 'mkdir',
-                             os.path.join(self.projFolder, 'MeshShp',
-                                          shpFolder)])
+                if not os.path.isfile(meshFile):
+                    onCritical(116)
+                elif not os.path.isdir(outDir):
+                    onCritical(117)
 
-        outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
+        def loadOld(meshFile, shpFolder):
+            group = QgsProject.instance().layerTreeRoot().addGroup(shpFolder)
 
-        if os.path.isfile(meshFile):
-            self.boundaryOrder, self.regionOrder = loadMesh(
-                meshFile, systemCRS, outDir, self.dlg)
-        else:
-            onCritical(122)
+            folder = os.path.join(self.projFolder, 'MeshShp', shpFolder)
+            self.boundaryOrder, self.regionOrder = loadMshBoundaries(meshFile)
 
-        msg = ''
-        for i in range(0, len(self.boundaryOrder)):
-            msg = self.boundaryOrder[i] + ", "
-        msg = msg[:-2]
-        iface.messageBar().pushMessage(msg)
+            NodePath = os.path.join(folder, 'Nodes.shp')
+            nodelayer = QgsVectorLayer(NodePath, QFileInfo(NodePath).baseName(),
+                                       'ogr')
+            QgsMapLayerRegistry.instance().addMapLayer(nodelayer, False)
+            group.addLayer(nodelayer)
+            nodelayer.reload()
+            SegPath = os.path.join(folder, 'Segments.shp')
+            seglayer = QgsVectorLayer(SegPath, QFileInfo(SegPath).baseName(),
+                                      'ogr')
+            QgsMapLayerRegistry.instance().addMapLayer(seglayer, False)
+            group.addLayer(seglayer)
+            seglayer.reload()
+            ZonePath = os.path.join(folder, 'Zones.shp')
+            zonelayer = QgsVectorLayer(ZonePath, QFileInfo(ZonePath).baseName(),
+                                       'ogr')
+            QgsMapLayerRegistry.instance().addMapLayer(zonelayer, False)
+            group.addLayer(zonelayer)
+            zonelayer.reload()
 
-        try:
             Instance = QgsMapLayerRegistry.instance()
             NodeLayer = Instance.mapLayersByName("Nodes")[0]
             iface.setActiveLayer(NodeLayer)
@@ -1863,13 +1898,32 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             self.zoneLayer = zoneLayer
             self.zoneLayerStyle()
 
-            self.dlg.meshOutputBtn.setEnabled(True)
+            size = self.dlg.maximumSize()
+            self.dlg.resize(size)
+            self.dlg.outputMeshPointsBtn.setEnabled(True)
+            self.dlg.outputSegmentsBtn.setEnabled(True)
+            self.dlg.outputDistri.setEnabled(True)
 
-        except:
-            if not os.path.isfile(meshFile):
-                onCritical(116)
-            elif not os.path.isdir(outDir):
-                onCritical(117)
+        refId = QgsCoordinateReferenceSystem.EpsgCrsId
+        if not self.systemCRS:
+            systemCRS = QgsCoordinateReferenceSystem(3826, refId)
+        else:
+            systemCRS = self.systemCRS
+        meshFile = self.dlg.whereMshEdit.text()
+        shpFolder = os.path.splitext(os.path.basename(meshFile))[0]
+
+        try:
+            self.projFolder
+        except(AttributeError):
+            self.projFolder = self.dlg.whereMshLayerEdit.text()
+
+        loader = loadSelector(iface, u'選擇QGIS圖層處理方式')
+        result = loader.run()
+        self.iface.messageBar().pushMessage(str(result))
+        if result == 1:
+            genMesh(meshFile, shpFolder, systemCRS)
+        else:
+            loadOld(meshFile, shpFolder)
 
     def getProj(self):
         try:
@@ -1998,6 +2052,7 @@ def loadMshBoundaries(filename):
 
     read = False
     boundaryOrder = list()
+    regionOrder = list()
     for l in mesh:
         w = l.split()
         if w[0] == "$PhysicalNames":
@@ -2008,11 +2063,13 @@ def loadMshBoundaries(filename):
             # Boundaries
             if dim == 1:
                 boundaryOrder.append(name)
+            elif dim == 2:
+                regionOrder.append(name)
 
         if w[0] == '$EndPhysicalNames':
             break
 
-    return boundaryOrder
+    return boundaryOrder, regionOrder
 
 
 def loadMesh(filename, crs, outDir, dlg):
@@ -2025,6 +2082,7 @@ def loadMesh(filename, crs, outDir, dlg):
     vertices = dict()
     physicalNames = dict()
     layerPath = dict()
+    polyDict = dict()
     NodeFeature = dict()
     mode = 0
     endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
@@ -2094,7 +2152,6 @@ def loadMesh(filename, crs, outDir, dlg):
             NodesNum = mshTypeRef[geoType]
             ElementNodes = w[3+tagsNum:3+tagsNum+NodesNum]
 
-            feature = QgsFeature()
             if NodesNum == 1:
                 point = NodeFeature[int(ElementNodes[0])][0]
                 feature.setGeometry(QgsGeometry().fromWkt(point))
@@ -2107,10 +2164,9 @@ def loadMesh(filename, crs, outDir, dlg):
                 geoString = geoString + str(x1) + " " + str(y1) + ","
                 geoString = geoString + str(x2) + " " + str(y2)
                 geoString = geoString + ")"
-                feature.setGeometry(QgsGeometry().fromWkt(geoString))
-                try:
-                    SegList[int(ElementNodes[0]), int(ElementNodes[1])]
-                except(KeyError):
+
+                val = SegList.get((int(ElementNodes[0]), int(ElementNodes[1])))
+                if val is None:
                     x1, y1, z1 = vertices[int(ElementNodes[0])]
                     x2, y2, z2 = vertices[int(ElementNodes[1])]
                     WktString = ("LINESTRING (" + str(x1) + " " + str(y1) + ",")
@@ -2126,20 +2182,25 @@ def loadMesh(filename, crs, outDir, dlg):
                     x, y, z = vertices[int(pid)]
                     geoString = geoString + str(x) + " " + str(y) + ","
                 geoString = geoString[:-1] + "))"
+                """
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
 
                 zoneFeature = QgsFeature()
                 zoneFeature.setFields(ZoneFields)
                 zoneFeature.setGeometry(QgsGeometry().fromWkt(geoString))
                 zoneFeature.setAttributes(
-                    [int(fid), physicalNames[int(tagArgs[0])][1]])
+                    [int(fid), physicalNames[int(tagArgs[0])][1]])"""
+                polyDict.update(
+                    {int(fid):
+                     {'geo': geoString,
+                      'attr': [int(fid), physicalNames[int(tagArgs[0])][1]]}})
 
-                ZoneWriter.addFeature(zoneFeature)
+                # ZoneWriter.addFeature(zoneFeature)
 
                 for i in range(1, len(ElementNodes)):
-                    try:
-                        SegList[(int(ElementNodes[i-1]), int(ElementNodes[i]))]
-                    except(KeyError):
+                    key = SegList.get((int(ElementNodes[i-1]),
+                                       int(ElementNodes[i])))
+                    if key is None:
                         x1, y1, z1 = vertices[int(ElementNodes[i-1])]
                         x2, y2, z2 = vertices[int(ElementNodes[i])]
                         WktString = ("LINESTRING (" + str(x1) + " " + str(y1) +
@@ -2196,6 +2257,15 @@ def loadMesh(filename, crs, outDir, dlg):
         counter += 1
         dlg.meshLoadProgress.setValue(
             currProcess + int(counter/TotalLength*imComplete))
+
+    for key in polyDict.keys():
+        geoString = polyDict[key]['geo']
+        attributes = polyDict[key]['attr']
+        feature = QgsFeature()
+        feature.setGeometry(QgsGeometry().fromWkt(geoString))
+        feature.setFields(ZoneFields)
+        feature.setAttributes(attributes)
+        ZoneWriter.addFeature(feature)
 
     del SegWriter
     del ZoneWriter

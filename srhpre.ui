@@ -531,7 +531,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_FlowSetting">
     <attribute name="title">
@@ -550,7 +550,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabFlowSetting">
       <attribute name="title">
@@ -1143,7 +1143,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="sediPropertyTab">
       <attribute name="title">
