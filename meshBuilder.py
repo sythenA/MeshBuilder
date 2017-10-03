@@ -89,8 +89,8 @@ class meshBuilder:
                 QCoreApplication.installTranslator(self.translator)
 
         self.dlg = meshBuilderDialog()
-        self.shepred = shepred.shepred(iface)
-        self.mesh2D = mesh2DView(iface)
+        self.shepred = shepred.shepred(self.iface)
+        self.mesh2D = mesh2DView(self.iface)
 
         # Declare instance attributes
         self.actions = []
@@ -494,7 +494,8 @@ class meshBuilder:
             #  Load the assinged shape file layer into qgis, and show on the
             #  canvas.
             #
-            iface.addVectorLayer(source, QFileInfo(source).baseName(), 'ogr')
+            self.iface.addVectorLayer(source, QFileInfo(source).baseName(),
+                                      'ogr')
         else:
             source = ""
 
@@ -572,12 +573,11 @@ class meshBuilder:
         selectedFeatures = list()
         for row in c_Feature:
             selectedFeatures.append(row.row())
-        # layer = iface.mapCanvas().currentLayer()
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.select(selectedFeatures)
 
     def cancelSelection(self):
-        layer = iface.mapCanvas().currentLayer()
+        layer = self.iface.mapCanvas().currentLayer()
         layer.removeSelection()
 
     def cleanTableSelection(self):
@@ -593,7 +593,7 @@ class meshBuilder:
 
     def selectFromQgis(self):
         self.cleanTableSelection()
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         selectedIds = layer.selectedFeatures()
         columns = self.dlg.tableWidget.columnCount()
         table = self.dlg.tableWidget
@@ -605,7 +605,7 @@ class meshBuilder:
                     item.setSelected(True)
 
     def writeTableToLayer(self):
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
 
         fieldDict = self.fieldDict
         layerFields = layer.pendingFields()
@@ -684,7 +684,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.mainLayer.name())
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -730,7 +730,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'輸出名': 3,
                                   u'合併三角網格': 4,
                                   u'結構化網格': 5}
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToPoint(self, layer):
@@ -758,7 +758,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.pointLayer.name())
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -803,7 +803,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'點分類': 3,
                                   u'輸出名': 4,
                                   u'分段點': 5}
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToLine(self, layer):
@@ -861,7 +861,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -928,7 +928,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.dlg.tableWidget.setItem(i, 6, item)
 
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(1, 2))
@@ -966,18 +966,20 @@ into layer attributes.', level=QgsMessageBar.INFO)
         for border in self.boundaryOrder:
             color_code = randColor()
             style_rules.append((border, '"Physical"=' + "'" + border + "'",
-                                color_code))
+                                color_code, 0.66))
         color_code = randColor()
-        style_rules.append(('Segements', '"Physical" is NULL', color_code))
+        style_rules.append(('Segements', '"Physical" is NULL', color_code,
+                            0.26))
         symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
         renderer = QgsRuleBasedRendererV2(symbol)
         root_rule = renderer.rootRule()
 
-        for label, expression, color_name in style_rules:
+        for label, expression, color_name, width in style_rules:
             rule = root_rule.children()[0].clone()
             rule.setLabel(label)
             rule.setFilterExpression(expression)
             rule.symbol().setColor(QColor(color_name))
+            rule.symbol().setWidth(width)
             root_rule.appendChild(rule)
 
         root_rule.removeChildAt(0)
@@ -1004,7 +1006,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 for i in range(0, len(boundaryOrder)):
                     msg = msg + ", " + boundaryOrder[i]
                 msg = msg[1:-1]
-                iface.messageBar().pushMessage(msg)
+                self.iface.messageBar().pushMessage(msg)
 
             for i in range(0, table.rowCount()):
                 if table.item(i, nameCol):
@@ -1031,8 +1033,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
             iterator = zoneSeqIterator(self.iface, regionOrder, self.dlg)
             res = iterator.run()
             if res == 1:
+                rows = table.rowCount()
                 self.regionOrder = iterator.zoneOrd
-                for i in range(0, table.rowCount()):
+                for i in range(0, rows):
                     physName = table.item(i, 1).text()
                     idx = self.regionOrder.index(physName)
                     table.item(i, 2).setText(str(idx+1))
@@ -1180,7 +1183,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName("Nodes")
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -1206,7 +1209,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                                   u'點位性質': 1}
         #  Connect QGIS active layer to table, if selection is made in QGIS
         #  interface, reflect the selection result to data table.
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
     def setTableToSegments(self, layer):
@@ -1243,7 +1246,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName("Segments")
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         if len(self.boundaryOrder) == 0:
             meshFile = self.dlg.whereMshEdit.text()
@@ -1276,7 +1279,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.tableAttrNameDict = {u'邊界性質': 0,
                                   u'邊界輸出序': 1}
 
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(0, 1))
@@ -1317,10 +1320,10 @@ into layer attributes.', level=QgsMessageBar.INFO)
 
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName("Zones")
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         regionOrder = self.regionOrder
-        iface.messageBar().pushMessage(str(regionOrder))
+        self.iface.messageBar().pushMessage(str(regionOrder))
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -1349,7 +1352,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.tableAttrNameDict = {u'區域分類': 1}
         #  Connect QGIS active layer to table, if selection is made in QGIS
         #  interface, reflect the selection result to data table.
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
         self.zoneLayerStyle()
@@ -1455,7 +1458,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         path = self.dlg.pointIndicator.text()
         layer = self.iface.addVectorLayer(path, QFileInfo(path).baseName(),
                                           'ogr')
-        iface.setActiveLayer(layer)
+        self.iface.setActiveLayer(layer)
 
         self.dlg.pointConfirm.setEnabled(False)
         self.pointLayer = layer
@@ -1590,14 +1593,14 @@ into layer attributes.', level=QgsMessageBar.INFO)
         process = self.currentProcess
         if process == 1:
             self.writeTableToLayer()
-            iface.messageBar().pushMessage('Data in table wrote to main layer \
-attributes, load point layer...', level=QgsMessageBar.INFO)
+            self.iface.messageBar().pushMessage('Data in table wrote to main \
+layer attributes, load point layer...', level=QgsMessageBar.INFO)
             self.step2_1()
             self.dlg.backButton.setEnabled(True)
         elif process == 2:
             self.writeTableToLayer()
-            iface.messageBar().pushMessage('Data in table wrote to point layer,\
- load line layer...', level=QgsMessageBar.INFO)
+            self.iface.messageBar().pushMessage('Data in table wrote to point \
+layer, load line layer...', level=QgsMessageBar.INFO)
             self.step2_2()
         elif process == 3:
             self.writeTableToLayer()
@@ -1608,18 +1611,18 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
             self.boundaryOrder = countPhysics(self.lineLayer)
 
             lineFrame.lineCombine(self.lineFrameObj)
-            iface.messageBar().pushMessage('Line segments combined according to\
- break point setting in point layer.')
+            self.iface.messageBar().pushMessage('Line segments combined \
+according to break point setting in point layer.')
             self.setTableToLine(self.lineLayer)
             # Change layer legend style to arrow
-            lLayer = iface.activeLayer()
+            lLayer = self.iface.activeLayer()
             qmlPath = os.path.join(os.path.dirname(__file__), 'arrow.qml')
             lLayer.loadNamedStyle(qmlPath)
             lLayer.triggerRepaint()
             self.step2_3()
         elif process == 4:
             self.writeTableToLayer()
-            iface.messageBar().pushMessage('Data in table wrote into line layer\
+            self.iface.messageBar().pushMessage('Data in table wrote into line layer\
  attribute table, procced to mesh generation.', level=QgsMessageBar.INFO)
 
         elif process == 10:
@@ -1638,7 +1641,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         # load polygon layer if button pressed
 
         try:
-            layer = iface.activeLayer()
+            layer = self.iface.activeLayer()
             layer.selectionChanged.connect(self.selectFromQgis)
         except(AttributeError):
             pass
@@ -1661,7 +1664,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
 
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.pointLayer.name())
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
 
         path = os.path.join(self.projFolder, 'MainLayers',
                             'MainPoint_frame.shp')
@@ -1669,7 +1672,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         self.attrTable(self.pointLayer, Type='point')
         self.dlg.pointIndicator.setText(path)
         self.dlg.pointAttrBtn.setEnabled(True)
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
         self.currentProcess = 2
 
@@ -1687,7 +1690,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
 
         registry = QgsMapLayerRegistry.instance()
         vl = registry.mapLayersByName(self.lineLayer.name())
-        iface.setActiveLayer(vl[0])
+        self.iface.setActiveLayer(vl[0])
         path = os.path.join(self.projFolder, 'MainLayers',
                             'MainLines_frame.shp')
 
@@ -1695,7 +1698,7 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         self.dlg.lineIndicator.setText(path)
 
         self.dlg.lineAttrBtn.setEnabled(True)
-        layer = iface.activeLayer()
+        layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
         self.pointLayer = lineFrameObj.setBreakPoint()
@@ -1709,8 +1712,8 @@ attributes, load point layer...', level=QgsMessageBar.INFO)
         self.currentProcess = 4
         self.dlg.nextBtn2.setEnabled(True)
         self.dlg.nextBtn2.pressed.connect(self.step3)
-        iface.messageBar().pushMessage("Please complete boundary settings to \
-proceed to mesh generation.", level=QgsMessageBar.INFO)
+        self.iface.messageBar().pushMessage("Please complete boundary settings \
+to proceed to mesh generation.", level=QgsMessageBar.INFO)
 
     def step3(self):
         self.dlg.tabWidget.setTabEnabled(2, True)
@@ -1722,7 +1725,7 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         meshOutput(meshFile, self.nodeLayer, self.segLayer,
                    self.zoneLayer, self.regionOrder)
         message = u'New mesh data wrote to ' + meshFile
-        iface.messageBar().pushMessage(message, level=QgsMessageBar.INFO)
+        self.iface.messageBar().pushMessage(message, level=QgsMessageBar.INFO)
 
     def resizeDialog(self):
         currentTab = self.dlg.tabWidget.currentIndex()
@@ -1836,12 +1839,12 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             for i in range(0, len(self.boundaryOrder)):
                 msg = self.boundaryOrder[i] + ", "
             msg = msg[:-2]
-            iface.messageBar().pushMessage(msg)
+            self.iface.messageBar().pushMessage(msg)
 
             try:
                 Instance = QgsMapLayerRegistry.instance()
                 NodeLayer = Instance.mapLayersByName("Nodes")[0]
-                iface.setActiveLayer(NodeLayer)
+                self.iface.setActiveLayer(NodeLayer)
                 self.setTableToNodes(NodeLayer)
                 self.nodeLayer = NodeLayer
 
@@ -1884,9 +1887,12 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
             group.addLayer(zonelayer)
             zonelayer.reload()
 
+            self.boundaryOrder = boundariesFromLayer(seglayer)
+            self.regionOrder = zoneFromLayer(zonelayer)
+
             Instance = QgsMapLayerRegistry.instance()
             NodeLayer = Instance.mapLayersByName("Nodes")[0]
-            iface.setActiveLayer(NodeLayer)
+            self.iface.setActiveLayer(NodeLayer)
             self.setTableToNodes(NodeLayer)
             self.nodeLayer = NodeLayer
 
@@ -1917,9 +1923,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         except(AttributeError):
             self.projFolder = self.dlg.whereMshLayerEdit.text()
 
-        loader = loadSelector(iface, u'選擇QGIS圖層處理方式')
+        loader = loadSelector(self.iface, u'選擇QGIS圖層處理方式')
         result = loader.run()
-        self.iface.messageBar().pushMessage(str(result))
         if result == 1:
             genMesh(meshFile, shpFolder, systemCRS)
         else:
@@ -1967,8 +1972,8 @@ proceed to mesh generation.", level=QgsMessageBar.INFO)
         else:
             subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
                              meshFile, path2dm])
-        iface.messageBar().pushMessage(".msh Transfomed to .2dm",
-                                       level=QgsMessageBar.INFO)
+        self.iface.messageBar().pushMessage(".msh Transfomed to .2dm",
+                                            level=QgsMessageBar.INFO)
         self.dlg.label_26.setText(u'輸出為' + path2dm)
 
     def mshInterp(self):
@@ -2286,6 +2291,36 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.outputDistri.setEnabled(True)
 
     return boundaryOrder, regionOrder
+
+
+def boundariesFromLayer(SegmentLayer):
+    allBoundaries = list()
+    for feature in SegmentLayer.getFeatures():
+        if feature['Physical']:
+            name = feature['Physical']
+            seq = feature['seq']
+            allBoundaries.append((name, seq))
+    allBoundaries = set(allBoundaries)
+    allBoundaries = list(allBoundaries)
+    allBoundaries = sorted(allBoundaries, key=itemgetter(1))
+
+    boundaryOrder = list()
+    for i in range(0, len(allBoundaries)):
+        boundaryOrder.append(allBoundaries[i][0])
+
+    return boundaryOrder
+
+
+def zoneFromLayer(zoneLayer):
+    allZones = list()
+    for feature in zoneLayer.getFeatures():
+        if feature['Zone']:
+            allZones.append(feature['Zone'])
+    allZones = set(allZones)
+    allZones = list(allZones)
+    allZones.sort()
+
+    return allZones
 
 
 def loadMeshLayers(layerPath, meshName):
