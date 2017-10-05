@@ -594,13 +594,13 @@ class meshBuilder:
     def selectFromQgis(self):
         self.cleanTableSelection()
         layer = self.iface.activeLayer()
-        selectedIds = layer.selectedFeatures()
+        selectedIds = layer.selectedFeaturesIds()
         columns = self.dlg.tableWidget.columnCount()
         table = self.dlg.tableWidget
 
-        for feature in selectedIds:
+        for fid in selectedIds:
             for j in range(0, columns):
-                item = table.item(feature.id(), j)
+                item = table.item(fid, j)
                 if item:
                     item.setSelected(True)
 
@@ -1033,12 +1033,17 @@ into layer attributes.', level=QgsMessageBar.INFO)
             iterator = zoneSeqIterator(self.iface, regionOrder, self.dlg)
             res = iterator.run()
             if res == 1:
+                table.itemChanged.disconnect()
                 rows = table.rowCount()
                 self.regionOrder = iterator.zoneOrd
+                ordDict = dict()
+                for j in range(0, len(self.regionOrder)):
+                    ordDict.update({self.regionOrder[j]: j+1})
                 for i in range(0, rows):
-                    physName = table.item(i, 1).text()
-                    idx = self.regionOrder.index(physName)
-                    table.item(i, 2).setText(str(idx+1))
+                    physName = str(table.item(i, 1).text())
+                    idx = ordDict[physName]
+                    table.setItem(i, 2, QTableWidgetItem(str(idx)))
+                table.itemChanged.connect(self.checkLayerRegions)
         else:
             pass
 
@@ -1299,17 +1304,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 else:
                     widget.setCurrentIndex(0)
                 self.dlg.tableWidget.setCellWidget(i, j, widget)
-            elif Type == 'ComboBox2':
-                widget = QComboBox()
-                for k in range(0, len(regionOrder)):
-                    widget.addItem(str(k+1))
-                name = self.dlg.tableWidget.item(i, 1).text()
-                idx = regionOrder.index(name)
-                widget.setCurrentIndex(idx)
-                self.dlg.tableWidget.setCellWidget(i, j, widget)
-                cell = self.dlg.tableWidget.cellWidget(i, j)
-                cell.currentIndexChanged.connect(
-                    lambda: self.regionOrderChanged(1, 2, False))
             elif type(Object) != QPyNullVariant and Type == 'Fixed':
                 Object = str(Object)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(Object))
@@ -1339,8 +1333,11 @@ into layer attributes.', level=QgsMessageBar.INFO)
             setTableItem(counter, 0, str(feature['id']), Type='Fixed')
             setTableItem(counter, 1, feature['Zone'])
 
-            regionOrder = self.regionOrder
-            setTableItem(counter, 2, str(regionOrder.index(feature['Zone'])+1))
+            try:
+                setTableItem(counter, 2,
+                             str(regionOrder.index(feature['Zone'])+1))
+            except:
+                self.regionOrder = zoneFromLayer(self.zoneLayer)
             counter += 1
 
         fieldDict = {0: 'id',
@@ -2187,20 +2184,16 @@ def loadMesh(filename, crs, outDir, dlg):
                     x, y, z = vertices[int(pid)]
                     geoString = geoString + str(x) + " " + str(y) + ","
                 geoString = geoString[:-1] + "))"
-                """
+
                 feature.setGeometry(QgsGeometry().fromWkt(geoString))
 
                 zoneFeature = QgsFeature()
                 zoneFeature.setFields(ZoneFields)
                 zoneFeature.setGeometry(QgsGeometry().fromWkt(geoString))
                 zoneFeature.setAttributes(
-                    [int(fid), physicalNames[int(tagArgs[0])][1]])"""
-                polyDict.update(
-                    {int(fid):
-                     {'geo': geoString,
-                      'attr': [int(fid), physicalNames[int(tagArgs[0])][1]]}})
+                    [int(fid), physicalNames[int(tagArgs[0])][1]])
 
-                # ZoneWriter.addFeature(zoneFeature)
+                ZoneWriter.addFeature(zoneFeature)
 
                 for i in range(1, len(ElementNodes)):
                     key = SegList.get((int(ElementNodes[i-1]),
@@ -2223,6 +2216,8 @@ def loadMesh(filename, crs, outDir, dlg):
         counter = counter + 1
         dlg.meshLoadProgress.setValue(int(float(counter)/len(mesh)*100))
 
+    del ZoneWriter
+
     currProcess = int(float(counter)/len(mesh)*100)
     imComplete = 100 - int(float(counter)/len(mesh)*100)
 
@@ -2242,6 +2237,7 @@ def loadMesh(filename, crs, outDir, dlg):
             currProcess + int(counter/TotalLength*imComplete))
 
     del NodeWriter
+    del NodeFeature
 
     layerPath.update({1: nodePath})
 
@@ -2263,17 +2259,8 @@ def loadMesh(filename, crs, outDir, dlg):
         dlg.meshLoadProgress.setValue(
             currProcess + int(counter/TotalLength*imComplete))
 
-    for key in polyDict.keys():
-        geoString = polyDict[key]['geo']
-        attributes = polyDict[key]['attr']
-        feature = QgsFeature()
-        feature.setGeometry(QgsGeometry().fromWkt(geoString))
-        feature.setFields(ZoneFields)
-        feature.setAttributes(attributes)
-        ZoneWriter.addFeature(feature)
-
     del SegWriter
-    del ZoneWriter
+    del SegList
 
     layerPath.update({2: SegPath})
     layerPath.update({3: zonePath})
@@ -2501,9 +2488,9 @@ def meshOutput(meshFile, NodeLayer, SegLayer, ZoneLayer, regionOrder):
             physicsRef.update({counter: [physic[0], 1]})
             counter = counter + 1
     if zonePhysics:
-        for physic in zonePhysics:
-            physicsRef.update({counter: [physic, 2]})
-            counter = counter + 1
+        for zone in regionOrder:
+            physicsRef.update({counter: [zone, 2]})
+            counter += 1
 
     f = open(meshFile, 'w')
     f.write("$MeshFormat\n")
