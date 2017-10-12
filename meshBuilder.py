@@ -1396,6 +1396,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
         try:
             self.dlg.tableWidget.itemChanged.disconnect()
             self.dlg.tableWidget.itemClicked.disconnect()
+            layer = self.iface.activeLayer()
+            layer.selectionChanged.disconnect()
         except:
             pass
         if Type == 'poly':
@@ -1483,6 +1485,11 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.dlg.setCompleteBtn.setText(u'¦X¨Ö½u¬q')
 
     def batchFill(self):
+        try:
+            self.dlg.tableWidget.itemChanged.disconnect()
+        except:
+            pass
+        layer = self.iface.activeLayer()
         currentAttrText = self.dlg.attrSelectBox.currentText()
         fillText = self.dlg.fillBox.currentText()
         currentAttrIdx = self.tableAttrNameDict[currentAttrText]
@@ -1513,6 +1520,14 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 if self.dlg.tableWidget.item(i, j):
                     if self.dlg.tableWidget.item(i, j).isSelected():
                         self.dlg.tableWidget.item(i, j).setSelected(False)
+
+        if layer.name() == 'Segments':
+            self.arrangeLineTable(0, 1)
+            self.dlg.tableWidget.itemChanged.connect(
+                lambda: self.arrangeLineTable(0, 1))
+        elif layer.name() == 'Zones':
+            self.checkLayerRegions
+            self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
 
     def backSwitch(self):
         process = self.currentProcess
@@ -2084,7 +2099,6 @@ def loadMesh(filename, crs, outDir, dlg):
     vertices = dict()
     physicalNames = dict()
     layerPath = dict()
-    polyDict = dict()
     NodeFeature = dict()
     mode = 0
     endStatements = ["$EndPhysicalNames", "$EndNodes", "$EndElements"]
@@ -2115,6 +2129,7 @@ def loadMesh(filename, crs, outDir, dlg):
     counter = 0
     boundaryOrder = list()
     regionOrder = list()
+    Seg_idTag = 0
     for l in mesh:
         w = l.split()
 
@@ -2175,8 +2190,13 @@ def loadMesh(filename, crs, outDir, dlg):
                     WktString = WktString + str(x2) + " " + str(y2) + ")"
                     boundName = physicalNames[int(tagArgs[0])][1]
                     SegList.update({(int(ElementNodes[0]),
-                                     int(ElementNodes[1])):
-                                    [WktString, boundName]})
+                                     int(ElementNodes[1])): 0})
+                    feature = QgsFeature()
+                    feature.setGeometry(QgsGeometry().fromWkt(WktString))
+                    seq = boundaryOrder.index(boundName)+1
+                    feature.setAttributes([Seg_idTag, boundName, seq])
+                    SegWriter.addFeature(feature)
+                    Seg_idTag += 1
             elif NodesNum > 2:
                 geoString = "POLYGON (("
                 ElementNodes.append(ElementNodes[0])
@@ -2205,8 +2225,12 @@ def loadMesh(filename, crs, outDir, dlg):
                                      ",")
                         WktString = WktString + str(x2) + " " + str(y2) + ")"
                         SegList.update({(int(ElementNodes[i-1]),
-                                         int(ElementNodes[i])):
-                                        [WktString, None]})
+                                         int(ElementNodes[i])): 0})
+                        feature = QgsFeature()
+                        feature.setGeometry(QgsGeometry().fromWkt(WktString))
+                        feature.setAttributes([Seg_idTag, None, None])
+                        SegWriter.addFeature(feature)
+                        Seg_idTag += 1
 
             feature.setAttributes([int(fid)])
         elif mode == 0:
@@ -2240,24 +2264,6 @@ def loadMesh(filename, crs, outDir, dlg):
     del NodeFeature
 
     layerPath.update({1: nodePath})
-
-    id_tag = 1
-    for key in SegList.keys():
-        lineString = SegList[key][0]
-        boundName = SegList[key][1]
-        if boundName:
-            seq = boundaryOrder.index(boundName)+1
-        else:
-            seq = None
-        feature = QgsFeature()
-        feature.setGeometry(QgsGeometry().fromWkt(lineString))
-        feature.setAttributes([id_tag, boundName, seq])
-        SegWriter.addFeature(feature)
-        id_tag += 1
-
-        counter += 1
-        dlg.meshLoadProgress.setValue(
-            currProcess + int(counter/TotalLength*imComplete))
 
     del SegWriter
     del SegList
