@@ -53,6 +53,7 @@ from loadPara import loadParaView
 from mesh2DViewer import mesh2DView
 from zoneOrdDiag import zoneSeqIterator
 from selectorDiag import loadSelector
+from itertools import izip as zip, count
 import os
 import pickle
 # Initialize Qt resources from file resources.py
@@ -489,13 +490,10 @@ class meshBuilder:
             else:
                 self.mainLayer = mainLayerSelected
 
-            source = self.mainLayer.dataProvider().dataSourceUri().split('|')[0]
-            #
-            #  Load the assinged shape file layer into qgis, and show on the
-            #  canvas.
-            #
-            self.iface.addVectorLayer(source, QFileInfo(source).baseName(),
-                                      'ogr')
+            mainLayerId = QgsMapLayerRegistry.instance().addMapLayer(
+                self.mainLayer)
+            self.mainLayerId = mainLayerId.id()
+
         else:
             source = ""
 
@@ -683,8 +681,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(self.mainLayer.name())
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.mainLayerId)
+        self.iface.setActiveLayer(vl)
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -757,8 +755,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(self.pointLayer.name())
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.pointLayerId)
+        self.iface.setActiveLayer(vl)
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -860,8 +858,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             self.boundaryOrder = boundaryOrder
 
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(self.lineLayer.name())
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.lineLayerId)
+        self.iface.setActiveLayer(vl)
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -1187,8 +1185,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName("Nodes")
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.nodeLayerId)
+        self.iface.setActiveLayer(vl)
 
         self.dlg.tableWidget.clear()
         self.dlg.attrSelectBox.clear()
@@ -1250,8 +1248,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
             else:
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName("Segments")
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.segLayerId)
+        self.iface.setActiveLayer(vl)
 
         if len(self.boundaryOrder) == 0:
             meshFile = self.dlg.whereMshEdit.text()
@@ -1313,8 +1311,8 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(""))
 
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName("Zones")
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.zoneLayerId)
+        self.iface.setActiveLayer(vl)
 
         regionOrder = self.regionOrder
         self.iface.messageBar().pushMessage(str(regionOrder))
@@ -1671,12 +1669,12 @@ according to break point setting in point layer.')
                                              CRS=self.systemCRS)
         pointFrameObj.copyPoint()
         pointFrameObj.openLayer()
-        pointFrameObj.showLayer()
+        self.pointLayerId = pointFrameObj.showLayer()
         self.pointLayer = pointFrameObj.frameLayer
 
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(self.pointLayer.name())
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.pointLayerId)
+        self.iface.setActiveLayer(vl)
 
         path = os.path.join(self.projFolder, 'MainLayers',
                             'MainPoint_frame.shp')
@@ -1695,14 +1693,14 @@ according to break point setting in point layer.')
                                            CRS=self.systemCRS)
         lineFrameObj.copyLines()
         lineFrameObj.openLayer()
-        lineFrameObj.showLayer()
+        self.lineLayerId = lineFrameObj.showLayer()
 
         self.lineLayer = lineFrameObj.frameLayer
         self.lineFrameObj = lineFrameObj
 
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName(self.lineLayer.name())
-        self.iface.setActiveLayer(vl[0])
+        vl = registry.mapLayer(self.lineLayerId)
+        self.iface.setActiveLayer(vl)
         path = os.path.join(self.projFolder, 'MainLayers',
                             'MainLines_frame.shp')
 
@@ -1842,39 +1840,51 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
             outDir = os.path.join(self.projFolder, 'MeshShp', shpFolder)
 
             if os.path.isfile(meshFile):
-                self.boundaryOrder, self.regionOrder = loadMesh(
+                self.boundaryOrder, self.regionOrder, layerid = loadMesh(
                     meshFile, systemCRS, outDir, self.dlg)
+
+                msg = ''
+                for i in range(0, len(self.boundaryOrder)):
+                    msg = self.boundaryOrder[i] + ", "
+                msg = msg[:-2]
+                self.iface.messageBar().pushMessage(msg)
+
+                try:
+                    idx = [r for r, j in zip(count(), layerid) if 'Nodes' in r]
+                    idx = idx[0]
+                    Instance = QgsMapLayerRegistry.instance()
+                    NodeLayer = Instance.mapLayer(layerid[idx][1])
+                    self.iface.setActiveLayer(NodeLayer)
+                    self.setTableToNodes(NodeLayer)
+                    self.nodeLayer = NodeLayer
+                    self.nodeLayerId = layerid[idx][1]
+
+                    idx = [r for r, j in zip(count(),
+                                             layerid) if 'Segments' in r]
+                    idx = idx[0]
+                    SegmentLayer = Instance.mapLayer(layerid[idx][1])
+
+                    self.segLayerId = layerid[idx][1]
+                    self.segLayer = SegmentLayer
+                    self.segLayerStyle()
+
+                    idx = [r for r, j in zip(count(), layerid) if 'Zones' in r]
+                    idx = idx[0]
+                    zoneLayer = Instance.mapLayer(layerid[idx][1])
+                    self.zoneLayerId = layerid[idx][1]
+                    self.zoneLayer = zoneLayer
+                    self.zoneLayerStyle()
+
+                except:
+                    if not os.path.isfile(meshFile):
+                        onCritical(116)
+                    elif not os.path.isdir(outDir):
+                        onCritical(117)
             else:
                 onCritical(122)
 
-            msg = ''
-            for i in range(0, len(self.boundaryOrder)):
-                msg = self.boundaryOrder[i] + ", "
-            msg = msg[:-2]
-            self.iface.messageBar().pushMessage(msg)
-
-            try:
-                Instance = QgsMapLayerRegistry.instance()
-                NodeLayer = Instance.mapLayersByName("Nodes")[0]
-                self.iface.setActiveLayer(NodeLayer)
-                self.setTableToNodes(NodeLayer)
-                self.nodeLayer = NodeLayer
-
-                SegmentLayer = Instance.mapLayersByName("Segments")[0]
-                self.segLayer = SegmentLayer
-                self.segLayerStyle()
-
-                zoneLayer = Instance.mapLayersByName("Zones")[0]
-                self.zoneLayer = zoneLayer
-                self.zoneLayerStyle()
-
-            except:
-                if not os.path.isfile(meshFile):
-                    onCritical(116)
-                elif not os.path.isdir(outDir):
-                    onCritical(117)
-
         def loadOld(meshFile, shpFolder):
+            Instance = QgsMapLayerRegistry.instance()
             group = QgsProject.instance().layerTreeRoot().addGroup(shpFolder)
 
             folder = os.path.join(self.projFolder, 'MeshShp', shpFolder)
@@ -1883,36 +1893,35 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
             NodePath = os.path.join(folder, 'Nodes.shp')
             nodelayer = QgsVectorLayer(NodePath, QFileInfo(NodePath).baseName(),
                                        'ogr')
-            QgsMapLayerRegistry.instance().addMapLayer(nodelayer, False)
+            mNodeLayer = Instance().addMapLayer(nodelayer, False)
             group.addLayer(nodelayer)
             nodelayer.reload()
             SegPath = os.path.join(folder, 'Segments.shp')
             seglayer = QgsVectorLayer(SegPath, QFileInfo(SegPath).baseName(),
                                       'ogr')
-            QgsMapLayerRegistry.instance().addMapLayer(seglayer, False)
+            mSegLayer = Instance().addMapLayer(seglayer, False)
             group.addLayer(seglayer)
             seglayer.reload()
             ZonePath = os.path.join(folder, 'Zones.shp')
             zonelayer = QgsVectorLayer(ZonePath, QFileInfo(ZonePath).baseName(),
                                        'ogr')
-            QgsMapLayerRegistry.instance().addMapLayer(zonelayer, False)
+            mZoneLayer = Instance().addMapLayer(zonelayer, False)
             group.addLayer(zonelayer)
             zonelayer.reload()
 
             self.boundaryOrder = boundariesFromLayer(seglayer)
             self.regionOrder = zoneFromLayer(zonelayer)
 
-            Instance = QgsMapLayerRegistry.instance()
-            NodeLayer = Instance.mapLayersByName("Nodes")[0]
+            NodeLayer = Instance.mapLayer(mNodeLayer.id())
             self.iface.setActiveLayer(NodeLayer)
             self.setTableToNodes(NodeLayer)
             self.nodeLayer = NodeLayer
 
-            SegmentLayer = Instance.mapLayersByName("Segments")[0]
+            SegmentLayer = Instance.mapLayer(mSegLayer.id())
             self.segLayer = SegmentLayer
             self.segLayerStyle()
 
-            zoneLayer = Instance.mapLayersByName("Zones")[0]
+            zoneLayer = Instance.mapLayer(mZoneLayer.id())
             self.zoneLayer = zoneLayer
             self.zoneLayerStyle()
 
@@ -2271,7 +2280,7 @@ def loadMesh(filename, crs, outDir, dlg):
     layerPath.update({2: SegPath})
     layerPath.update({3: zonePath})
     dlg.meshLoadProgress.setValue(100)
-    loadMeshLayers(layerPath, meshName)
+    layerid = loadMeshLayers(layerPath, meshName)
 
     size = dlg.maximumSize()
     dlg.resize(size)
@@ -2283,7 +2292,7 @@ def loadMesh(filename, crs, outDir, dlg):
     dlg.outputSegmentsBtn.setEnabled(True)
     dlg.outputDistri.setEnabled(True)
 
-    return boundaryOrder, regionOrder
+    return boundaryOrder, regionOrder, layerid
 
 
 def boundariesFromLayer(SegmentLayer):
@@ -2322,12 +2331,15 @@ def loadMeshLayers(layerPath, meshName):
 
     keyString = layerPath.keys()
     keyString.sort()
+    layerid = list()
     for key in keyString:
         path = layerPath[key]
         layer = QgsVectorLayer(path, QFileInfo(path).baseName(), 'ogr')
-        QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+        mlayer = QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+        layerid.append([QFileInfo(path).baseName(), mlayer.id()])
         group.addLayer(layer)
         layer.reload()
+    return layerid
 
 
 def physicCode(physName, physicsRef):

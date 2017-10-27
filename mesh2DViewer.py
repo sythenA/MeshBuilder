@@ -91,6 +91,12 @@ class mesh2DView:
                 3826, QgsCoordinateReferenceSystem.EpsgCrsId)
         meshFile = self.dlg.meshFileEdit.text()
         f = open(meshFile, 'r')
+        nodeFields = QgsFields()
+        nodeFields.append(QgsField("id", QVariant.Int))
+        nodeFields.append(QgsField("z", QVariant.Double))
+        nodePath = os.path.join(self.dlg.folderLineEdit.text(), 'Nodes.shp')
+        nodeWriter = QgsVectorFileWriter(nodePath, 'UTF-8', nodeFields,
+                                         QGis.WKBPoint, crs, 'ESRI Shapefile')
 
         data = f.readlines()
         NodeDict = dict()
@@ -103,6 +109,11 @@ class mesh2DView:
                 NodeDict.update(
                     {int(line[1]): (float(line[2]), float(line[3]),
                                     float(line[4]))})
+                geoString = ('POINT (' + line[2] + ' ' + line[3] + ')')
+                feature = QgsFeature()
+                feature.setGeometry(QgsGeometry.fromWkt(geoString))
+                feature.setAttributes([int(line[1]), float(line[4])])
+                nodeWriter.addFeature(feature)
             elif line[0] in meshType.keys():
                 Regions.append(int(line[-1]))
             elif line[0] == 'NS':
@@ -112,6 +123,7 @@ class mesh2DView:
                     NodeStrings.append(oneString)
                     oneString = list()
 
+        del nodeWriter
         Regions = list(set(Regions))
         Regions.sort()
 
@@ -122,6 +134,7 @@ class mesh2DView:
         fields = QgsFields()
         fields.append(QgsField("id", QVariant.Int))
         layerList = list()
+        layerList.append(nodePath)
         for i in range(0, len(Regions)):
             layerName = 'Material' + str(Regions[i])
             path = os.path.join(self.dlg.folderLineEdit.text(),

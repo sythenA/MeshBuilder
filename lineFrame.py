@@ -1,7 +1,7 @@
 
 from qgis.utils import iface
 from qgis.core import QgsVectorFileWriter, QGis, QgsField, QgsFeature
-from qgis.core import QgsVectorLayer, QgsGeometry, QgsPoint
+from qgis.core import QgsVectorLayer, QgsGeometry, QgsPoint, QgsMapLayerRegistry
 from PyQt4.QtCore import QVariant, QFileInfo, QPyNullVariant
 import os.path
 import collections
@@ -110,8 +110,8 @@ class pointFrame:
         del pointFrameWriter
 
     def showLayer(self):
-        iface.addVectorLayer(self.filePath, QFileInfo(self.filePath).baseName(),
-                             'ogr')
+        mlayer = QgsMapLayerRegistry.instance().addMapLayer(self.frameLayer)
+        return mlayer.id()
 
     def openLayer(self):
         projFolder = self.projFolder
@@ -140,8 +140,9 @@ class lineFrame:
         self.pointDict = pointRef(pointFrame.frameLayer)
 
     def showLayer(self):
-        iface.addVectorLayer(self.filePath,
-                             QFileInfo(self.filePath).baseName(), 'ogr')
+        mlineLayer = QgsMapLayerRegistry.instance().addMapLayer(
+            self.frameLayer)
+        return mlineLayer.id()
 
     def lineInverse(self, lineGeo):
         InverseGeo = list()

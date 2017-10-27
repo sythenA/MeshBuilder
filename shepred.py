@@ -12,6 +12,7 @@ from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from sedimentMod import sedimentModule, bankErosionMod
 from shutil import copy2
+from bankCross import bankCrossSecSetting
 import subprocess
 import pickle
 
@@ -166,6 +167,7 @@ class shepred:
                                 lineEdit=self.dlg.rstFileEdit,
                                 presetType='*.dat'))
 
+        self.dlg.hotStartChk.stateChanged.connect(self.usingHotStart)
         self.dlg.readMeshBtn.pressed.connect(self.readMesh)
         self.dlg.rbtnManningConstant.pressed.connect(self.constantManning)
         self.dlg.rbtnManningMaterial.pressed.connect(self.mannMaterial)
@@ -253,6 +255,14 @@ class shepred:
         dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
+        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked():
+            genDIP(self.iface, self.dlg, self.projFolder,
+                   self.dlg.lineEditCaseName.text(),
+                   mesh=self.dlg.lineEditMeshFileName.text(),
+                   bankErosion=self.bankEroMod)
+        else:
+            genDIP(self.iface, self.dlg, self.projFolder,
+                   self.dlg.lineEditCaseName.text())
         subprocess.Popen([dstPath])
 
     def addSource(self):
@@ -1200,3 +1210,109 @@ Curve.'
 
                 self.fillMannTable()
                 self.setBoundaryTable()
+
+    def usingHotStart(self):
+        self.setProjFolder()
+        if self.dlg.hotStartChk.checkState() == Qt.Checked:
+            self.dlg.lineEditDescription.setEnabled(False)
+            self.dlg.lineEditMeshFileName.setEnabled(False)
+            self.dlg.pbtnFileSelector.setEnabled(False)
+            self.dlg.lineMeshFilePath.setEnabled(False)
+            self.dlg.mshFileSelector.setEnabled(False)
+            self.dlg.readMeshBtn.setEnabled(False)
+            self.dlg.groupBox.setEnabled(False)
+            self.dlg.groupBox_4.setEnabled(False)
+            self.dlg.groupBox_5.setEnabled(False)
+            self.dlg.groupBox_2.setEnabled(False)
+            self.dlg.groupBox_3.setEnabled(False)
+            self.dlg.obsPointsLayerCombo.setEnabled(False)
+            self.dlg.solverTabWidget.setTabEnabled(0, False)
+            self.dlg.solverTabWidget.setTabEnabled(1, False)
+            self.dlg.solverTabWidget.setTabEnabled(2, False)
+            self.dlg.exportBtn.setEnabled(False)
+            self.dlg.callSrhpreBtn.setEnabled(False)
+            self.dlg.callSRH2DBtn.setEnabled(True)
+        else:
+            self.dlg.lineEditDescription.setEnabled(True)
+            self.dlg.lineEditMeshFileName.setEnabled(True)
+            self.dlg.pbtnFileSelector.setEnabled(True)
+            self.dlg.lineMeshFilePath.setEnabled(True)
+            self.dlg.mshFileSelector.setEnabled(True)
+            self.dlg.readMeshBtn.setEnabled(True)
+            self.dlg.groupBox.setEnabled(True)
+            self.dlg.groupBox_4.setEnabled(True)
+            self.dlg.groupBox_5.setEnabled(True)
+            self.dlg.groupBox_2.setEnabled(True)
+            self.dlg.groupBox_3.setEnabled(True)
+            self.dlg.obsPointsLayerCombo.setEnabled(True)
+            self.dlg.solverTabWidget.setTabEnabled(0, True)
+            if self.dlg.rbtnSolverMobile.isChecked():
+                self.dlg.solverTabWidget.setTabEnabled(1, True)
+            self.dlg.solverTabWidget.setTabEnabled(2, True)
+            self.dlg.exportBtn.setEnabled(True)
+            self.dlg.callSRH2DBtn.setEnabled(False)
+
+
+class genDIP:
+    def __init__(self, iface, dialog, projFolder, projName,
+                 mesh='', bankErosion=''):
+        self.dlg = dialog
+        self.iface = iface
+        self.projFolder = projFolder
+        self.projName = projName
+        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked:
+            self.callBankErosionDiag(mesh, bankErosion.Toes, bankErosion.Tops)
+        self.chkSettings()
+
+    def chkSettings(self):
+        DIPfilePath = os.path.join(self.projFolder, 'sim',
+                                   self.projName + '_DIP.dat')
+        ExistingSettings = list()
+        try:
+            f = open(DIPfilePath, 'r')
+            dat = f.readlines()
+            f.close()
+
+            state = 0
+            for line in dat:
+                if line == '$DATAC':
+                    state = 1
+                elif line == '$ENDC':
+                    state = 2
+                if state == 1:
+                    ExistingSettings.append(line)
+        except:
+            pass
+
+        Settings = dict()
+        for line in ExistingSettings:
+            line = re.split('=', line)
+            Settings.update({line[0].strip().upper(): line[1]})
+
+        if self.dlg.hotStartChk.checkState() == Qt.Checked:
+            Settings.update({'IREST': '1'})
+        else:
+            Settings.update({'IREST': '0'})
+        if self.dlg.aSIMTIMEEdit.text():
+            Settings.update(
+                {'TOTAL_SIMULATION_TIME': self.dlg.aSIMTIMEEdit.text()})
+        if self.dlg.aDTEdit.text():
+            Settings.update({'DT_NEW': self.dlg.aDTEdit.text()})
+        if self.dlg.aTurbEdit.text():
+            Settings.update({'A_TURB': self.dlg.aTurbEdit.text()})
+        if self.dlg.NITEREdit.text():
+            Settings.update({'NITER': self.dlg.NITEREdit.text()})
+        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked():
+            Settings.update({'USER(11)': '1'})
+
+        Settings.update({'DAMP': str(self.dlg.dampBox.value())})
+        Settings.update({'RELAX_H': str(self.dlg.relaxHBox.value())})
+        Settings.update({'RELAX_UV': str(self.dlg.relaxUVBox.value())})
+
+        keys = Settings.keys()
+        f = open(DIPfilePath, 'w')
+        f.write('$DATAC')
+        for key in keys:
+            f.write(key + ' = ' + Settings[key] + '\n')
+        f.write('$ENDC')
+        f.close()

@@ -762,6 +762,8 @@ class bankErosionMod:
     def __init__(self, iface, dialog):
         self.iface = iface
         self.dlg = dialog
+        self.Toes = list()
+        self.Tops = list()
 
         self.dlg.remeshFileSelector.setEnabled(False)
         self.dlg.remeshLabel.setEnabled(False)
@@ -931,8 +933,12 @@ class bankErosionMod:
         string = '// Bank Erosion Module: Pairing IDs of all Bank Zones \
 (Toe_ID Top_ID ...)\n'
         string += self.dlg.bankPairTable.cellWidget(0, 0).currentText()
+        self.Toes.append(
+            int(self.dlg.bankPairTable.cellWidget(0, 0).currentText()))
         string += ' '
         string += self.dlg.bankPairTable.cellWidget(0, 1).currentText()
+        self.Tops.append(
+            int(self.dlg.bankPairTable.cellWidget(0, 1).currentText()))
         string += '\n'
 
         bankMethod = self.dlg.erosionModTable.item(0, 2).text()
@@ -981,8 +987,12 @@ segments\n'
 
         for i in range(0, self.dlg.bankPairTable.rowCount()):
             string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            self.Toes.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 0).currentText()))
             string += ' '
             string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            self.Tops.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 1).currentText()))
             string += ' '
         string = string[:-1] + '\n'
 
@@ -1006,8 +1016,12 @@ segments\n'
 
         for i in range(0, self.dlg.bankPairTable.rowCount()):
             string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            self.Toes.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 0).currentText()))
             string += ' '
             string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            self.Tops.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 1).currentText()))
             string += ' '
         string = string[:-1] + '\n'
 
@@ -1025,8 +1039,12 @@ segments\n'
 (Toe_ID Top_ID ...)\n'
         for i in range(0, self.dlg.bankPairTable.rowCount()):
             string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            self.Toes.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 0).currentText()))
             string += ' '
             string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            self.Tops.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 1).currentText()))
             string += ' '
         string = string[:-1] + '\n'
 
@@ -1051,8 +1069,12 @@ segments\n'
 (Toe_ID Top_ID ...)\n'
         for i in range(0, self.dlg.bankPairTable.rowCount()):
             string += self.dlg.bankPairTable.cellWidget(i, 0).currentText()
+            self.Toes.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 0).currentText()))
             string += ' '
             string += self.dlg.bankPairTable.cellWidget(i, 1).currentText()
+            self.Tops.append(
+                int(self.dlg.bankPairTable.cellWidget(i, 1).currentText()))
             string += ' '
         string = string[:-1] + '\n'
 
