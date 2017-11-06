@@ -3147,6 +3147,19 @@
     <string>Using Hot Start</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="setGeoRefBtn">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>130</y>
+     <width>41</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -3,16 +3,22 @@
 import os
 import os.path
 import re
-from qgis.core import QGis
+from qgis.core import QGis, QgsCoordinateReferenceSystem, QgsFields, QgsField
+from qgis.core import QgsFeature, QgsGeometry
+from qgis.core import QgsVectorFileWriter
+from qgis.gui import QgsGenericProjectionSelector
 from PyQt4.QtCore import QSettings, qVersion, QTranslator, QCoreApplication, Qt
+from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QTableWidgetItem, QComboBox, QLineEdit, QPushButton
-from PyQt4.QtGui import QFileDialog, QPixmap
+from PyQt4.QtGui import QFileDialog, QPixmap, QIcon
 from shepredDialog import shepredDialog
 from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from sedimentMod import sedimentModule, bankErosionMod
 from shutil import copy2
-from bankCross import bankCrossSecSetting
+from bankCross import bankCrossSecSetting, bankCross
+from bankJumpPopDiag import setBankJump
+from bankLayerSetting import bankLayerProp
 import subprocess
 import pickle
 
@@ -115,6 +121,14 @@ class shepred:
             projFolder = ''
             self.projFolder = projFolder
 
+        pixMap = QPixmap(os.path.join(self.plugin_dir,
+                                      'Georeference.svg'))
+        geoIcon = QIcon(pixMap)
+        self.dlg.setGeoRefBtn.setIcon(geoIcon)
+        self.dlg.setGeoRefBtn.setIconSize(0.7*pixMap.rect().size())
+
+        self.dlg.setGeoRefBtn.setIcon(geoIcon)
+        self.dlg.setGeoRefBtn.setIconSize(0.7*pixMap.rect().size())
         dirToPic = os.path.join(os.path.dirname(__file__), 'eq_Pic',
                                 'Pressure_Unit.png')
         pic = QPixmap(dirToPic)
@@ -176,6 +190,7 @@ class shepred:
 
         self.dlg.exportBtn.clicked.connect(self.export)
         self.dlg.inputFileBtn.clicked.connect(self.setWidgetFileBrowser)
+        self.dlg.setGeoRefBtn.clicked.connect(self.selectCrs)
 
         self.dlg.rbtnICDry.pressed.connect(self.initialDry)
         self.dlg.rbtnICRst.pressed.connect(self.initialRST)
@@ -216,6 +231,13 @@ class shepred:
                 pass
         self.dlg.obsPointsLayerCombo.addItems(layerItems)
 
+    def selectCrs(self):
+        crsDiag = QgsGenericProjectionSelector()
+        crsDiag.exec_()
+        crsId = crsDiag.selectedCrsId()
+        crsType = QgsCoordinateReferenceSystem.InternalCrsId
+        self.systemCRS = QgsCoordinateReferenceSystem(crsId, crsType)
+
     def flowChoosed(self):
         self.dlg.solverTabWidget.setTabEnabled(1, False)
         self.dlg.rbtnSediInput.setEnabled(False)
@@ -255,19 +277,26 @@ class shepred:
         dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
-        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked():
+        try:
+            self.systemCRS
+        except(AttributeError):
+            crs = QgsCoordinateReferenceSystem(
+                3826, QgsCoordinateReferenceSystem.EpsgCrsId)
+            self.systemCRS = crs
+
+        if self.dlg.bankErosionChkBox.isChecked():
+            self.dlg.done(1)
             genDIP(self.iface, self.dlg, self.projFolder,
-                   self.dlg.lineEditCaseName.text(),
+                   self.dlg.lineEditCaseName.text(), dstPath,
                    mesh=self.dlg.lineEditMeshFileName.text(),
-                   bankErosion=self.bankEroMod)
+                   bankErosion=self.bankEroMod, crs=self.systemCRS)
         else:
             genDIP(self.iface, self.dlg, self.projFolder,
-                   self.dlg.lineEditCaseName.text())
-        subprocess.Popen([dstPath])
+                   self.dlg.lineEditCaseName.text(), dstPath)
 
     def addSource(self):
         self.dlg.rbtnSpecialNone.setCheckState(Qt.Unchecked)
-        if self.dlg.rbtnSpecialMomentumless.checkState() == Qt.Checked:
+        if self.dlg.rbtnSpecialMomentumless.isChecked():
             self.dlg.tabSpecialOps.setEnabled(True)
             self.dlg.tabSpecialOps.setTabEnabled(0, True)
         else:
@@ -275,14 +304,14 @@ class shepred:
 
     def addInfil(self):
         self.dlg.rbtnSpecialNone.setCheckState(Qt.Unchecked)
-        if self.dlg.rbtnSpecialInfiltration.checkState() == Qt.Checked:
+        if self.dlg.rbtnSpecialInfiltration.isChecked():
             self.dlg.tabSpecialOps.setEnabled(True)
             self.dlg.tabSpecialOps.setTabEnabled(1, True)
         else:
             self.dlg.tabSpecialOps.setTabEnabled(1, False)
 
     def setNoSpecials(self):
-        if self.dlg.rbtnSpecialNone.checkState == Qt.Checked:
+        if self.dlg.rbtnSpecialNone.isChecked():
             self.dlg.tabSpecialOps.setTabEnabled(0, False)
             self.dlg.tabSpecialOps.setTabEnabled(1, False)
             self.dlg.tabSpecialOps.setTabEnabled(2, False)
@@ -1213,7 +1242,7 @@ Curve.'
 
     def usingHotStart(self):
         self.setProjFolder()
-        if self.dlg.hotStartChk.checkState() == Qt.Checked:
+        if self.dlg.hotStartChk.isChecked():
             self.dlg.lineEditDescription.setEnabled(False)
             self.dlg.lineEditMeshFileName.setEnabled(False)
             self.dlg.pbtnFileSelector.setEnabled(False)
@@ -1254,15 +1283,40 @@ Curve.'
 
 
 class genDIP:
-    def __init__(self, iface, dialog, projFolder, projName,
-                 mesh='', bankErosion=''):
+    def __init__(self, iface, dialog, projFolder, projName, dstPath,
+                 mesh='', bankErosion='', crs=''):
         self.dlg = dialog
         self.iface = iface
         self.projFolder = projFolder
         self.projName = projName
-        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked:
-            self.callBankErosionDiag(mesh, bankErosion.Toes, bankErosion.Tops)
-        self.chkSettings()
+        self.mesh = mesh
+        self.dstPath = dstPath
+        self.crs = crs
+        if self.dlg.bankErosionChkBox.isChecked():
+            self.checkFolder()
+            self.loadMeshNodes()
+            nodeJumpDiag = setBankJump(iface)
+            nodeJump, bankLayers = nodeJumpDiag.run()
+            if nodeJump:
+                bankCS = self.setBankCS(mesh, bankErosion, nodeJump)
+                bankPairDiag = bankLayerProp(len(bankCS.Toes), bankLayers)
+                bankPairs = bankPairDiag.run()
+                bankDiag = bankCrossSecSetting(iface, projFolder, self.nodePath,
+                                               self.boundaryPath, bankCS)
+                bankDiag.dlg.accepted.connect(self.chkSettings)
+                bankDiag.run()
+            else:
+                onCritical(134)
+
+        else:
+            self.chkSettings()
+
+    def setBankCS(self, mesh, bankErosion, jump):
+        bankCS = bankCross(mesh, bankErosion.Toes, bankErosion.Tops, jump)
+        bankCS.findBetween()
+        bankCS.findOutSide()
+
+        return bankCS
 
     def chkSettings(self):
         DIPfilePath = os.path.join(self.projFolder, 'sim',
@@ -1289,7 +1343,7 @@ class genDIP:
             line = re.split('=', line)
             Settings.update({line[0].strip().upper(): line[1]})
 
-        if self.dlg.hotStartChk.checkState() == Qt.Checked:
+        if self.dlg.hotStartChk.isChecked():
             Settings.update({'IREST': '1'})
         else:
             Settings.update({'IREST': '0'})
@@ -1302,7 +1356,7 @@ class genDIP:
             Settings.update({'A_TURB': self.dlg.aTurbEdit.text()})
         if self.dlg.NITEREdit.text():
             Settings.update({'NITER': self.dlg.NITEREdit.text()})
-        if self.dlg.bankErosionChkBox.checkState() == Qt.Checked():
+        if self.dlg.bankErosionChkBox.isChecked():
             Settings.update({'USER(11)': '1'})
 
         Settings.update({'DAMP': str(self.dlg.dampBox.value())})
@@ -1316,3 +1370,82 @@ class genDIP:
             f.write(key + ' = ' + Settings[key] + '\n')
         f.write('$ENDC')
         f.close()
+
+        subprocess.Popen([self.dstPath])
+
+    def checkFolder(self):
+        folderPath = os.path.join(self.projFolder, 'MeshShp', 'bank')
+        if not os.path.isdir(folderPath):
+            subprocess.Popen(['mkdir', folderPath])
+
+    def loadMeshNodes(self):
+        self.checkFolder()
+        f = open(self.mesh, 'r')
+        dat = f.readlines()
+        f.close()
+
+        nodePath = os.path.join(self.projFolder, 'MeshShp', 'bank',
+                                'bankNodes.shp')
+        boundaryPath = os.path.join(self.projFolder, 'MeshShp', 'bank',
+                                    'boundaries.shp')
+        nodeFields = QgsFields()
+        nodeFields.append(QgsField('id', QVariant.Int))
+        nodeFields.append(QgsField('z', QVariant.Double))
+        NodeWriter = QgsVectorFileWriter(nodePath, 'utf-8', nodeFields,
+                                         QGis.WKBPoint, self.crs,
+                                         "ESRI Shapefile")
+        boundaryFields = QgsFields()
+        boundaryFields.append(QgsField('start_id', QVariant.Int))
+        boundaryFields.append(QgsField('end_id', QVariant.Int))
+        boundaryFields.append(QgsField('string No', QVariant.Int))
+
+        NSlist = list()
+        nodeDict = dict()
+        for line in dat:
+            line = re.split('\s+|\t', line)
+            line.pop(-1)
+            if line[0] == 'ND':
+                feature = QgsFeature()
+                geoString = 'POINT(' + line[2] + ' ' + line[3] + ')'
+                feature.setGeometry(QgsGeometry().fromWkt(geoString))
+                feature.setAttributes([int(line[1]), float(line[4])])
+                NodeWriter.addFeature(feature)
+                nodeDict.update({int(line[1]): (line[2], line[3])})
+            elif line[0] == 'NS':
+                line.pop(0)
+                NSlist += line
+
+        del NodeWriter
+
+        boundaries = self.breakNS(NSlist)
+        boundaryWriter = QgsVectorFileWriter(boundaryPath, 'utf-8',
+                                             boundaryFields, QGis.WKBLineString,
+                                             self.crs, 'ESRI Shapefile')
+        for i in range(0, len(boundaries)):
+            feature = QgsFeature()
+            geoString = 'LINESTRING('
+            for j in range(0, len(boundaries[i])):
+                node_id = boundaries[i][j]
+                (x, y) = nodeDict[node_id]
+                geoString += str(x) + ' ' + str(y) + ','
+            geoString = geoString[:-1]
+            geoString += ')'
+            feature.setGeometry(QgsGeometry().fromWkt(geoString))
+            feature.setAttributes([boundaries[i][0], boundaries[i][-1], i+1])
+            boundaryWriter.addFeature(feature)
+
+        del boundaryWriter
+        self.nodePath = nodePath
+        self.boundaryPath = boundaryPath
+
+    def breakNS(self, nodeString):
+        boundaries = list()
+        boundary = list()
+        for i in range(0, len(nodeString)):
+            if int(nodeString[i]) >= 0:
+                boundary.append(int(nodeString[i]))
+            else:
+                boundary.append(-int(nodeString[i]))
+                boundaries.append(boundary)
+                boundary = list()
+        return boundaries
