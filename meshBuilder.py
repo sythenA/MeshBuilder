@@ -484,6 +484,7 @@ class meshBuilder:
             newMainLayer = newPointLayer.copyMainLayer(mainLayerSelected,
                                                        self.systemCRS,
                                                        projFolder)
+            source = newMainLayer.source()
             self.iface.mapCanvas().setDestinationCrs(self.systemCRS)
             if newMainLayer:
                 self.mainLayer = newMainLayer
@@ -931,10 +932,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(1, 2))
 
-    def zoneLayerStyle(self):
+    def zoneLayerStyle(self, layerId):
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName("Zones")
-        layer = vl[0]
+        layer = registry.mapLayer(layerId)
         style_rules = list()
 
         for zone in self.regionOrder:
@@ -955,10 +955,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer.setRendererV2(renderer)
         layer.triggerRepaint()
 
-    def segLayerStyle(self):
+    def segLayerStyle(self, layerId):
         registry = QgsMapLayerRegistry.instance()
-        vl = registry.mapLayersByName("Segments")
-        layer = vl[0]
+        layer = registry.mapLayer(layerId)
         style_rules = list()
 
         for border in self.boundaryOrder:
@@ -1286,7 +1285,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer.selectionChanged.connect(self.selectFromQgis)
         self.dlg.tableWidget.itemChanged.connect(lambda:
                                                  self.arrangeLineTable(0, 1))
-        self.segLayerStyle()
+        self.segLayerStyle(self.segLayerId)
 
     def setTableToZone(self, zoneLayer):
         def setTableItem(i, j, Object, Type='Object'):
@@ -1350,7 +1349,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
         layer = self.iface.activeLayer()
         layer.selectionChanged.connect(self.selectFromQgis)
 
-        self.zoneLayerStyle()
+        self.zoneLayerStyle(self.zoneLayerId)
         self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
         self.dlg.tableWidget.itemClicked.connect(self.regionOrderChanged)
 
@@ -1842,6 +1841,7 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
             if os.path.isfile(meshFile):
                 self.boundaryOrder, self.regionOrder, layerid = loadMesh(
                     meshFile, systemCRS, outDir, self.dlg)
+                self.iface.messageBar().pushMessage(str(layerid))
 
                 msg = ''
                 for i in range(0, len(self.boundaryOrder)):
@@ -1850,30 +1850,30 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
                 self.iface.messageBar().pushMessage(msg)
 
                 try:
-                    idx = [r for r, j in zip(count(), layerid) if 'Nodes' in r]
+                    idx = [r for r, j in zip(count(), layerid) if 'Nodes' in j]
                     idx = idx[0]
                     Instance = QgsMapLayerRegistry.instance()
                     NodeLayer = Instance.mapLayer(layerid[idx][1])
                     self.iface.setActiveLayer(NodeLayer)
+                    self.nodeLayerId = layerid[idx][1]
                     self.setTableToNodes(NodeLayer)
                     self.nodeLayer = NodeLayer
-                    self.nodeLayerId = layerid[idx][1]
 
                     idx = [r for r, j in zip(count(),
-                                             layerid) if 'Segments' in r]
+                                             layerid) if 'Segments' in j]
                     idx = idx[0]
                     SegmentLayer = Instance.mapLayer(layerid[idx][1])
 
                     self.segLayerId = layerid[idx][1]
                     self.segLayer = SegmentLayer
-                    self.segLayerStyle()
+                    self.segLayerStyle(self.segLayerId)
 
-                    idx = [r for r, j in zip(count(), layerid) if 'Zones' in r]
+                    idx = [r for r, j in zip(count(), layerid) if 'Zones' in j]
                     idx = idx[0]
                     zoneLayer = Instance.mapLayer(layerid[idx][1])
                     self.zoneLayerId = layerid[idx][1]
                     self.zoneLayer = zoneLayer
-                    self.zoneLayerStyle()
+                    self.zoneLayerStyle(self.zoneLayerId)
 
                 except:
                     if not os.path.isfile(meshFile):
@@ -1893,19 +1893,19 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
             NodePath = os.path.join(folder, 'Nodes.shp')
             nodelayer = QgsVectorLayer(NodePath, QFileInfo(NodePath).baseName(),
                                        'ogr')
-            mNodeLayer = Instance().addMapLayer(nodelayer, False)
+            mNodeLayer = Instance.addMapLayer(nodelayer, False)
             group.addLayer(nodelayer)
             nodelayer.reload()
             SegPath = os.path.join(folder, 'Segments.shp')
             seglayer = QgsVectorLayer(SegPath, QFileInfo(SegPath).baseName(),
                                       'ogr')
-            mSegLayer = Instance().addMapLayer(seglayer, False)
+            mSegLayer = Instance.addMapLayer(seglayer, False)
             group.addLayer(seglayer)
             seglayer.reload()
             ZonePath = os.path.join(folder, 'Zones.shp')
             zonelayer = QgsVectorLayer(ZonePath, QFileInfo(ZonePath).baseName(),
                                        'ogr')
-            mZoneLayer = Instance().addMapLayer(zonelayer, False)
+            mZoneLayer = Instance.addMapLayer(zonelayer, False)
             group.addLayer(zonelayer)
             zonelayer.reload()
 
@@ -1914,16 +1914,19 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
 
             NodeLayer = Instance.mapLayer(mNodeLayer.id())
             self.iface.setActiveLayer(NodeLayer)
+            self.nodeLayerId = mNodeLayer.id()
             self.setTableToNodes(NodeLayer)
             self.nodeLayer = NodeLayer
 
             SegmentLayer = Instance.mapLayer(mSegLayer.id())
             self.segLayer = SegmentLayer
-            self.segLayerStyle()
+            self.segLayerStyle(mSegLayer.id())
+            self.segLayerId = mSegLayer.id()
 
             zoneLayer = Instance.mapLayer(mZoneLayer.id())
             self.zoneLayer = zoneLayer
-            self.zoneLayerStyle()
+            self.zoneLayerStyle(mZoneLayer.id())
+            self.zoneLayerId = mZoneLayer.id()
 
             size = self.dlg.maximumSize()
             self.dlg.resize(size)
@@ -2128,6 +2131,8 @@ def loadMesh(filename, crs, outDir, dlg):
     SegPath = os.path.join(outDir, "Segments.shp")
     SegWriter = QgsVectorFileWriter(SegPath, "UTF-8", SegFields,
                                     QGis.WKBLineString, crs, "ESRI Shapefile")
+    del SegWriter
+    SegLayer = QgsVectorLayer(SegPath, 'Segments', 'ogr')
     ZoneFields = QgsFields()
     ZoneFields.append(QgsField('id', QVariant.Int))
     ZoneFields.append(QgsField('Zone', QVariant.String))
@@ -2135,9 +2140,13 @@ def loadMesh(filename, crs, outDir, dlg):
     zonePath = os.path.join(outDir, 'Zones.shp')
     ZoneWriter = QgsVectorFileWriter(zonePath, "utf-8", ZoneFields,
                                      QGis.WKBPolygon, crs, "ESRI Shapefile")
+    del ZoneWriter
+    ZoneLayer = QgsVectorLayer(zonePath, 'Zones', 'ogr')
     counter = 0
     boundaryOrder = list()
     regionOrder = list()
+    polygonList = list()
+    segmentFeatureList = list()
     Seg_idTag = 0
     for l in mesh:
         w = l.split()
@@ -2204,8 +2213,9 @@ def loadMesh(filename, crs, outDir, dlg):
                     feature.setGeometry(QgsGeometry().fromWkt(WktString))
                     seq = boundaryOrder.index(boundName)+1
                     feature.setAttributes([Seg_idTag, boundName, seq])
-                    SegWriter.addFeature(feature)
+                    segmentFeatureList.append(feature)
                     Seg_idTag += 1
+                    del feature
             elif NodesNum > 2:
                 geoString = "POLYGON (("
                 ElementNodes.append(ElementNodes[0])
@@ -2214,20 +2224,21 @@ def loadMesh(filename, crs, outDir, dlg):
                     geoString = geoString + str(x) + " " + str(y) + ","
                 geoString = geoString[:-1] + "))"
 
-                feature.setGeometry(QgsGeometry().fromWkt(geoString))
-
                 zoneFeature = QgsFeature()
                 zoneFeature.setFields(ZoneFields)
                 zoneFeature.setGeometry(QgsGeometry().fromWkt(geoString))
                 zoneFeature.setAttributes(
                     [int(fid), physicalNames[int(tagArgs[0])][1]])
 
-                ZoneWriter.addFeature(zoneFeature)
+                polygonList.append(zoneFeature)
+                del zoneFeature
 
                 for i in range(1, len(ElementNodes)):
-                    key = SegList.get((int(ElementNodes[i-1]),
-                                       int(ElementNodes[i])))
-                    if key is None:
+                    key1 = SegList.get((int(ElementNodes[i-1]),
+                                        int(ElementNodes[i])))
+                    key2 = SegList.get((int(ElementNodes[i]),
+                                        int(ElementNodes[i-1])))
+                    if key1 is None and key2 is None:
                         x1, y1, z1 = vertices[int(ElementNodes[i-1])]
                         x2, y2, z2 = vertices[int(ElementNodes[i])]
                         WktString = ("LINESTRING (" + str(x1) + " " + str(y1) +
@@ -2238,18 +2249,16 @@ def loadMesh(filename, crs, outDir, dlg):
                         feature = QgsFeature()
                         feature.setGeometry(QgsGeometry().fromWkt(WktString))
                         feature.setAttributes([Seg_idTag, None, None])
-                        SegWriter.addFeature(feature)
+                        segmentFeatureList.append(feature)
                         Seg_idTag += 1
+                        del feature
 
-            feature.setAttributes([int(fid)])
         elif mode == 0:
             continue
         elif len(w) == 1:
             continue
         counter = counter + 1
         dlg.meshLoadProgress.setValue(int(float(counter)/len(mesh)*100))
-
-    del ZoneWriter
 
     currProcess = int(float(counter)/len(mesh)*100)
     imComplete = 100 - int(float(counter)/len(mesh)*100)
@@ -2274,8 +2283,16 @@ def loadMesh(filename, crs, outDir, dlg):
 
     layerPath.update({1: nodePath})
 
-    del SegWriter
     del SegList
+    segEditable = SegLayer.startEditing()
+    if segEditable:
+        SegLayer.addFeatures(segmentFeatureList)
+    SegLayer.commitChanges()
+
+    zoneEditable = ZoneLayer.startEditing()
+    if zoneEditable:
+        ZoneLayer.addFeatures(polygonList)
+    ZoneLayer.commitChanges()
 
     layerPath.update({2: SegPath})
     layerPath.update({3: zonePath})
