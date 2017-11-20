@@ -38,7 +38,7 @@ class TransformedDict(collections.MutableMapping):
 class pointRefDict(TransformedDict):
     def __keytransform__(self, key):
         for rkey in self.keys():
-            if sqrt((key[0]-rkey[0])**2 + (key[1]-rkey[1])**2) < 1.0e-3:
+            if sqrt((key[0]-rkey[0])**2 + (key[1]-rkey[1])**2) < 1.0e-5:
                 return rkey
         return key
 

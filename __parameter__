@@ -1,0 +1,10 @@
+(dp0
+S'GMSH'
+p1
+VD:/gmsh-2.16.0-Windows/gmsh.exe
+p2
+sS'projFolder'
+p3
+S'D:\\test\\proj5'
+p4
+s.

@@ -20,6 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt4.QtCore import QFileInfo, QPyNullVariant
 from PyQt4.QtCore import QProcess, QProcessEnvironment, QVariant
@@ -37,7 +38,7 @@ from commonDialog import onCritical, onWarning
 from random import randint
 # Import the code for the dialog
 from meshBuilder_dialog import meshBuilderDialog
-import shepred
+from .srhpre import shepred
 import os.path
 import newPointLayer
 import lineFrame
@@ -90,7 +91,7 @@ class meshBuilder:
                 QCoreApplication.installTranslator(self.translator)
 
         self.dlg = meshBuilderDialog()
-        self.shepred = shepred.shepred(self.iface)
+        self.srhpre = shepred.shepred(self.iface)
         self.mesh2D = mesh2DView(self.iface)
 
         # Declare instance attributes
@@ -358,7 +359,7 @@ class meshBuilder:
         self.srhpredAction = self.add_action(
                             pre_Icon,
                             text=self.tr(u'srhpre UI'),
-                            callback=self.shepred.run,
+                            callback=self.srhpre.run,
                             parent=self.iface.mainWindow())
         self.mesh2DViewerAction = self.add_action(
                             viewer_Icon,

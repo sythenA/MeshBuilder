@@ -1,0 +1,3166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>srhpreUI</class>
+ <widget class="QDialog" name="srhpreUI">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>923</width>
+    <height>685</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>923</width>
+    <height>685</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>923</width>
+    <height>685</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>srhpre UI</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox_11">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>540</y>
+     <width>221</width>
+     <height>131</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Special Modeling Options</string>
+   </property>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>21</y>
+      <width>202</width>
+      <height>99</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="rbtnSpecialInfiltration">
+       <property name="text">
+        <string>Infiltration</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="rbtnSpecialMomentumless">
+       <property name="text">
+        <string>Momentumless Sink/Source</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="rbtnSpecialNone">
+       <property name="text">
+        <string>None</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QCheckBox" name="rbtnSediInput">
+       <property name="text">
+        <string>Sediment Dropping Into River</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>20</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Case Name</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEditCaseName"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>_SIF.DAT</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_5">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>310</y>
+     <width>201</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Time Setup</string>
+   </property>
+   <widget class="QWidget" name="layoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>171</width>
+      <height>82</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Tstart (hr)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="lineEditTStart">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEditTStep"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Total Time (hr)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineEditTTotal"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Time Step (sec)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_4">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>50</y>
+     <width>551</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Description</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEditDescription"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_4">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>250</y>
+     <width>201</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Simulation</string>
+   </property>
+   <widget class="QRadioButton" name="rbtnSimSteady">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steady</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbtnSimUnsteady">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Unsteady</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>200</y>
+     <width>201</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Solver</string>
+   </property>
+   <widget class="QRadioButton" name="rbtnSolverFlow">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Flow</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbtnSolverMobile">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Mobile</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_2">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>440</y>
+     <width>201</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Output Format</string>
+   </property>
+   <widget class="QRadioButton" name="rbtnOutputSMS">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SMS</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbtnOutputTecplot">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>20</y>
+      <width>83</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Tecplot</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_3">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>490</y>
+     <width>201</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Output Unit</string>
+   </property>
+   <widget class="QRadioButton" name="rbtnOutputUnitSI">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SI</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="rbtnOutputUnitEN">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>20</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>EN</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="exportBtn">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>630</y>
+     <width>171</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>輸出SIF</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_6">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>110</y>
+     <width>551</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="QLabel" name="label_7">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>.2dm Mesh</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEditMeshFileName"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pbtnFileSelector">
+      <property name="text">
+       <string>...</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_7">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>140</y>
+     <width>651</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <item>
+     <widget class="QLabel" name="label_11">
+      <property name="text">
+       <string>.msh Mesh</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineMeshFilePath"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="mshFileSelector">
+      <property name="text">
+       <string>...</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="readMeshBtn">
+      <property name="text">
+       <string>讀入網格</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_8">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>80</y>
+     <width>551</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <item>
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>Save Folder</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="saveFolderEdit"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="saveFolderBtn">
+      <property name="text">
+       <string>...</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QLabel" name="label_Complete">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>640</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="callSrhpreBtn">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>630</y>
+     <width>91</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>srhpre</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="callSRH2DBtn">
+   <property name="geometry">
+    <rect>
+     <x>750</x>
+     <y>630</y>
+     <width>91</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>SRH2D</string>
+   </property>
+  </widget>
+  <widget class="QTabWidget" name="solverTabWidget">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>180</y>
+     <width>631</width>
+     <height>441</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>1</number>
+   </property>
+   <widget class="QWidget" name="tab_FlowSetting">
+    <attribute name="title">
+     <string>Flow Settings</string>
+    </attribute>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>631</width>
+       <height>411</height>
+      </rect>
+     </property>
+     <property name="tabPosition">
+      <enum>QTabWidget::North</enum>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabFlowSetting">
+      <attribute name="title">
+       <string>Flow Setting</string>
+      </attribute>
+      <widget class="QGroupBox" name="groupBox_6">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>201</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Turbulent Model</string>
+       </property>
+       <widget class="QRadioButton" name="rbtnTurbPARA">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>PARA</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnTurbKE">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>KE</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnTurbRNG">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>19</y>
+          <width>98</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>RNG</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_8">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>321</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Mesh Unit</string>
+       </property>
+       <widget class="QWidget" name="layoutWidget_5">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>311</width>
+          <height>47</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="rbtnMUnitMETER">
+           <property name="text">
+            <string>METER</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QRadioButton" name="rbtnMUnitmm">
+           <property name="text">
+            <string>mm</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QRadioButton" name="rbtnMUnitKM">
+           <property name="text">
+            <string>KM</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QRadioButton" name="rbtnMUnitGScale">
+           <property name="text">
+            <string>GScale</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="rbtnMUnitFOOT">
+           <property name="text">
+            <string>FOOT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QRadioButton" name="rbtnMUnitinch">
+           <property name="text">
+            <string>inch</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QRadioButton" name="rbtnMUnitMile">
+           <property name="text">
+            <string>MILE</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_9">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>311</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Manning's Setup</string>
+       </property>
+       <widget class="QRadioButton" name="rbtnManningConstant">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Constant</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnManningMaterial">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>20</y>
+          <width>111</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Material Type</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnManningDistributed">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>20</y>
+          <width>101</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Distributed</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLabel" name="label_9">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>10</y>
+         <width>281</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Set parameter for Parabolic Turbulence Model:</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="turbParaInput">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>50</y>
+         <width>81</width>
+         <height>22</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_10">
+       <property name="geometry">
+        <rect>
+         <x>220</x>
+         <y>30</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>(from 0.05 ~ 1.0)</string>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="mannTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>591</width>
+         <height>161</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="mannLabel">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>150</y>
+         <width>261</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Flow Initial Cond.</string>
+      </attribute>
+      <widget class="QGroupBox" name="groupBox_12">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>20</y>
+         <width>311</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Initial Condition</string>
+       </property>
+       <widget class="QRadioButton" name="rbtnICDry">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>DRY</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnICRst">
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>RST</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnICAuto">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>AUTO</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rbtnICZonal">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>20</y>
+          <width>83</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>ZONAL</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLineEdit" name="rstFileEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>70</y>
+         <width>221</width>
+         <height>31</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="addRstFileBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>260</x>
+         <y>70</y>
+         <width>41</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="initLabel">
+       <property name="geometry">
+        <rect>
+         <x>350</x>
+         <y>40</y>
+         <width>241</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="InitCondTable">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>110</y>
+         <width>571</width>
+         <height>121</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_7">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>240</y>
+         <width>331</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Output Interval</string>
+       </property>
+       <widget class="QRadioButton" name="fixIntvBtn">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>151</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Fixed Interval (1hr)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="asigOutBtn">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>20</y>
+          <width>161</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Assign Output Time</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLineEdit" name="outIntvEdit">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>260</y>
+         <width>91</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="addIntvBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>470</x>
+         <y>260</y>
+         <width>51</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="OutIntvTable">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>300</y>
+         <width>571</width>
+         <height>81</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="deleteIntvBtn">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>530</x>
+         <y>260</y>
+         <width>51</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Delete</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tabFlowBCSetting">
+      <attribute name="title">
+       <string>Flow BC Setting</string>
+      </attribute>
+      <widget class="QTableWidget" name="boundaryTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>601</width>
+         <height>321</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton">
+       <property name="geometry">
+        <rect>
+         <x>-410</x>
+         <y>30</y>
+         <width>93</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="inputFileBtn">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>10</y>
+         <width>111</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>使用檔案輸入</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_12">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>181</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Set up boundary condition</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="explainBoundaryBtn">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>10</y>
+         <width>61</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>說明</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_MobileSetting">
+    <attribute name="title">
+     <string>Mobile Settings</string>
+    </attribute>
+    <widget class="QTabWidget" name="sedimentTab">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>621</width>
+       <height>411</height>
+      </rect>
+     </property>
+     <property name="currentIndex">
+      <number>5</number>
+     </property>
+     <widget class="QWidget" name="sediPropertyTab">
+      <attribute name="title">
+       <string>Sediment Properties</string>
+      </attribute>
+      <widget class="QFrame" name="frame">
+       <property name="geometry">
+        <rect>
+         <x>360</x>
+         <y>0</y>
+         <width>251</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_15">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Sediment Specific Gtravity</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="sediSGEdit">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>10</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_16">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Sediment Size Class</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="sediSizeClass">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>50</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QTableWidget" name="sediPropTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>140</y>
+         <width>601</width>
+         <height>241</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_20">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>601</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;單位容積重(Bulk Density)用以計算孔隙率，可不用填入。若有填入Bulk Density，可選擇填&lt;br/&gt;入的單位為英制(EN)或公制(SI)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QFrame" name="frame_2">
+       <property name="geometry">
+        <rect>
+         <x>-500</x>
+         <y>520</y>
+         <width>120</width>
+         <height>80</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+      <widget class="QFrame" name="frame_6">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>351</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_41">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Sediment Modeling Option</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="sediModelingCombo">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>10</y>
+          <width>171</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>Fully Unsteady</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Quasi-Unsteady</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_42">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>331</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Sediment Model Starting Time </string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="sediStartingEdit">
+        <property name="geometry">
+         <rect>
+          <x>196</x>
+          <y>50</y>
+          <width>41</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_43">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>50</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>(hr)</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="sediTransportTab">
+      <attribute name="title">
+       <string>Sediment Transport Capacity</string>
+      </attribute>
+      <widget class="QLabel" name="label_EqnParameter">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>70</y>
+         <width>211</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Equation Dependent Parameters</string>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="eqDependentTable">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>90</y>
+         <width>331</width>
+         <height>71</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QFrame" name="frame_3">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>170</y>
+         <width>171</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_17">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>151</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Water Temperature( ℃ )&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="watTempEdit">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>60</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_13">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>280</y>
+         <width>291</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 1px solid gray</string>
+       </property>
+       <property name="title">
+        <string>Adaption Coefficients for Suspended Load</string>
+       </property>
+       <widget class="QGroupBox" name="groupBox_14">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>20</y>
+          <width>91</width>
+          <height>61</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>A_Dep</string>
+        </property>
+        <widget class="QLineEdit" name="suspCoefEdit">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>20</y>
+           <width>61</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>0.25</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_15">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>20</y>
+          <width>91</width>
+          <height>61</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>A_Ero</string>
+        </property>
+        <widget class="QLineEdit" name="bedLoadCoefEdit">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>20</y>
+           <width>61</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>1.0</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QFrame" name="frame_4">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>170</y>
+         <width>401</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_18">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>231</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Adaption Length for Bedload Transport</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="adaptionLenCombo">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>271</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>0: Constant Length</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>1: Philip-Sutherland Saltation Length</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2: van Rijn Sand Dune Formula</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>3: van Rijn Saltation Length Formula</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4: Seminara et al. (2002) Formula</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLineEdit" name="bLoadAdaptionLenEdit">
+        <property name="geometry">
+         <rect>
+          <x>290</x>
+          <y>60</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_22">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>58</width>
+          <height>15</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Mode</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_23">
+        <property name="geometry">
+         <rect>
+          <x>290</x>
+          <y>40</y>
+          <width>58</width>
+          <height>15</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Length</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QFrame" name="frame_5">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>280</y>
+         <width>281</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_19">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>171</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Active Layer Thickness</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="aTMode">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>171</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>1: Constant Thickness</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2: Using T_Para * D_90</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_24">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>58</width>
+          <height>15</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Mode</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_25">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>71</width>
+          <height>15</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>T_para</string>
+        </property>
+        <property name="scaledContents">
+         <bool>false</bool>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="tParaEdit">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>50</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QComboBox" name="capacityEqnCombo">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>30</y>
+         <width>331</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>Enelund-Hansen (1972) Total-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Meyer-Peter-Muller (1948) Bed-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Parker (1990) Bed-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Wilcock (2003) Bed-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Wu (2000) Bed material load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Yang (1973) Gravel total load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Yang (1979) Gravel total load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Ackers-White (1973) Total load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Rijn (1984) Bed-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Seminara (2002)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Bagnold (1980) Bed-load</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Trinity (Gaeuman et al.(2009) Bed-load)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Kuo (1984-1988) Bed-load</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLabel" name="label_44">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>4</y>
+         <width>331</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Sediment Transport Capacity Equation</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="cohesiveTab">
+      <attribute name="title">
+       <string>Cohesive Sediment Modeling</string>
+      </attribute>
+      <widget class="QCheckBox" name="checkCohesiveUsed">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>261</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Activate Cohesive Sediment Modeling</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_21">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>50</y>
+         <width>301</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Maximum Diameter of Cohesive Sediment (C_limit)</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="cohDiaLimEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>50</y>
+         <width>71</width>
+         <height>31</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="cohSediEroRateGroup">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>150</y>
+         <width>501</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Parameters for Cohesive Sediment Erosion Rate</string>
+       </property>
+       <widget class="QLabel" name="label_26">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>30</y>
+          <width>51</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Tau_es</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="tauEsEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>30</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_27">
+        <property name="geometry">
+         <rect>
+          <x>150</x>
+          <y>30</y>
+          <width>51</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Tau_em</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="tauEmEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>30</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_28">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>70</y>
+          <width>31</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>S_s</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="ssEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>70</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_29">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>70</y>
+          <width>31</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>S_m</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="smEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>70</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="unitBox_1">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>420</x>
+          <y>30</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>SI</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>EN</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_34">
+        <property name="geometry">
+         <rect>
+          <x>270</x>
+          <y>30</y>
+          <width>141</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>label</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_37">
+        <property name="geometry">
+         <rect>
+          <x>270</x>
+          <y>70</y>
+          <width>221</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="cohSediDepRateGroup">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>270</y>
+         <width>501</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Parameters for Cohesive Sediment Deposition Rate</string>
+       </property>
+       <widget class="QLabel" name="label_31">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>30</y>
+          <width>51</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Tau_df</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="tauDfEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>30</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_32">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>30</y>
+          <width>51</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Tau_dp</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="tauDpEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>30</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_33">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>70</y>
+          <width>58</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Conc_eq</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="concEqEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>70</x>
+          <y>70</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="unitBox_2">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>410</x>
+          <y>30</y>
+          <width>71</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>SI</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>EN</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_35">
+        <property name="geometry">
+         <rect>
+          <x>260</x>
+          <y>30</y>
+          <width>121</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_36">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>70</y>
+          <width>131</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLabel" name="label_30">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>90</y>
+         <width>201</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Cohesive Sediment Fall Velocity</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="cohFallVelCombo">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>110</y>
+         <width>251</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>-1: Kaolinite</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0: Severn River</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>File Input</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLabel" name="label_40">
+       <property name="geometry">
+        <rect>
+         <x>300</x>
+         <y>84</y>
+         <width>241</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="bedPropertyTab">
+      <attribute name="title">
+       <string>Bed Properties</string>
+      </attribute>
+      <widget class="QGroupBox" name="bedPropertyBox">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>10</y>
+         <width>331</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Bed Variety Spatial Variation Input</string>
+       </property>
+       <widget class="QRadioButton" name="rdoBedUniform">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>98</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>UNIFORM</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rdoBedZonal">
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>30</y>
+          <width>98</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>ZONAL</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="rdoBedDistri">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>30</y>
+          <width>121</width>
+          <height>19</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>DISTRIBUTED</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_17">
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>10</y>
+         <width>241</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Bed Distribution .2dm File</string>
+       </property>
+       <widget class="QCheckBox" name="sameFileAsFlowBox">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>211</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Use The Same .2dm file as Flow</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_45">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>80</y>
+          <width>221</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>.2dm For Bed Material:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="setBed2dmBtn">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>40</y>
+          <width>41</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_18">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>80</y>
+         <width>331</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Set Bed Layers in Each Zone</string>
+       </property>
+       <widget class="QComboBox" name="zoneBedSelector">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>20</y>
+          <width>81</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_38">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>20</y>
+          <width>101</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Layers in Zone</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="layerInZoneEdit">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>20</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QTreeWidget" name="bedLayerTree">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>180</y>
+         <width>581</width>
+         <height>191</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+      <widget class="QCheckBox" name="rockErosionCheck">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>152</y>
+         <width>201</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Use Bedrock Erosion</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="rockSettingsTab">
+      <attribute name="title">
+       <string>Rock Settings</string>
+      </attribute>
+      <widget class="QTableWidget" name="bedRockSetTable">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>581</width>
+         <height>361</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="bankErosionTab">
+      <attribute name="title">
+       <string>Bank Erosion</string>
+      </attribute>
+      <widget class="QFrame" name="bankErosionFrameWork">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>40</y>
+         <width>611</width>
+         <height>331</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QLabel" name="label_46">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>100</y>
+          <width>101</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Bank Pairs</string>
+        </property>
+       </widget>
+       <widget class="QTableWidget" name="bankPairTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>120</y>
+          <width>141</width>
+          <height>111</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QTableWidget" name="erosionModTable">
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>120</y>
+          <width>421</width>
+          <height>111</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_47">
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>92</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Erosion Model Selection</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="remeshZoneChk">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>240</y>
+          <width>371</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Use a .2dm File To Define Mesh Zone For Remesh</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="remeshFileSelector">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>270</y>
+          <width>31</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="remeshLabel">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>270</y>
+          <width>441</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Please Choose a .2dm File to Define Transformed Mesh Zone.</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="bankModBox">
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>10</y>
+          <width>421</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>2: Linear Retreat Model(Non-Cohesive Banks)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>3: Failure Based Model With Moving Mesh</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4: Failure Based Model With Fixed Mesh</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>5: Linear Retreat Model With Cell BasedFixed Mesh</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>6: Angle of Respondse Model With Cell Based Fixed Mesh</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_48">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>161</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Bank Module</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_49">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>221</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Bank Model Time Step</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="bankTimeStep">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>50</y>
+          <width>61</width>
+          <height>31</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_50">
+        <property name="geometry">
+         <rect>
+          <x>420</x>
+          <y>235</y>
+          <width>181</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Remesh Interval: </string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_51">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>55</y>
+          <width>71</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>(sec)</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QCheckBox" name="bankErosionChkBox">
+       <property name="geometry">
+        <rect>
+         <x>3</x>
+         <y>10</y>
+         <width>261</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Activate Bank Erosion</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="sediFluxTab">
+      <attribute name="title">
+       <string>Boundary Sediment Flux</string>
+      </attribute>
+      <widget class="QTableWidget" name="sediBoundaryTable">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>60</y>
+         <width>611</width>
+         <height>321</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_14">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>271</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Sediment Input/Output On The Boundary</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="geometry">
+        <rect>
+         <x>280</x>
+         <y>20</y>
+         <width>51</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>說明</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_SpecialOption">
+    <attribute name="title">
+     <string>Special Options</string>
+    </attribute>
+    <widget class="QTabWidget" name="tabSpecialOps">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>631</width>
+       <height>401</height>
+      </rect>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_5">
+      <attribute name="title">
+       <string>Momentumless Sink/Source</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_6">
+      <attribute name="title">
+       <string>Infiltration</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_7">
+      <attribute name="title">
+       <string>Sediment Dropping Into River</string>
+      </attribute>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>Advanced Settings</string>
+    </attribute>
+    <widget class="QLabel" name="label_39">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>200</y>
+       <width>111</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>NITER = </string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_52">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>240</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>DAMP = </string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_53">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>200</y>
+       <width>441</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Number of iterations within each time step.</string>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="dampBox">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>240</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <double>0.300000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.990000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_54">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>240</y>
+       <width>421</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>The amount of damping added to 2nd-order discretization scheme.</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_55">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>280</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>RELAX_H = </string>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="relaxHBox">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>280</y>
+       <width>61</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="minimum">
+      <double>0.001000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>0.500000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.100000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_56">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>320</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>RELAX_UV =</string>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="relaxUVBox">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>320</y>
+       <width>51</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>100.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_57">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>280</y>
+       <width>401</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Specify relaxation of continuity equation to assigned number.</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_58">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>320</y>
+       <width>391</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Specify relaxation of momumtun equation to assigned number.</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="varyTimeStepChk">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>360</y>
+       <width>321</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Use varying time step.</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_59">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>13</y>
+       <width>81</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>DT_NEW =</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="aDTEdit">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>10</y>
+       <width>61</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_60">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>13</y>
+       <width>411</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Override the simulation time step settings. (in seconds)</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_61">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>221</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TOTAL_SIMULATION_TIME = </string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="aSIMTIMEEdit">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>50</y>
+       <width>71</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_62">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>90</y>
+       <width>361</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Override the total simulation time settings. (in hr)</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_63">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>120</y>
+       <width>81</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>A_TURB = </string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="aTurbEdit">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>110</y>
+       <width>61</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_64">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>150</y>
+       <width>481</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Overridde of the parabolic parameter if using parabolic turbulence model.</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="NITEREdit">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>200</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QComboBox" name="obsPointsLayerCombo">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>80</y>
+     <width>191</width>
+     <height>31</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>50</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Observation Points Layer</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="hotStartChk">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>20</y>
+     <width>191</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Using Hot Start</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="setGeoRefBtn">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>130</y>
+     <width>41</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
