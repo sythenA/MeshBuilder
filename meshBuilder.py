@@ -1108,7 +1108,6 @@ into layer attributes.', level=QgsMessageBar.INFO)
                 if table.cellWidget(i, comCol):
                     table.removeCellWidget(i, comCol)
         self.boundaryOrder = boundaryOrder
-        self.segLayerStyle()
 
     def setRefLength(self):
         table = self.dlg.tableWidget
@@ -2105,7 +2104,7 @@ def loadMesh(filename, crs, outDir, dlg):
     meshfile = open(filename, 'r')
     meshName = filename.split('/')[-1]
     mesh = meshfile.readlines()
-    SegList = lineFrame.lineRefDict()
+    SegList = dict()
     meshfile.close()
 
     vertices = dict()
@@ -2200,7 +2199,10 @@ def loadMesh(filename, crs, outDir, dlg):
                 geoString = geoString + str(x2) + " " + str(y2)
                 geoString = geoString + ")"
 
-                val = SegList.get((int(ElementNodes[0]), int(ElementNodes[1])))
+                keyString = [int(ElementNodes[0]), int(ElementNodes[1])]
+                keyString.sort()
+
+                val = SegList.get(tuple(keyString))
                 if val is None:
                     x1, y1, z1 = vertices[int(ElementNodes[0])]
                     x2, y2, z2 = vertices[int(ElementNodes[1])]
@@ -2234,11 +2236,10 @@ def loadMesh(filename, crs, outDir, dlg):
                 del zoneFeature
 
                 for i in range(1, len(ElementNodes)):
-                    key1 = SegList.get((int(ElementNodes[i-1]),
-                                        int(ElementNodes[i])))
-                    key2 = SegList.get((int(ElementNodes[i]),
-                                        int(ElementNodes[i-1])))
-                    if key1 is None and key2 is None:
+                    keyString = [int(ElementNodes[i-1]), int(ElementNodes[i])]
+                    keyString.sort()
+                    key = SegList.get(tuple(keyString))
+                    if key is None:
                         x1, y1, z1 = vertices[int(ElementNodes[i-1])]
                         x2, y2, z2 = vertices[int(ElementNodes[i])]
                         WktString = ("LINESTRING (" + str(x1) + " " + str(y1) +
