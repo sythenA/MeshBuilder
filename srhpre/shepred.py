@@ -108,7 +108,8 @@ class shepred:
         self.dlg = shepredDialog()
 
         try:
-            path = os.path.join(os.path.dirname(__file__), '__parameter__')
+            parentFolder = os.path.dirname(os.path.dirname(__file__))
+            path = os.path.join(parentFolder, '__parameter__')
             f = open(path, 'rb')
             param = pickle.load(f)
             f.close()
@@ -1304,8 +1305,8 @@ class genDIP:
                                              bankLayers, gradClass)
                 bankPairs = bankPairDiag.run()
                 bankDiag = bankCrossSecSetting(iface, projFolder, self.nodePath,
-                                               self.boundaryPath, bankCS,
-                                               bankPairs)
+                                               self.boundaryPath, bankPairs,
+                                               bankCS)
                 bankDiag.dlg.accepted.connect(self.chkSettings)
                 bankDiag.run()
             else:

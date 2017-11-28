@@ -9,20 +9,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>751</width>
-    <height>564</height>
+    <width>951</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>751</width>
-    <height>564</height>
+    <width>951</width>
+    <height>800</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>751</width>
-    <height>564</height>
+    <width>951</width>
+    <height>800</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -31,8 +31,8 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>520</y>
+     <x>380</x>
+     <y>750</y>
      <width>211</width>
      <height>41</height>
     </rect>
@@ -50,7 +50,7 @@
      <x>10</x>
      <y>60</y>
      <width>241</width>
-     <height>401</height>
+     <height>651</height>
     </rect>
    </property>
   </widget>
@@ -95,16 +95,16 @@
     <rect>
      <x>260</x>
      <y>100</y>
-     <width>471</width>
-     <height>141</height>
+     <width>681</width>
+     <height>321</height>
     </rect>
    </property>
   </widget>
   <widget class="QPushButton" name="addLayerBtn">
    <property name="geometry">
     <rect>
-     <x>640</x>
-     <y>20</y>
+     <x>660</x>
+     <y>60</y>
      <width>31</width>
      <height>31</height>
     </rect>
@@ -121,8 +121,8 @@
   <widget class="QPushButton" name="removeLayerBtn">
    <property name="geometry">
     <rect>
-     <x>680</x>
-     <y>20</y>
+     <x>700</x>
+     <y>60</y>
      <width>31</width>
      <height>31</height>
     </rect>
@@ -136,24 +136,17 @@
     <string>-</string>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="textBrowser">
-   <property name="geometry">
-    <rect>
-     <x>-150</x>
-     <y>760</y>
-     <width>256</width>
-     <height>192</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QTextBrowser" name="secPropertyViewer">
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>250</y>
-     <width>471</width>
-     <height>211</height>
+     <y>430</y>
+     <width>681</width>
+     <height>281</height>
     </rect>
+   </property>
+   <property name="lineWrapMode">
+    <enum>QTextEdit::NoWrap</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label_6">
@@ -177,8 +170,8 @@
   <widget class="QPushButton" name="changeNodesBtn">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>470</y>
+     <x>10</x>
+     <y>720</y>
      <width>61</width>
      <height>31</height>
     </rect>

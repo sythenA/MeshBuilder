@@ -1,6 +1,7 @@
 import os
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog, QTableWidgetItem
+from PyQt4.QtCore import Qt
 from copy import deepcopy
 from commonDialog import onCritical
 
@@ -18,12 +19,14 @@ class genBankLayerPropDiag(QDialog, FORM_CLASS):
 class layerItem:
     def __init__(self, sedimentGrad=list()):
         self.minElev = 0.0  # Minimum Elevation
+        self.grdWatLvl = -999  # Ground Water Level
         self.porosity = 0.0  # Porosity
         self.ssw = 0.0  # Saturated Unit Weight
         self.tau = 0.0  # Critical Shear Stress
         self.coh = 0.0  # Effective Cohesion
         self.phi = 0.0  # Internal Friction Angle
-        self.phib = 0.0  # Rate of Pore Water Suction
+        self.erodibility = 0.0  # Erodibility
+        self.phib = 0.0  # Stress increse of Pore Water Suction(in angle)
         self.gradList = sedimentGrad
 
 
@@ -61,9 +64,10 @@ class bankLayerProp:
         self.dlg.effCohEdit.editingFinished.connect(self.setEffCoh)
         self.dlg.phiBEdit.editingFinished.connect(self.setPhiB)
         self.dlg.angEdit.editingFinished.connect(self.setInternalAng)
+        self.dlg.eroEdit.editingFinished.connect(self.setErodibility)
         self.dlg.pairSelector.currentIndexChanged.connect(self.changePair)
         self.dlg.layerSelector.currentIndexChanged.connect(self.selectLayer)
-        self.dlg.sediGradTable.itemEntered.connect(self.setLayerGrad)
+        self.dlg.sediGradTable.cellChanged.connect(self.setLayerGrad)
         self.dlg.noMoveBtn.toggled.connect(self.setToFixed)
         self.dlg.retreatBtn.toggled.connect(self.setToRetreat)
 
@@ -72,14 +76,16 @@ class bankLayerProp:
         if self.gradClass:
             table.setRowCount(2)
             table.setColumnCount(len(self.gradClass))
-            for i in range(0, 2):
-                for j in range(0, len(self.gradClass)):
-                    table.setItem(i, j, QTableWidgetItem())
 
             for j in range(0, len(self.gradClass)):
                 minSize, maxSize, portion = self.gradClass[j]
-                table.item(0, j).setText(str(minSize) + ' - ' + str(maxSize))
+                item = QTableWidgetItem(str(minSize) + ' - ' + str(maxSize))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                table.setItem(0, j, item)
+
+                table.setItem(1, j, QTableWidgetItem())
                 table.item(1, j).setText(str(portion))
+
         self.showContent()
 
     def run(self):
@@ -88,6 +94,15 @@ class bankLayerProp:
             return self.bankPairs
         else:
             onCritical(134)
+            return self.bankPairs
+
+    def showGradListOnMessage(self, currentLayer):
+        gradList = currentLayer.gradList
+        newList = list()
+        for i in range(0, len(gradList)):
+            newList.append(gradList[i][2])
+        line = 'Bank Layer Composition: ' + str(newList)
+        self.iface.messageBar().pushMessage(line)
 
     def makeBankPair(self, bankPairs, layers):
         for i in range(0, bankPairs):
@@ -108,20 +123,22 @@ class bankLayerProp:
         currentLayer = self.currentPair.layerItems[idx]
 
         table = self.dlg.sediGradTable
-        for j in range(0, table.columnCount()):
-            currentLayer.gradList[j][2] = float(table.item(1, j).text())
-        self.currentPair.layerItems[idx] = currentLayer
+        column = table.currentColumn()
+        currentLayer.gradList[column][2] = float(table.item(1, column).text())
+        table.selectColumn(-1)
+        self.showGradListOnMessage(currentLayer)
 
     def showLayerComposition(self):
         table = self.dlg.sediGradTable
 
         idx = self.dlg.layerSelector.currentIndex()
         currentLayer = self.currentPair.layerItems[idx]
-        self.iface.messageBar().pushMessage(str(currentLayer.gradList))
         for j in range(0, len(currentLayer.gradList)):
             item = table.item(1, j)
             item.setText(str(currentLayer.gradList[j][2]))
             table.setItem(1, j, item)
+
+        self.dlg.sediGradTable.cellChanged.connect(self.setLayerGrad)
 
     def setStartType(self):
         idx = self.dlg.pairSelector.currentIndex()
@@ -149,6 +166,8 @@ class bankLayerProp:
 
     def setPairGrdWatLvl(self):
         self.currentPair.grdWatLvl = float(self.dlg.grdWatLvlEdit.text())
+        for layer in self.currentPair.layers:
+            layer.grdWatLvl = float(self.dlg.grdWatLvlEdit.text())
         if self.grdWatLvl == -999.0:
             self.dlg.phiBEdit.setEnabled(False)
             self.dlg.effCohEdit.setEnabled(False)
@@ -174,6 +193,13 @@ class bankLayerProp:
         idx = self.dlg.layerSelector.currentIndex()
         currentItem = self.currentPair.layerItems[idx]
         currentItem.ssw = float(self.dlg.satWeightEdit.text())
+        self.currentPair.layerItems[idx] = currentItem
+        self.showContent()
+
+    def setErodibility(self):
+        idx = self.dlg.layerSelector.currentIndex()
+        currentItem = self.currentPair.layerItems[idx]
+        currentItem.erodibility = float(self.dlg.eroEdit.text())
         self.currentPair.layerItems[idx] = currentItem
         self.showContent()
 
@@ -210,7 +236,7 @@ class bankLayerProp:
             self.dlg.layerSelector.clear()
             totalLayers = int(self.dlg.totalLayersEdit.text())
             self.currentPair.layers = totalLayers
-            self.currentPair.makeLayers()
+            self.currentPair.makeLayers(self.gradClass)
 
             for i in range(0, totalLayers):
                 self.dlg.layerSelector.addItem(str(i+1))
@@ -221,6 +247,7 @@ class bankLayerProp:
     def selectLayer(self):
         idx = self.dlg.layerSelector.currentIndex()
         self.currentItem = self.currentPair.layerItems[idx]
+        self.dlg.sediGradTable.cellChanged.disconnect()
         self.showContent()
 
     def setToFixed(self):
@@ -249,5 +276,6 @@ class bankLayerProp:
         self.dlg.satWeightEdit.setText(str(currentItem.ssw))
         self.dlg.tauCriEdit.setText(str(currentItem.tau))
         self.dlg.effCohEdit.setText(str(currentItem.coh))
+        self.dlg.eroEdit.setText(str(currentItem.erodibility))
         self.dlg.angEdit.setText(str(currentItem.phi))
         self.dlg.phiBEdit.setText(str(currentItem.phib))
