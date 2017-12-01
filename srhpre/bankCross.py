@@ -8,7 +8,8 @@ from qgis.core import QgsFeatureRequest, QgsExpression
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog, QListWidgetItem, QTableWidgetItem
 from PyQt4.QtCore import QVariant, Qt
-from copy import copy
+from copy import deepcopy
+from bankLayerSetting import bankPairItem, layerItem
 import subprocess
 
 
@@ -273,17 +274,30 @@ class bankCrossSecSetting:
         self.dlg.retreatRdo.clicked.connect(self.setToRetreatCS)
         self.dlg.noMoveRdo.clicked.connect(self.setToFixedCS)
         self.dlg.sectionList.itemClicked.connect(self.showSec)
+        self.dlg.addLayerBtn.clicked.connect(self.addOneLayer)
+        self.dlg.removeLayerBtn.clicked.connect(self.removeOneLayer)
 
     def run(self):
         self.dlg.show()
         result = self.dlg.exec_()
         if result:
-            pass
+            self.writeIn()
 
     def checkFolder(self):
         folderPath = os.path.join(self.projFolder, 'MeshShp', 'bank')
         if not os.path.isdir(folderPath):
             subprocess.Popen(['mkdir', folderPath])
+
+    def copyBankPairs(self, orgBankPair):
+        layers = len(orgBankPair.layerItems)
+        newBankPair = bankPairItem(layers, orgBankPair.gradList)
+        newBankPair.startCSType = orgBankPair.startCSType
+        newBankPair.makeLayers()
+
+        for i in range(0, orgBankPair.layers):
+            newBankPair.layerItems[i] = deepcopy(orgBankPair.layerItems[i])
+
+        return newBankPair
 
     def loadCrossSecs(self):
         if self.bankCS:
@@ -296,7 +310,9 @@ class bankCrossSecSetting:
                                              self.mNodeLayer, sec)
                 idx = bankCS.CS.index(sec)
                 bankSecItem.pairNum = pairNum[idx]
-                bankSecItem.bankData = copy(bankPairs[bankSecItem.pairNum-1])
+                newBankPair = self.copyBankPairs(
+                    bankPairs[bankSecItem.pairNum-1])
+                bankSecItem.bankData = newBankPair
                 if idx >= 1:
                     if (pairNum[idx] != pairNum[idx-1] and
                             bankPairs[bankSecItem.pairNum-1].startCSType ==
@@ -383,6 +399,10 @@ class bankCrossSecSetting:
         self.iface.setActiveLayer(mNodeLayer)
 
     def showSec(self, Type='Move'):
+        try:
+            self.dlg.sectionPropTable.cellChanged.disconnect()
+        except:
+            pass
         # Select cross-section and show on map.
         self.dlg.setWindowModality(Qt.NonModal)
         bankItem = self.dlg.sectionList.currentItem()
@@ -392,6 +412,7 @@ class bankCrossSecSetting:
         else:
             self.showPropOnTable(bankItem.bankData, Type)
         self.showTextofBank()
+        self.dlg.sectionPropTable.cellChanged.connect(self.secPropTableToItem)
 
     def setToFixedCS(self):
         bankItem = self.dlg.sectionList.currentItem()
@@ -491,8 +512,6 @@ class bankCrossSecSetting:
                 item = table.item(n_layers+2+i, j)
                 layerItem.gradList[j][2] = float(item.text())
 
-        self.showSec()
-
     def nodeInTop(self, secNodes):
         Tops = self.bankCS.Tops
 
@@ -538,6 +557,50 @@ class bankCrossSecSetting:
             CSNodeList.append([dist, z])
         return CSNodeList
 
+    def addOneLayer(self):
+        bankItem = self.dlg.sectionList.currentItem()
+        if bankItem:
+            gradList = deepcopy(bankItem.bankData.layerItems[0].gradList)
+            bankItem.bankData.layerItems.append(layerItem(gradList))
+            self.showSec(Type=bankItem.Type)
+
+    def removeOneLayer(self):
+        bankItem = self.dlg.sectionList.currentItem()
+        if bankItem:
+            if len(bankItem.bankData.layerItems) > 1:
+                bankItem.bankData.layerItems.pop(-1)
+            self.showSec(Type=bankItem.Type)
+
+    def CSTypeCount(self):
+        secList = self.dlg.sectionList
+        totalSecs = secList.count()
+
+        moveCount = 0
+        for i in range(0, totalSecs):
+            item = secList.item(i)
+            if item.Type == 'Move':
+                moveCount += 1
+        return [totalSecs, moveCount]
+
+    def writeIn(self):
+        f = open(os.path.join(self.projFolder, 'sim', 'Bank_Data.in'), 'w')
+        f.write('// Main Channel Solution Method SELECTION: FLOW-ONLY or ' +
+                'MOBILE-BED\n')
+        f.write('CHANNEL_METHOD   MOBILE-BED\n')
+        f.write('// Number of Bank Profiles: Total_Number & ' +
+                'Total_but_excluding_NON_MOVING_ones\n')
+        n_totalSecs, n_moveAble = self.CSTypeCount()
+        f.write('N_PROF     ' + str(int(n_totalSecs)) + '     ' +
+                str(int(n_moveAble)) + '\n')
+        for i in range(0, n_totalSecs):
+            self.dlg.sectionList.setCurrentRow(i)
+            self.showSec()
+        for j in range(0, n_totalSecs):
+            item = self.dlg.sectionList.item(j)
+            f.write(item.textString)
+
+        f.close()
+
     def showTextofBank(self):
         bankItem = self.dlg.sectionList.currentItem()
         textString = ''
@@ -576,6 +639,7 @@ class bankCrossSecSetting:
                 '// Top point (x y) coordinates used by SRH-2D mesh ')
             textString += '(units the same as the mesh)\n'
             CSNodes = bankItem.bankNodes
+            CSNodes = self.inverseList(CSNodes)
             topNode, x, y, z = self.nodeInTop(CSNodes)
             line = 'TOP_XY     '
             line += '{0:15E}'.format(x)
@@ -639,7 +703,8 @@ class bankCrossSecSetting:
                 layer = bankItem.bankData.layerItems[i]
                 line = '    '
                 for j in range(0, len(layer.gradList)):
-                    line += ('{0:12E}'.format(layer.gradList[j][2]) + '    ')
+                    line += ('{0:12E}'.format(layer.gradList[j][2]/100.0) +
+                             '    ')
                 line = line[:-4] + '\n'
                 textString += line
 

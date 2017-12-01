@@ -1374,7 +1374,7 @@ class genDIP:
         if self.dlg.NITEREdit.text():
             Settings.update({'NITER': self.dlg.NITEREdit.text()})
         if self.dlg.bankErosionChkBox.isChecked():
-            Settings.update({'USER(11)': '1'})
+            Settings.update({'USER(11)': '0'})
 
         Settings.update({'DAMP': str(self.dlg.dampBox.value())})
         Settings.update({'RELAX_H': str(self.dlg.relaxHBox.value())})
