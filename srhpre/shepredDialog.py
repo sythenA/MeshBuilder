@@ -21,6 +21,10 @@ class shepredDialog(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.projFolder = ''
 
+    def keyPressEvent(self, event):
+        if event.text() == u'0x01000005':
+            pass
+
     def closeEvent(self, event):
         self.lineEditCaseName.clear()
         self.lineEditDescription.clear()
