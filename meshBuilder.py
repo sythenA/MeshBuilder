@@ -1781,7 +1781,8 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
         env = QProcessEnvironment.systemEnvironment()
         env.remove("TERM")
         P.setProcessEnvironment(env)
-        command = GMSH + " " + geoPath + " -2 -o " + mshPath
+        command = ("'"+GMSH+"'" + " " + "'"+geoPath+"'" + " -2 -o " +
+                   "'"+mshPath+"'")
         P.start(command)
 
         self.dlg.textBrowser.setText(command)
@@ -1973,11 +1974,13 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
         ibcPath = os.path.join(dirname, ibcName)
         mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
-                             mshPath, path2dm, ibcPath])
+            subprocess.call(
+                ['cmd', '/c', '"'+os.path.join(mainDir, "GMSH2SRH.exe")+'"',
+                 "'"+mshPath+"'", "'"+path2dm+"'", "'"+ibcPath+"'"])
         else:
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
-                             mshPath, path2dm])
+            subprocess.call(
+                ['cmd', '/c', '"'+os.path.join(mainDir, "GMSH2SRH.exe")+'"',
+                 "'"+mshPath+"'", "'"+path2dm+"'"])
         self.dlg.label_21.setText(u'輸出為' + path2dm)
 
     def changeTo2dm(self):
@@ -1991,11 +1994,13 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
         ibcPath = os.path.join(dirname, ibcName)
         mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
-                             meshFile, path2dm, ibcPath])
+            subprocess.call(
+                ['cmd', '/c', '"'+os.path.join(mainDir, "GMSH2SRH.exe")+'"',
+                 meshFile, path2dm, ibcPath])
         else:
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
-                             meshFile, path2dm])
+            subprocess.call(
+                ['cmd', '/c', '"'+os.path.join(mainDir, "GMSH2SRH.exe")+'"',
+                 meshFile, path2dm])
         self.iface.messageBar().pushMessage(".msh Transfomed to .2dm",
                                             level=QgsMessageBar.INFO)
         self.dlg.label_26.setText(u'輸出為' + path2dm)
