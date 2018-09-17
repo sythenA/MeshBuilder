@@ -584,9 +584,10 @@ T_SIMU [FLAG]\n')
         f.write(str(0) + '\n')
 
         if self.dlg.rbtnSolverMobile.isChecked():
-            f.write('// BANK Module: OPTION DT_Multiple; [0=NO; 1=User_Supplied\
-; 2=Linear_Retreat; 3=Failure Moving Mesh; 4=Failure Fixed Mesh; 5=Linear Fixed\
- Mesh; 6=AoR]\n')
+            f.write(
+                '// BANK Module: OPTION DT_Multiple; [0=NO; 1=User_Supplied\
+; 2=Linear_Retreat; 3=Failure Moving Mesh; 4=Failure Fixed Mesh; 5=Linear \
+Fixed Mesh; 6=AoR]\n')
             if self.dlg.bankErosionChkBox.isChecked():
                 f.write(str(self.dlg.bankModBox.currentIndex()+2) + ' ')
                 f.write(self.dlg.bankTimeStep.text() + '\n')
@@ -602,21 +603,24 @@ T_SIMU [FLAG]\n')
         # If Wall roughness is set on walls
         if self.wallRoughness:
             for i in range(0, len(self.wallRoughness)):
-                f.write('// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch\
--ID\n')
+                f.write(
+                    '// WALL-ROUGHNESS-HEIGHT-SPECIFICATION: Boundary-Patch-\
+ID\n')
                 f.write(str(self.wallRoughness[i][0]+1) + '\n')
                 f.write('// ROUGHNESS-HEIGHT-in-MillMeter\n')
                 f.write(str(self.wallRoughness[i][1]) + '\n')
             f.write('\n')
         else:
-            f.write('// Wall-Roughess-Height-Specification (empty-line=DONE)\n')
+            f.write('// Wall-Roughess-Height-Specification\
+(empty-line=DONE)\n')
             f.write('\n')
 
         f.write('// Number of In-Stream Flow Obstructions:\n')
         f.write(str(0) + '\n')
+        f.write(str(0) + '\n')
         f = self.onOutputFormat(f)
-        f.write('// Headers of Output Variables specified by the User: EMPTY li\
-ne means default is used\n')
+        f.write('// Headers of Output Variables specified by the User: EMPTY \
+line means default is used\n')
         f.write('\n')
         f = self.onIntvOuput(f)
 
@@ -627,7 +631,8 @@ ne means default is used\n')
         self.dlg.callSRH2DBtn.setEnabled(True)
 
     def onOutputFormat(self, f):
-        f.write('// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
+        f.write(
+            '// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
         if self.dlg.rbtnOutputSMS.isChecked():
             line = "SRHN"
         elif self.dlg.rbtnOutputTecplot.isChecked():
@@ -666,11 +671,12 @@ ne means default is used\n')
                     if capacityCombo.currentIndex() == 0:
                         line += (capacityCombo.currentText() + ' ')
                     else:
-                        sediFileName = self.dlg.sediBoundaryTable.item(i, 3
-                                                                       ).text()
+                        sediFileName = self.dlg.sediBoundaryTable.item(
+                            i, 3).text()
                         baseSediName = os.path.basename(sediFileName)
-                        subprocess.Popen(['/Y', sediFileName,
-                                          os.path.join(self.projFolder, 'sim')])
+                        subprocess.Popen(
+                            ['/Y', sediFileName, os.path.join(self.projFolder,
+                                                              'sim')])
                         line += (baseSediName + ' ')
                 line = line + table.cellWidget(i, 4).currentText()
 
@@ -720,7 +726,8 @@ ne means default is used\n')
                     if len(w) < 3:
                         onCritical(113)
                     else:
-                        f.write('// Q_METHOD(0_at_INLET_Q; >0_at_monitor; <0_lo\
+                        f.write(
+                            '// Q_METHOD(0_at_INLET_Q; >0_at_monitor; <0_lo\
 cally, BED_SLOPE, WSE_MIN at the exit\n')
                         line = ""
                         for j in range(0, len(w)):
