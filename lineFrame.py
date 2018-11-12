@@ -156,7 +156,8 @@ class lineFrame:
         rep = False
         for _feature in featureList:
             _featureGeo = _feature.geometry().asPolyline()
-            b = [self.pointDict[_featureGeo[0]], self.pointDict[_featureGeo[1]]]
+            b = [self.pointDict[_featureGeo[0]],
+                 self.pointDict[_featureGeo[1]]]
 
             verse = (a == b)
             inverse = (a == self.lineInverse(b))
@@ -310,7 +311,10 @@ def multiToPoly(lineFrameLayer, pointDict):
         return multiGeo
 
     for feature in lineFrameLayer.getFeatures():
-        geo = feature.geometry().asPolyline()
+        try:
+            geo = feature.geometry().asPolyline()
+        except(AttributeError):
+            geo = None
         multiGeo = feature.geometry().asMultiPolyline()
         if multiGeo and not geo:
             connPoints = findConn(multiGeo, pointDict)
@@ -381,7 +385,9 @@ def lineRef(lineFrame, pointDict):
 
 
 def polygonBoundary(feature):
-    polygonGeo = feature.geometry().asPolygon()
+    points = len(feature.geometry().asPolygon())
+    polygonGeo = feature.geometry().buffer(10.0, points*2)
+    """
     loop = polygonGeo[0]
     lineString = list()
     for point in loop:
@@ -389,7 +395,8 @@ def polygonBoundary(feature):
 
     lineGeo = QgsGeometry.fromPolyline(lineString)
 
-    return lineGeo
+    return lineGeo"""
+    return polygonGeo
 
 
 def innerBoundaries(feature):
@@ -548,9 +555,10 @@ def lineToLoop(lineFrameObj, polygonLayer):
             geo = lineFeat.geometry().asPolyline()
             if geo:
                 a = lineFeat.geometry().within(boundary)
-                b = boundary.overlaps(lineFeat.geometry())
-                lineIntersect = lineFeat.geometry().intersection(boundary)
-                if a or b:
+                # b = boundary.overlaps(lineFeat.geometry())
+                # lineIntersect = lineFeat.geometry().intersection(boundary)
+                # if a or b:
+                if a:
                     key = list()
                     for point in lineFeat.geometry().asPolyline():
                         key.append(pointDict[point]['geoName'])

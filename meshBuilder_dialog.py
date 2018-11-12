@@ -53,9 +53,9 @@ class meshBuilderDialog(QtGui.QDialog, FORM_CLASS):
             f.close()
 
         iface.messageBar().pushMessage('MeshBuilder Closed')
-        if not self.Finished:
-            self.setWindowState(Qt.WindowMinimized)
-        else:
+        if self.Finished:
             self.close()
+        else:
+            self.setWindowState(Qt.WindowMinimized)
 
         return QtGui.QDialog.closeEvent(self, event)
