@@ -21,6 +21,7 @@ from bankJumpPopDiag import setBankJump
 from bankLayerSetting import bankLayerProp
 import subprocess
 import pickle
+import time
 
 
 def read2dmMesh(meshLines):
@@ -391,7 +392,8 @@ class shepred:
         table.removeColumn(col)
 
     def onIntvOuput(self, f):
-        f.write('// Intermediate Result Output Control: INTERVAL(hour) OR List \
+        f.write(
+            '// Intermediate Result Output Control: INTERVAL(hour) OR List \
 of T1 T2 ...  EMPTY means the end\n')
         if self.dlg.fixIntvBtn.isChecked():
             if self.dlg.outIntvEdit.text():
@@ -516,7 +518,8 @@ of T1 T2 ...  EMPTY means the end\n')
         fileName = self.dlg.lineEditCaseName.text() + '_SIF.DAT'
         saveFolder = os.path.join(self.dlg.saveFolderEdit.text(), 'sim')
         if not os.path.isdir(saveFolder):
-            subprocess.Popen(['mkdir', saveFolder])
+            subprocess.Popen(['cmd', '/c', 'mkdir', saveFolder])
+            time.sleep(2)
         fullPath = os.path.join(saveFolder, fileName)
         useMobile = False
 
@@ -617,8 +620,10 @@ ID\n')
 
         f.write('// Number of In-Stream Flow Obstructions:\n')
         f.write(str(0) + '\n')
-        f.write(str(0) + '\n')
+        # f.write(str(0) + '\n')   One extra blank line for v301 srhpre
+        # Set result files output format (Tecplot type or SMS type)
         f = self.onOutputFormat(f)
+        # Change output header names
         f.write('// Headers of Output Variables specified by the User: EMPTY \
 line means default is used\n')
         f.write('\n')

@@ -1,1 +1,1 @@
-"D:\SRH2D_Package\Exec_bin\srh2d_pre.exe"
+start d:\SRH-2D\srh2d_pre.exe
