@@ -15,7 +15,7 @@ from shepredDialog import shepredDialog
 from commonDialog import onCritical, onWarning, onComment, onInfo
 from commonDialog import fileBrowser, folderBrowser
 from sedimentMod import sedimentModule, bankErosionMod
-from shutil import copy2
+from shutil import copy2, copyfile
 from bankCross import bankCrossSecSetting, bankCross
 from bankJumpPopDiag import setBankJump
 from bankLayerSetting import bankLayerProp
@@ -128,6 +128,7 @@ class shepred:
         geoIcon = QIcon(pixMap)
         self.dlg.setGeoRefBtn.setIcon(geoIcon)
         self.dlg.setGeoRefBtn.setIconSize(0.7*pixMap.rect().size())
+        self.dlg.SIFopenBtn.setEnabled(False)
 
         self.dlg.setGeoRefBtn.setIcon(geoIcon)
         self.dlg.setGeoRefBtn.setIconSize(0.7*pixMap.rect().size())
@@ -189,6 +190,7 @@ class shepred:
         self.dlg.rbtnManningMaterial.pressed.connect(self.mannMaterial)
         self.dlg.rbtnManningDistributed.pressed.connect(self.distriMann)
         self.dlg.saveFolderEdit.textChanged.connect(self.setProjFolder)
+        self.dlg.SIFopenBtn.clicked.connect(self.viewSIF)
 
         self.dlg.exportBtn.clicked.connect(self.export)
         self.dlg.inputFileBtn.clicked.connect(self.setWidgetFileBrowser)
@@ -264,18 +266,20 @@ class shepred:
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srhpre.bat')
         if not os.path.isdir(os.path.join(folderPath, 'sim')):
-            subprocess.Popen(['mkdir', os.path.join(folderPath, 'sim')])
+            subprocess.Popen(['cmd', '/c', 'mkdir',
+                              os.path.join(folderPath, 'sim')])
         dstPath = os.path.join(folderPath, 'sim', 'srhpre.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
-        subprocess.Popen([dstPath])
+        subprocess.Popen(['cmd', '/c', dstPath])
 
     def callSRH2D(self):
         folderPath = self.dlg.saveFolderEdit.text()
         appFolder = os.path.dirname(__file__)
         srcPath = os.path.join(appFolder, 'srh2d.bat')
         if not os.path.isdir(os.path.join(folderPath, 'sim')):
-            subprocess.Popen(['mkdir', os.path.join(folderPath, 'sim')])
+            subprocess.Popen(['cmd', '/c', 'mkdir',
+                              os.path.join(folderPath, 'sim')])
         dstPath = os.path.join(folderPath, 'sim', 'srh2d.bat')
         os.chdir(os.path.join(folderPath, 'sim'))
         copy2(srcPath, dstPath)
@@ -635,6 +639,23 @@ line means default is used\n')
         self.dlg.callSrhpreBtn.setEnabled(True)
         self.dlg.callSRH2DBtn.setEnabled(True)
 
+        self.SIFpath = fullPath
+        self.dlg.SIFopenBtn.setEnabled(True)
+        self.showSIFContent()
+
+    def showSIFContent(self):
+        f = open(self.SIFpath, 'r')
+        dat = f.readlines()
+
+        for line in dat:
+            self.dlg.SIFBrowser.append(line)
+
+        f.close()
+        self.dlg.tabWidget.setCurrentIndex(3)
+
+    def viewSIF(self):
+        os.system(self.SIFpath)
+
     def onOutputFormat(self, f):
         f.write(
             '// Results-Output-Format-and-Unit(SRHC/TEC/SRHN/XMDF;SI/EN)\n')
@@ -680,8 +701,8 @@ line means default is used\n')
                             i, 3).text()
                         baseSediName = os.path.basename(sediFileName)
                         subprocess.Popen(
-                            ['/Y', sediFileName, os.path.join(self.projFolder,
-                                                              'sim')])
+                            ['cmd', '/c', '/Y', sediFileName,
+                             os.path.join(self.projFolder, 'sim')])
                         line += (baseSediName + ' ')
                 line = line + table.cellWidget(i, 4).currentText()
 
@@ -1011,7 +1032,8 @@ Curve.'
             return []
 
     def drawSediInput(self, fileName, unit):
-        gnuExe = os.path.join(self.plugin_dir, 'gnuplot', 'gnuplot')
+        gnuExe = os.path.join(os.path.dirname(self.plugin_dir), 'gnuplot',
+                              'gnuplot')
         title = os.path.basename(fileName)
         sediGrad = self.getGradClass()
         if sediGrad:
@@ -1072,7 +1094,7 @@ Curve.'
                     'title columnheader\n')
             f.close()
 
-            subprocess.Popen([gnuExe,
+            subprocess.Popen(['cmd', '/c', gnuExe,
                               os.path.join(self.projFolder, 'plot.dem'),
                               '--persist'], shell=False)
 
@@ -1101,6 +1123,7 @@ Curve.'
                 sediWig.setEnabled(True)
 
     def setWidgetFileBrowser(self):
+        proj_folder = self.dlg.saveFolderEdit.text()
         table = self.dlg.boundaryTable
         row = table.currentRow()
         column = table.currentColumn()
@@ -1115,24 +1138,31 @@ Curve.'
 
         if column == 2 or column == 3:
             fileName = QFileDialog.getOpenFileName(self.dlg, caption,
-                                                   self.projFolder)
+                                                   proj_folder)
+            try:
+                # subprocess.Popen(['cmd', '/c', 'copy', '/Y', fileName,
+                #                  os.path.join(proj_folder, 'sim')])
+                copy2(fileName, os.path.join(proj_folder, 'sim'))
+                table.setItem(row, column,
+                              QTableWidgetItem(os.path.basename(fileName)))
+            except(IOError):
+                table.setItem(row, column, QTableWidgetItem(fileName))
+
+            # Draw chart
             if column == 2:
                 self.drawChartofBoundary(fileName, 'flowrate', unit)
             elif column == 3:
                 self.drawChartofBoundary(fileName, 'stage', unit)
+            else:
+                pass
 
-            try:
-                subprocess.Popen(['copy', '/Y', fileName,
-                                  os.path.join(self.projFolder, 'sim')])
-                table.setItem(row, column,
-                              QTableWidgetItem(os.path.basename(fileName)))
-            except:
-                table.setItem(row, column, QTableWidgetItem(fileName))
         else:
             pass
 
     def drawChartofBoundary(self, fileName, chartType, unit):
-        gnuExe = os.path.join(self.plugin_dir, 'gnuplot', 'gnuplot')
+        proj_folder = self.dlg.saveFolderEdit.text()
+        gnuExe = os.path.join(os.path.dirname(self.plugin_dir), 'gnuplot',
+                              'gnuplot.exe')
         if chartType == 'flowrate':
             T = list()
             Q = list()
@@ -1144,13 +1174,13 @@ Curve.'
                 T.append(dat[i].split()[0])
                 Q.append(dat[i].split()[1])
 
-            f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
-            filename = os.path.join(self.projFolder, 'data.dat')
+            f = open(os.path.join(proj_folder, 'data.dat'), 'w')
+            filename = os.path.join(proj_folder, 'data.dat')
             for i in range(0, len(T)):
                 f.write(str(T[i]) + ' ' + str(Q[i]) + '\n')
             f.close()
 
-            f = open(os.path.join(self.projFolder, 'plot.dem'), 'w')
+            f = open(os.path.join(proj_folder, 'plot.dem'), 'w')
             f.write('set title "' + title + '" noenhanced\n')
             label = os.path.splitext(title)[0]
 
@@ -1165,7 +1195,7 @@ Curve.'
                     'with lines ls 1 title "' + label + '" noenhanced\n')
             f.close()
             subprocess.Popen([gnuExe,
-                              os.path.join(self.projFolder, 'plot.dem'),
+                              os.path.join(proj_folder, 'plot.dem'),
                               '--persist'], shell=False)
         elif chartType == 'stage':
             T = list()
@@ -1181,13 +1211,13 @@ Curve.'
                 except(IndexError):
                     pass
 
-            f = open(os.path.join(self.projFolder, 'data.dat'), 'w')
-            filename = os.path.join(self.projFolder, 'data.dat')
+            f = open(os.path.join(proj_folder, 'data.dat'), 'w')
+            filename = os.path.join(proj_folder, 'data.dat')
             for i in range(0, len(T)):
                 f.write(str(T[i]) + ' ' + str(Y[i]) + '\n')
             f.close()
 
-            f = open(os.path.join(self.projFolder, 'plot.dem'), 'w')
+            f = open(os.path.join(proj_folder, 'plot.dem'), 'w')
             f.write('set title "' + title + '" noenhanced\n')
             label = os.path.splitext(title)[0]
 
@@ -1203,7 +1233,7 @@ Curve.'
                     label + '" noenhanced\n')
             f.close()
             subprocess.Popen([gnuExe,
-                              os.path.join(self.projFolder, 'plot.dem'),
+                              os.path.join(proj_folder, 'plot.dem'),
                               '--persist'], shell=False)
 
     def onMeshUnit(self):
@@ -1348,7 +1378,8 @@ class genDIP:
             return []
 
     def chkSettings(self):
-        DIPfilePath = os.path.join(self.projFolder, 'sim',
+        projFolder = self.dlg.saveFolderEdit.text()
+        DIPfilePath = os.path.join(projFolder, 'sim',
                                    self.projName + '_DIP.dat')
         ExistingSettings = list()
         try:
@@ -1400,12 +1431,12 @@ class genDIP:
         f.write('$ENDC\n')
         f.close()
 
-        subprocess.Popen([self.dstPath])
+        subprocess.Popen(['cmd', '/c', self.dstPath])
 
     def checkFolder(self):
         folderPath = os.path.join(self.projFolder, 'MeshShp', 'bank')
         if not os.path.isdir(folderPath):
-            subprocess.Popen(['mkdir', folderPath])
+            subprocess.Popen(['cmd', '/c', 'mkdir', folderPath])
 
     def loadMeshNodes(self):
         self.checkFolder()
