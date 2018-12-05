@@ -62,7 +62,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_step1">
        <attribute name="title">
@@ -105,6 +105,12 @@
           <height>31</height>
          </rect>
         </property>
+        <property name="toolTip">
+         <string>專案資料夾</string>
+        </property>
+        <property name="text">
+         <string>C:\</string>
+        </property>
        </widget>
        <widget class="QLabel" name="label_selectFolder">
         <property name="geometry">
@@ -142,7 +148,7 @@
          <rect>
           <x>40</x>
           <y>200</y>
-          <width>171</width>
+          <width>271</width>
           <height>31</height>
          </rect>
         </property>
@@ -152,7 +158,7 @@
          </font>
         </property>
         <property name="text">
-         <string>選擇內部邊界圖層</string>
+         <string>選擇內部邊界圖層(功能尚未開發)</string>
         </property>
        </widget>
        <widget class="QPushButton" name="nextBtn1">
@@ -178,9 +184,12 @@
          <rect>
           <x>40</x>
           <y>230</y>
-          <width>271</width>
+          <width>281</width>
           <height>211</height>
          </rect>
+        </property>
+        <property name="toolTip">
+         <string/>
         </property>
        </widget>
        <widget class="QPushButton" name="geoReferenceBtn">
@@ -1073,6 +1082,9 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>點圖層</string>
+   </property>
    <property name="text">
     <string>點</string>
    </property>
@@ -1101,6 +1113,9 @@
      <width>51</width>
      <height>31</height>
     </rect>
+   </property>
+   <property name="toolTip">
+    <string>面圖層</string>
    </property>
    <property name="text">
     <string>面</string>

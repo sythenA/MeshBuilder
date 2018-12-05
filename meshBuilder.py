@@ -113,10 +113,11 @@ class meshBuilder:
             param.update({'projFolder': ''})
         self.__parameter__ = param
 
+		# WRA 修改預設資料夾： 改變 120 行的 Dir='目標資料夾'
         caption = u'請選擇一個專案資料夾'
         self.dlg.FileBrowseBtn.pressed.connect(
             lambda: folderBrowser(self.dlg,
-                                  caption,
+                                  caption, Dir=self.dlg.lineEdit.text(),
                                   lineEdit=self.dlg.lineEdit))
         self.dlg.FileBrowseBtn.setToolTip(caption)
 
@@ -579,6 +580,9 @@ class meshBuilder:
     def cancelSelection(self):
         layer = self.iface.mapCanvas().currentLayer()
         layer.removeSelection()
+
+        # WRA 當更改儲存中內容之後，直接把寫入的內容儲存至圖層資料庫
+        self.writeTableToLayer()
 
     def cleanTableSelection(self):
         table = self.dlg.tableWidget
@@ -1512,12 +1516,15 @@ into layer attributes.', level=QgsMessageBar.INFO)
                     item.setText(fillText)
                 else:
                     item.setText("")
+
+        # Cancel Selection after change. (feature canceled)
+        """
         for i in range(0, self.dlg.tableWidget.rowCount()):
             for j in range(0, self.dlg.tableWidget.columnCount()):
                 if self.dlg.tableWidget.item(i, j):
                     if self.dlg.tableWidget.item(i, j).isSelected():
                         self.dlg.tableWidget.item(i, j).setSelected(False)
-
+                                                                       """
         if layer.name() == 'Segments':
             self.arrangeLineTable(0, 1)
             self.dlg.tableWidget.itemChanged.connect(
@@ -1525,6 +1532,9 @@ into layer attributes.', level=QgsMessageBar.INFO)
         elif layer.name() == 'Zones':
             self.checkLayerRegions
             self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
+
+        # WRA 使用批次填入後，直接將填入的內容寫回圖層資料庫
+        self.writeTableToLayer()
 
     def backSwitch(self):
         process = self.currentProcess
