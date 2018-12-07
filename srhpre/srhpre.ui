@@ -9,20 +9,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>923</width>
-    <height>685</height>
+    <width>1000</width>
+    <height>789</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>923</width>
+    <width>1000</width>
     <height>685</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>923</width>
-    <height>685</height>
+    <width>1000</width>
+    <height>65535</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -34,9 +34,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>540</y>
-     <width>221</width>
+     <x>20</x>
+     <y>570</y>
+     <width>201</width>
      <height>131</height>
     </rect>
    </property>
@@ -116,8 +116,8 @@
   <widget class="QGroupBox" name="groupBox_5">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>310</y>
+     <x>20</x>
+     <y>340</y>
      <width>201</width>
      <height>111</height>
     </rect>
@@ -197,8 +197,8 @@
   <widget class="QGroupBox" name="groupBox_4">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>250</y>
+     <x>20</x>
+     <y>280</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -239,8 +239,8 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>200</y>
+     <x>20</x>
+     <y>230</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -281,8 +281,8 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>440</y>
+     <x>20</x>
+     <y>470</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -323,8 +323,8 @@
   <widget class="QGroupBox" name="groupBox_3">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>490</y>
+     <x>20</x>
+     <y>520</y>
      <width>201</width>
      <height>41</height>
     </rect>
@@ -365,8 +365,8 @@
   <widget class="QPushButton" name="exportBtn">
    <property name="geometry">
     <rect>
-     <x>320</x>
-     <y>630</y>
+     <x>270</x>
+     <y>730</y>
      <width>171</width>
      <height>41</height>
     </rect>
@@ -475,8 +475,8 @@
   <widget class="QLabel" name="label_Complete">
    <property name="geometry">
     <rect>
-     <x>500</x>
-     <y>640</y>
+     <x>450</x>
+     <y>740</y>
      <width>101</width>
      <height>16</height>
     </rect>
@@ -488,8 +488,8 @@
   <widget class="QPushButton" name="callSrhpreBtn">
    <property name="geometry">
     <rect>
-     <x>620</x>
-     <y>630</y>
+     <x>760</x>
+     <y>730</y>
      <width>91</width>
      <height>41</height>
     </rect>
@@ -506,8 +506,8 @@
   <widget class="QPushButton" name="callSRH2DBtn">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>630</y>
+     <x>880</x>
+     <y>730</y>
      <width>91</width>
      <height>41</height>
     </rect>
@@ -524,14 +524,14 @@
   <widget class="QTabWidget" name="solverTabWidget">
    <property name="geometry">
     <rect>
-     <x>280</x>
+     <x>250</x>
      <y>180</y>
-     <width>631</width>
-     <height>441</height>
+     <width>741</width>
+     <height>541</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_FlowSetting">
     <attribute name="title">
@@ -542,7 +542,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>631</width>
+       <width>701</width>
        <height>411</height>
       </rect>
      </property>
@@ -764,9 +764,12 @@
         <rect>
          <x>220</x>
          <y>50</y>
-         <width>81</width>
+         <width>101</width>
          <height>22</height>
         </rect>
+       </property>
+       <property name="text">
+        <string>0.7</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_10">
@@ -787,7 +790,7 @@
         <rect>
          <x>10</x>
          <y>210</y>
-         <width>591</width>
+         <width>681</width>
          <height>161</height>
         </rect>
        </property>
@@ -928,7 +931,7 @@
         <rect>
          <x>30</x>
          <y>110</y>
-         <width>571</width>
+         <width>661</width>
          <height>121</height>
         </rect>
        </property>
@@ -1033,7 +1036,7 @@
         <rect>
          <x>30</x>
          <y>300</y>
-         <width>571</width>
+         <width>661</width>
          <height>81</height>
         </rect>
        </property>
@@ -1064,7 +1067,7 @@
         <rect>
          <x>10</x>
          <y>50</y>
-         <width>601</width>
+         <width>681</width>
          <height>321</height>
         </rect>
        </property>
@@ -1127,6 +1130,21 @@
        </property>
       </widget>
      </widget>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>預覽SIF</string>
+      </attribute>
+      <widget class="QTextBrowser" name="SIFBrowser">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>10</y>
+         <width>691</width>
+         <height>371</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_MobileSetting">
@@ -1138,102 +1156,17 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>621</width>
-       <height>411</height>
+       <width>741</width>
+       <height>521</height>
       </rect>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="sediPropertyTab">
       <attribute name="title">
        <string>Sediment Properties</string>
       </attribute>
-      <widget class="QFrame" name="frame">
-       <property name="geometry">
-        <rect>
-         <x>360</x>
-         <y>0</y>
-         <width>251</width>
-         <height>91</height>
-        </rect>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_15">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>161</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Sediment Specific Gtravity</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="sediSGEdit">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>10</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_16">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>161</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Sediment Size Class</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="sediSizeClass">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>50</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QTableWidget" name="sediPropTable">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>140</y>
-         <width>601</width>
-         <height>241</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_20">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>100</y>
-         <width>601</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;單位容積重(Bulk Density)用以計算孔隙率，可不用填入。若有填入Bulk Density，可選擇填&lt;br/&gt;入的單位為英制(EN)或公制(SI)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
       <widget class="QFrame" name="frame_2">
        <property name="geometry">
         <rect>
@@ -1250,1437 +1183,1576 @@
         <enum>QFrame::Raised</enum>
        </property>
       </widget>
-      <widget class="QFrame" name="frame_6">
+      <widget class="QTabWidget" name="sedimentPropertyTab">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>351</width>
-         <height>91</height>
+         <width>736</width>
+         <height>498</height>
         </rect>
        </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
+       <property name="currentIndex">
+        <number>0</number>
        </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_41">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>161</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Sediment Modeling Option</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="sediModelingCombo">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>10</y>
-          <width>171</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Fully Unsteady</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Quasi-Unsteady</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLabel" name="label_42">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>331</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Sediment Model Starting Time </string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="sediStartingEdit">
-        <property name="geometry">
-         <rect>
-          <x>196</x>
-          <y>50</y>
-          <width>41</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_43">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>50</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>(hr)</string>
-        </property>
-       </widget>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="sediTransportTab">
-      <attribute name="title">
-       <string>Sediment Transport Capacity</string>
-      </attribute>
-      <widget class="QLabel" name="label_EqnParameter">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>70</y>
-         <width>211</width>
-         <height>18</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>9</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Equation Dependent Parameters</string>
-       </property>
-      </widget>
-      <widget class="QTableWidget" name="eqDependentTable">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>90</y>
-         <width>331</width>
-         <height>71</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QFrame" name="frame_3">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>170</y>
-         <width>171</width>
-         <height>101</height>
-        </rect>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_17">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>151</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Water Temperature( ℃ )&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="watTempEdit">
-        <property name="geometry">
-         <rect>
-          <x>80</x>
-          <y>60</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="groupBox_13">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>280</y>
-         <width>291</width>
-         <height>91</height>
-        </rect>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 1px solid gray</string>
-       </property>
-       <property name="title">
-        <string>Adaption Coefficients for Suspended Load</string>
-       </property>
-       <widget class="QGroupBox" name="groupBox_14">
-        <property name="geometry">
-         <rect>
-          <x>50</x>
-          <y>20</y>
-          <width>91</width>
-          <height>61</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string>A_Dep</string>
-        </property>
-        <widget class="QLineEdit" name="suspCoefEdit">
+       <widget class="QWidget" name="tab_3">
+        <attribute name="title">
+         <string>Sediment Classes</string>
+        </attribute>
+        <widget class="QFrame" name="frame_6">
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>20</y>
-           <width>61</width>
+           <y>10</y>
+           <width>351</width>
+           <height>91</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_41">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>161</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Sediment Modeling Option</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="sediModelingCombo">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>10</y>
+            <width>171</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>Fully Unsteady</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Quasi-Unsteady</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_42">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>331</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Sediment Model Starting Time </string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="sediStartingEdit">
+          <property name="geometry">
+           <rect>
+            <x>196</x>
+            <y>50</y>
+            <width>41</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_43">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>50</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>(hr)</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QFrame" name="frame">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>10</y>
+           <width>251</width>
+           <height>91</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_15">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>161</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Sediment Specific Gtravity</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="sediSGEdit">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>10</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_16">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>161</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Sediment Size Class</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="sediSizeClass">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>50</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QTableWidget" name="sediPropTable">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>150</y>
+           <width>581</width>
+           <height>311</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_20">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>110</y>
+           <width>601</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;單位容積重(Bulk Density)用以計算孔隙率，可不用填入。若有填入Bulk Density，可選擇填&lt;br/&gt;入的單位為英制(EN)或公制(SI)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="sediTransportTab">
+        <attribute name="title">
+         <string>Sediment Transport Capacity</string>
+        </attribute>
+        <widget class="QFrame" name="frame_7">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>180</y>
+           <width>171</width>
+           <height>101</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_65">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>151</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Water Temperature( ℃ )&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="watTempEdit_2">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>60</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QFrame" name="frame_8">
+         <property name="geometry">
+          <rect>
+           <x>200</x>
+           <y>180</y>
+           <width>401</width>
+           <height>101</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_66">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>231</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Adaption Length for Bedload Transport</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="adaptionLenCombo">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>60</y>
+            <width>271</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>0: Constant Length</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1: Philip-Sutherland Saltation Length</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2: van Rijn Sand Dune Formula</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3: van Rijn Saltation Length Formula</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4: Seminara et al. (2002) Formula</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLineEdit" name="bLoadAdaptionLenEdit">
+          <property name="geometry">
+           <rect>
+            <x>290</x>
+            <y>60</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_67">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>40</y>
+            <width>58</width>
+            <height>15</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Mode</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_68">
+          <property name="geometry">
+           <rect>
+            <x>290</x>
+            <y>40</y>
+            <width>58</width>
+            <height>15</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Length</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QTableWidget" name="eqDependentTable">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>100</y>
+           <width>331</width>
+           <height>71</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_EqnParameter">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>80</y>
+           <width>211</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Equation Dependent Parameters</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_69">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>14</y>
+           <width>331</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Sediment Transport Capacity Equation</string>
+         </property>
+        </widget>
+        <widget class="QFrame" name="frame_9">
+         <property name="geometry">
+          <rect>
+           <x>320</x>
+           <y>290</y>
+           <width>281</width>
+           <height>91</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_70">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>171</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Active Layer Thickness</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="aTMode">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>171</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>1: Constant Thickness</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2: Using T_Para * D_90</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_71">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>58</width>
+            <height>15</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Mode</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_72">
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>30</y>
+            <width>71</width>
+            <height>15</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>T_para</string>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="tParaEdit_2">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>50</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QComboBox" name="capacityEqnCombo">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>331</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>Enelund-Hansen (1972) Total-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Meyer-Peter-Muller (1948) Bed-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Parker (1990) Bed-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Wilcock (2003) Bed-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Wu (2000) Bed material load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Yang (1973) Gravel total load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Yang (1979) Gravel total load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Ackers-White (1973) Total load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Rijn (1984) Bed-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Seminara (2002)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Bagnold (1980) Bed-load</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Trinity (Gaeuman et al.(2009) Bed-load)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Kuo (1984-1988) Bed-load</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_16">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>290</y>
+           <width>291</width>
+           <height>91</height>
+          </rect>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">border: 1px solid gray</string>
+         </property>
+         <property name="title">
+          <string>Adaption Coefficients for Suspended Load</string>
+         </property>
+         <widget class="QGroupBox" name="groupBox_19">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>20</y>
+            <width>91</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>A_Dep</string>
+          </property>
+          <widget class="QLineEdit" name="suspCoefEdit">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>61</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0.25</string>
+           </property>
+          </widget>
+         </widget>
+         <widget class="QGroupBox" name="groupBox_20">
+          <property name="geometry">
+           <rect>
+            <x>160</x>
+            <y>20</y>
+            <width>91</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="title">
+           <string>A_Ero</string>
+          </property>
+          <widget class="QLineEdit" name="bedLoadCoefEdit">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>61</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>1.0</string>
+           </property>
+          </widget>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_8">
+        <attribute name="title">
+         <string>Cohesive Sediment Modeling</string>
+        </attribute>
+        <widget class="QGroupBox" name="cohSediEroRateGroup">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>170</y>
+           <width>501</width>
+           <height>111</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Parameters for Cohesive Sediment Erosion Rate</string>
+         </property>
+         <widget class="QLabel" name="label_30">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>51</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tau_es</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="tauEsEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>30</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_40">
+          <property name="geometry">
+           <rect>
+            <x>150</x>
+            <y>30</y>
+            <width>51</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tau_em</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="tauEmEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>30</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_73">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>70</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>S_s</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="ssEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>70</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_74">
+          <property name="geometry">
+           <rect>
+            <x>160</x>
+            <y>70</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>S_m</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="smEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>70</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="unitBox_1">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>30</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>SI</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>EN</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_34">
+          <property name="geometry">
+           <rect>
+            <x>270</x>
+            <y>30</y>
+            <width>141</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>label</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_37">
+          <property name="geometry">
+           <rect>
+            <x>270</x>
+            <y>70</y>
+            <width>221</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QLabel" name="label_21">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>70</y>
+           <width>301</width>
            <height>31</height>
           </rect>
          </property>
          <property name="text">
-          <string>0.25</string>
+          <string>Maximum Diameter of Cohesive Sediment (C_limit)</string>
          </property>
         </widget>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_15">
-        <property name="geometry">
-         <rect>
-          <x>160</x>
-          <y>20</y>
-          <width>91</width>
-          <height>61</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string>A_Ero</string>
-        </property>
-        <widget class="QLineEdit" name="bedLoadCoefEdit">
+        <widget class="QLineEdit" name="cohDiaLimEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="geometry">
           <rect>
-           <x>10</x>
-           <y>20</y>
-           <width>61</width>
+           <x>360</x>
+           <y>70</y>
+           <width>71</width>
            <height>31</height>
           </rect>
          </property>
+        </widget>
+        <widget class="QLabel" name="label_77">
+         <property name="geometry">
+          <rect>
+           <x>320</x>
+           <y>104</y>
+           <width>241</width>
+           <height>61</height>
+          </rect>
+         </property>
          <property name="text">
-          <string>1.0</string>
+          <string>TextLabel</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkCohesiveUsed">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>30</y>
+           <width>261</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Activate Cohesive Sediment Modeling</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="cohFallVelCombo">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>130</y>
+           <width>251</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>-1: Kaolinite</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>0: Severn River</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>File Input</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QGroupBox" name="cohSediDepRateGroup">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>290</y>
+           <width>501</width>
+           <height>111</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Parameters for Cohesive Sediment Deposition Rate</string>
+         </property>
+         <widget class="QLabel" name="label_78">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>51</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tau_df</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="tauDfEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>30</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_79">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>30</y>
+            <width>51</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Tau_dp</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="tauDpEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>30</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_80">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>70</y>
+            <width>58</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Conc_eq</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="concEqEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>70</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="unitBox_2">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>30</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>SI</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>EN</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_35">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>30</y>
+            <width>121</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_36">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>70</y>
+            <width>131</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QLabel" name="label_83">
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>110</y>
+           <width>201</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Cohesive Sediment Fall Velocity</string>
          </property>
         </widget>
        </widget>
-      </widget>
-      <widget class="QFrame" name="frame_4">
-       <property name="geometry">
-        <rect>
-         <x>210</x>
-         <y>170</y>
-         <width>401</width>
-         <height>101</height>
-        </rect>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_18">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>231</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Adaption Length for Bedload Transport</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="adaptionLenCombo">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>60</y>
-          <width>271</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>0: Constant Length</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1: Philip-Sutherland Saltation Length</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2: van Rijn Sand Dune Formula</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>3: van Rijn Saltation Length Formula</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4: Seminara et al. (2002) Formula</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLineEdit" name="bLoadAdaptionLenEdit">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>60</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_22">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>40</y>
-          <width>58</width>
-          <height>15</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Mode</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_23">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>40</y>
-          <width>58</width>
-          <height>15</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Length</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QFrame" name="frame_5">
-       <property name="geometry">
-        <rect>
-         <x>330</x>
-         <y>280</y>
-         <width>281</width>
-         <height>91</height>
-        </rect>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_19">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>171</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Active Layer Thickness</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="aTMode">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>171</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>1: Constant Thickness</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2: Using T_Para * D_90</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLabel" name="label_24">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>58</width>
-          <height>15</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Mode</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_25">
-        <property name="geometry">
-         <rect>
-          <x>190</x>
-          <y>30</y>
-          <width>71</width>
-          <height>15</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>T_para</string>
-        </property>
-        <property name="scaledContents">
-         <bool>false</bool>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="tParaEdit">
-        <property name="geometry">
-         <rect>
-          <x>200</x>
-          <y>50</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QComboBox" name="capacityEqnCombo">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>30</y>
-         <width>331</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <item>
-        <property name="text">
-         <string>Enelund-Hansen (1972) Total-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Meyer-Peter-Muller (1948) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Parker (1990) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Wilcock (2003) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Wu (2000) Bed material load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Yang (1973) Gravel total load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Yang (1979) Gravel total load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Ackers-White (1973) Total load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Rijn (1984) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Seminara (2002)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Bagnold (1980) Bed-load</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Trinity (Gaeuman et al.(2009) Bed-load)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Kuo (1984-1988) Bed-load</string>
-        </property>
-       </item>
-      </widget>
-      <widget class="QLabel" name="label_44">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>4</y>
-         <width>331</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Sediment Transport Capacity Equation</string>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="cohesiveTab">
-      <attribute name="title">
-       <string>Cohesive Sediment Modeling</string>
-      </attribute>
-      <widget class="QCheckBox" name="checkCohesiveUsed">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>10</y>
-         <width>261</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Activate Cohesive Sediment Modeling</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_21">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>50</y>
-         <width>301</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Maximum Diameter of Cohesive Sediment (C_limit)</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="cohDiaLimEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>340</x>
-         <y>50</y>
-         <width>71</width>
-         <height>31</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QGroupBox" name="cohSediEroRateGroup">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>150</y>
-         <width>501</width>
-         <height>111</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Parameters for Cohesive Sediment Erosion Rate</string>
-       </property>
-       <widget class="QLabel" name="label_26">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>30</y>
-          <width>51</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Tau_es</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="tauEsEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>30</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_27">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>30</y>
-          <width>51</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Tau_em</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="tauEmEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>200</x>
-          <y>30</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_28">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>70</y>
-          <width>31</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>S_s</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="ssEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>70</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_29">
-        <property name="geometry">
-         <rect>
-          <x>160</x>
-          <y>70</y>
-          <width>31</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>S_m</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="smEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>200</x>
-          <y>70</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="unitBox_1">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>420</x>
-          <y>30</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>SI</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>EN</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLabel" name="label_34">
-        <property name="geometry">
-         <rect>
-          <x>270</x>
-          <y>30</y>
-          <width>141</width>
-          <height>30</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>label</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_37">
-        <property name="geometry">
-         <rect>
-          <x>270</x>
-          <y>70</y>
-          <width>221</width>
-          <height>30</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="cohSediDepRateGroup">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>270</y>
-         <width>501</width>
-         <height>111</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Parameters for Cohesive Sediment Deposition Rate</string>
-       </property>
-       <widget class="QLabel" name="label_31">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>30</y>
-          <width>51</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Tau_df</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="tauDfEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>30</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_32">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>30</y>
-          <width>51</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Tau_dp</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="tauDpEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>190</x>
-          <y>30</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_33">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>70</y>
-          <width>58</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Conc_eq</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="concEqEdit">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>70</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="unitBox_2">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>410</x>
-          <y>30</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>SI</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>EN</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLabel" name="label_35">
-        <property name="geometry">
-         <rect>
-          <x>260</x>
-          <y>30</y>
-          <width>121</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_36">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>70</y>
-          <width>131</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QLabel" name="label_30">
-       <property name="geometry">
-        <rect>
-         <x>40</x>
-         <y>90</y>
-         <width>201</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Cohesive Sediment Fall Velocity</string>
-       </property>
-      </widget>
-      <widget class="QComboBox" name="cohFallVelCombo">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>40</x>
-         <y>110</y>
-         <width>251</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <item>
-        <property name="text">
-         <string>-1: Kaolinite</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>0: Severn River</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>File Input</string>
-        </property>
-       </item>
-      </widget>
-      <widget class="QLabel" name="label_40">
-       <property name="geometry">
-        <rect>
-         <x>300</x>
-         <y>84</y>
-         <width>241</width>
-         <height>61</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="bedPropertyTab">
       <attribute name="title">
        <string>Bed Properties</string>
       </attribute>
-      <widget class="QGroupBox" name="bedPropertyBox">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>10</y>
-         <width>331</width>
-         <height>61</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Bed Variety Spatial Variation Input</string>
-       </property>
-       <widget class="QRadioButton" name="rdoBedUniform">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>30</y>
-          <width>98</width>
-          <height>19</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>UNIFORM</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-       <widget class="QRadioButton" name="rdoBedZonal">
-        <property name="geometry">
-         <rect>
-          <x>110</x>
-          <y>30</y>
-          <width>98</width>
-          <height>19</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>ZONAL</string>
-        </property>
-       </widget>
-       <widget class="QRadioButton" name="rdoBedDistri">
-        <property name="geometry">
-         <rect>
-          <x>200</x>
-          <y>30</y>
-          <width>121</width>
-          <height>19</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>DISTRIBUTED</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="groupBox_17">
-       <property name="geometry">
-        <rect>
-         <x>370</x>
-         <y>10</y>
-         <width>241</width>
-         <height>131</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Bed Distribution .2dm File</string>
-       </property>
-       <widget class="QCheckBox" name="sameFileAsFlowBox">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>20</y>
-          <width>211</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Use The Same .2dm file as Flow</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_45">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>80</y>
-          <width>221</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>.2dm For Bed Material:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="setBed2dmBtn">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="geometry">
-         <rect>
-          <x>180</x>
-          <y>40</y>
-          <width>41</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="groupBox_18">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>80</y>
-         <width>331</width>
-         <height>61</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>Set Bed Layers in Each Zone</string>
-       </property>
-       <widget class="QComboBox" name="zoneBedSelector">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>20</y>
-          <width>81</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_38">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>20</y>
-          <width>101</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Layers in Zone</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="layerInZoneEdit">
-        <property name="geometry">
-         <rect>
-          <x>230</x>
-          <y>20</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QTreeWidget" name="bedLayerTree">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>180</y>
-         <width>581</width>
-         <height>191</height>
-        </rect>
-       </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-      </widget>
-      <widget class="QCheckBox" name="rockErosionCheck">
-       <property name="geometry">
-        <rect>
-         <x>30</x>
-         <y>152</y>
-         <width>201</width>
-         <height>19</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Use Bedrock Erosion</string>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="rockSettingsTab">
-      <attribute name="title">
-       <string>Rock Settings</string>
-      </attribute>
-      <widget class="QTableWidget" name="bedRockSetTable">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>10</y>
-         <width>581</width>
-         <height>361</height>
-        </rect>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="bankErosionTab">
-      <attribute name="title">
-       <string>Bank Erosion</string>
-      </attribute>
-      <widget class="QFrame" name="bankErosionFrameWork">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
+      <widget class="QTabWidget" name="bedPropertyTab_2">
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>40</y>
-         <width>611</width>
-         <height>331</height>
+         <y>0</y>
+         <width>736</width>
+         <height>498</height>
         </rect>
        </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
+       <property name="currentIndex">
+        <number>0</number>
        </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-       <widget class="QLabel" name="label_46">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>100</y>
-          <width>101</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Bank Pairs</string>
-        </property>
-       </widget>
-       <widget class="QTableWidget" name="bankPairTable">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>120</y>
-          <width>141</width>
-          <height>111</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QTableWidget" name="erosionModTable">
-        <property name="geometry">
-         <rect>
-          <x>180</x>
-          <y>120</y>
-          <width>421</width>
-          <height>111</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_47">
-        <property name="geometry">
-         <rect>
-          <x>180</x>
-          <y>92</y>
-          <width>161</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Erosion Model Selection</string>
-        </property>
-       </widget>
-       <widget class="QCheckBox" name="remeshZoneChk">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>240</y>
-          <width>371</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Use a .2dm File To Define Mesh Zone For Remesh</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="remeshFileSelector">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>270</y>
-          <width>31</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="remeshLabel">
-        <property name="geometry">
-         <rect>
-          <x>50</x>
-          <y>270</y>
-          <width>441</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Please Choose a .2dm File to Define Transformed Mesh Zone.</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="bankModBox">
-        <property name="geometry">
-         <rect>
-          <x>110</x>
-          <y>10</y>
-          <width>421</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>2: Linear Retreat Model(Non-Cohesive Banks)</string>
+       <widget class="QWidget" name="tab_9">
+        <attribute name="title">
+         <string>Zone Bed Settings</string>
+        </attribute>
+        <widget class="QTreeWidget" name="bedLayerTree">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>200</y>
+           <width>581</width>
+           <height>221</height>
+          </rect>
          </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>3: Failure Based Model With Moving Mesh</string>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_18">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>60</y>
+           <width>331</width>
+           <height>61</height>
+          </rect>
          </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4: Failure Based Model With Fixed Mesh</string>
+         <property name="title">
+          <string>Set Bed Layers in Each Zone</string>
          </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>5: Linear Retreat Model With Cell BasedFixed Mesh</string>
+         <widget class="QComboBox" name="zoneBedSelector">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>20</y>
+            <width>81</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_38">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>20</y>
+            <width>101</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Layers in Zone</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="layerInZoneEdit">
+          <property name="geometry">
+           <rect>
+            <x>230</x>
+            <y>20</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QCheckBox" name="rockErosionCheck">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>170</y>
+           <width>201</width>
+           <height>19</height>
+          </rect>
          </property>
-        </item>
-        <item>
          <property name="text">
-          <string>6: Angle of Respondse Model With Cell Based Fixed Mesh</string>
+          <string>Use Bedrock Erosion</string>
          </property>
-        </item>
+        </widget>
+        <widget class="QGroupBox" name="bedPropertyBox">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>-90</y>
+           <width>331</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Bed Variety Spatial Variation Input</string>
+         </property>
+         <widget class="QRadioButton" name="rdoBedUniform">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>98</width>
+            <height>19</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>UNIFORM</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="rdoBedZonal">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>30</y>
+            <width>98</width>
+            <height>19</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>ZONAL</string>
+          </property>
+         </widget>
+         <widget class="QRadioButton" name="rdoBedDistri">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>30</y>
+            <width>121</width>
+            <height>19</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>DISTRIBUTED</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_17">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>60</y>
+           <width>241</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Bed Distribution .2dm File</string>
+         </property>
+         <widget class="QCheckBox" name="sameFileAsFlowBox">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>211</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use The Same .2dm file as Flow</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="setBed2dmBtn">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>40</y>
+            <width>41</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_45">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>80</y>
+            <width>221</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>.2dm For Bed Material:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          </property>
+         </widget>
+        </widget>
        </widget>
-       <widget class="QLabel" name="label_48">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>161</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Bank Module</string>
-        </property>
+       <widget class="QWidget" name="tab_10">
+        <attribute name="title">
+         <string>Bedrock Settings</string>
+        </attribute>
+        <widget class="QTableWidget" name="bedRockSetTable">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>711</width>
+           <height>451</height>
+          </rect>
+         </property>
+        </widget>
        </widget>
-       <widget class="QLabel" name="label_49">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>50</y>
-          <width>221</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Bank Model Time Step</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="bankTimeStep">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>50</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_50">
-        <property name="geometry">
-         <rect>
-          <x>420</x>
-          <y>235</y>
-          <width>181</width>
-          <height>30</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Remesh Interval: </string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_51">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>55</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>(sec)</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QCheckBox" name="bankErosionChkBox">
-       <property name="geometry">
-        <rect>
-         <x>3</x>
-         <y>10</y>
-         <width>261</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Activate Bank Erosion</string>
-       </property>
       </widget>
      </widget>
-     <widget class="QWidget" name="sediFluxTab">
+     <widget class="QWidget" name="boundarySettingsTab">
       <attribute name="title">
-       <string>Boundary Sediment Flux</string>
+       <string>Boundary Settings</string>
       </attribute>
-      <widget class="QTableWidget" name="sediBoundaryTable">
+      <widget class="QTabWidget" name="boundarySettings">
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>60</y>
-         <width>611</width>
-         <height>321</height>
+         <y>0</y>
+         <width>737</width>
+         <height>499</height>
         </rect>
        </property>
-      </widget>
-      <widget class="QLabel" name="label_14">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>30</y>
-         <width>271</width>
-         <height>21</height>
-        </rect>
+       <property name="currentIndex">
+        <number>0</number>
        </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Sediment Input/Output On The Boundary</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="geometry">
-        <rect>
-         <x>280</x>
-         <y>20</y>
-         <width>51</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>說明</string>
-       </property>
+       <widget class="QWidget" name="tab_13">
+        <attribute name="title">
+         <string>Boundary Sediment Flux</string>
+        </attribute>
+        <widget class="QTableWidget" name="sediBoundaryTable">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>70</y>
+           <width>611</width>
+           <height>321</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_14">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>271</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Sediment Input/Output On The Boundary</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="geometry">
+          <rect>
+           <x>290</x>
+           <y>10</y>
+           <width>51</width>
+           <height>31</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>說明</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_11">
+        <attribute name="title">
+         <string>Bank Erosion Settings</string>
+        </attribute>
+        <widget class="QFrame" name="bankErosionFrameWork">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>20</y>
+           <width>671</width>
+           <height>421</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="label_46">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>100</y>
+            <width>101</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Bank Pairs</string>
+          </property>
+         </widget>
+         <widget class="QTableWidget" name="bankPairTable">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>120</y>
+            <width>141</width>
+            <height>111</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QTableWidget" name="erosionModTable">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>120</y>
+            <width>421</width>
+            <height>111</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_47">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>92</y>
+            <width>161</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Erosion Model Selection</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="remeshZoneChk">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>240</y>
+            <width>371</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Use a .2dm File To Define Mesh Zone For Remesh</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="remeshFileSelector">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>270</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="remeshLabel">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>270</y>
+            <width>441</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Please Choose a .2dm File to Define Transformed Mesh Zone.</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="bankModBox">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>10</y>
+            <width>421</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>2: Linear Retreat Model(Non-Cohesive Banks)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3: Failure Based Model With Moving Mesh</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4: Failure Based Model With Fixed Mesh</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>5: Linear Retreat Model With Cell BasedFixed Mesh</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>6: Angle of Respondse Model With Cell Based Fixed Mesh</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QLabel" name="label_48">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>161</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Bank Module</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_49">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>221</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Bank Model Time Step</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="bankTimeStep">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>50</y>
+            <width>61</width>
+            <height>31</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_50">
+          <property name="geometry">
+           <rect>
+            <x>420</x>
+            <y>235</y>
+            <width>181</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Remesh Interval: </string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_51">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>55</y>
+            <width>71</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>(sec)</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QCheckBox" name="bankErosionChkBox">
+         <property name="geometry">
+          <rect>
+           <x>-177</x>
+           <y>-30</y>
+           <width>261</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Activate Bank Erosion</string>
+         </property>
+        </widget>
+       </widget>
       </widget>
      </widget>
     </widget>
@@ -3158,6 +3230,61 @@
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QToolBox" name="toolBox">
+   <property name="geometry">
+    <rect>
+     <x>-180</x>
+     <y>380</y>
+     <width>85</width>
+     <height>145</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="page">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>85</width>
+      <height>85</height>
+     </rect>
+    </property>
+    <attribute name="label">
+     <string>Page 1</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="page_2">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>100</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <attribute name="label">
+     <string>Page 2</string>
+    </attribute>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="SIFopenBtn">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>730</y>
+     <width>81</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>預覽SIF輸出檔</string>
+   </property>
+   <property name="text">
+    <string>修改SIF</string>
    </property>
   </widget>
  </widget>
