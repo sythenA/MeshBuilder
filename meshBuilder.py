@@ -55,10 +55,12 @@ from mesh2DViewer import mesh2DView
 from zoneOrdDiag import zoneSeqIterator
 from selectorDiag import loadSelector
 from itertools import izip as zip, count
+from toUnicode import toUnicode
 import os
 import pickle
 # Initialize Qt resources from file resources.py
 import resources
+import plus_rc
 
 
 class meshBuilder:
@@ -582,7 +584,7 @@ class meshBuilder:
         layer.removeSelection()
 
         # WRA 當更改儲存中內容之後，直接把寫入的內容儲存至圖層資料庫
-        self.writeTableToLayer()
+        # self.writeTableToLayer()
 
     def cleanTableSelection(self):
         table = self.dlg.tableWidget
@@ -1534,7 +1536,7 @@ into layer attributes.', level=QgsMessageBar.INFO)
             self.dlg.tableWidget.itemChanged.connect(self.checkLayerRegions)
 
         # WRA 使用批次填入後，直接將填入的內容寫回圖層資料庫
-        self.writeTableToLayer()
+        # self.writeTableToLayer()
 
     def backSwitch(self):
         process = self.currentProcess
@@ -2001,10 +2003,12 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
         ibcPath = os.path.join(dirname, ibcName)
         mainDir = os.path.dirname(__file__)
         if os.path.isfile(ibcPath):
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+            subprocess.call(['cmd', '/c', os.path.join(mainDir,
+                                                       "GMSH2SRH.exe"),
                              meshFile, path2dm, ibcPath])
         else:
-            subprocess.call(['cmd', '/c', os.path.join(mainDir, "GMSH2SRH.exe"),
+            subprocess.call(['cmd', '/c', os.path.join(mainDir,
+                                                       "GMSH2SRH.exe"),
                              meshFile, path2dm])
         self.iface.messageBar().pushMessage(".msh Transfomed to .2dm",
                                             level=QgsMessageBar.INFO)
@@ -2013,7 +2017,7 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
     def mshInterp(self):
         def writeMsgToLabel(P):
             while P.canReadLine():
-                line = u'執行中...' + str(P.readLine())[:-1]
+                line = u'執行中...' + toUnicode(str(P.readLine())[:-1])
                 self.dlg.label_xyz.setText(line)
 
         def onFinished():
@@ -2038,13 +2042,13 @@ to proceed to mesh generation.", level=QgsMessageBar.INFO)
         env.remove("TERM")
         P.setProcessEnvironment(env)
         try:
-            command = ("ZInterporate.exe" + ' "' + mshPath + '" "' +
-                       self.xyzName + '" "' + Path + '"')
+            plugin_dir = os.path.dirname(__file__)
+            interpPath = os.path.join(plugin_dir, 'Interpolate',
+                                      'ZInterporate.exe')
+            command = (interpPath + ' "' + mshPath +
+                       '" "' + self.xyzName + '" "' + Path + '"')
             P.start(command)
-            P.finished.connect(onFinished)
-        except(AttributeError):
-            command = "ZInterporate.exe" + " " + mshPath + " TW40M.xyz " + Path
-            P.start(command)
+            self.dlg.label_xyz.setText(u'執行中...')
             P.finished.connect(onFinished)
         except(IOError):
             onCritical(105)
